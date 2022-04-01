@@ -15,15 +15,20 @@ pub fn main() !void {
     // get cwd
     var buffer = [_]u8{undefined} ** 98302; // what the fuck?
     var cwdPath = try fs.realpath(".", &buffer);
-    var cwdWithIterationFlag = try fs.openDirAbsolute(cwdPath, .{ .iterate = true });
+    var cwdWithIterationFlag = try fs.openDirAbsolute(cwdPath, .{ .iterate = true, .access_sub_paths = true });
     
     // print lines matching word
     var walker = try cwdWithIterationFlag.walk(arenaAllocator);
     while (try walker.next()) |walkerEntry| {
+        try stdout.print("{s}: {s}\n", .{walkerEntry.path, walkerEntry.kind});
         if (walkerEntry.kind != .File) continue;
         const dir = walkerEntry.dir;
         const path = walkerEntry.path;
-        const file = dir.openFile(path, .{ .mode = .read_only }) catch continue;
+        var absolutePath = try fs.realpath(".", &buffer);
+        const file = dir.openFile(absolutePath, .{ .mode = .read_only }) catch |err| {
+            try stdout.print("{s}\n", .{err});
+            continue;
+        };
         const data = file.readToEndAlloc(arenaAllocator, std.math.pow(u64, 2, 20)) catch continue;
         var lineIterator = std.mem.tokenize(u8, data, "\n");
         while (lineIterator.next()) |line| {
