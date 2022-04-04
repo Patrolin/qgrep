@@ -1,12 +1,7 @@
-from argparse import ArgumentError
 from decimal import InvalidOperation
-from sys import argv
 from os import walk
 import re
 from typing import cast
-
-class NotEnoughArguments(Exception):
-    pass
 
 class RuleNode:
     def __init__(self, nodeType: int):
