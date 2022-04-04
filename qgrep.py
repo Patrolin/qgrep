@@ -134,7 +134,11 @@ if __name__ == "__main__":
             print("usage: <relative path> <rules>")
             continue
         dir_path, ruleString = match.groups()
-        ruleNode = parseRules(ruleString, is_debug)
+        try:
+            ruleNode = parseRules(ruleString, is_debug)
+        except Exception as error:
+            print(error)
+            continue
         for (root, dirs, files) in walk(dir_path, topdown=True):
             for file in files:
                 path = f"{root}/{file}".replace("\\", "/")
