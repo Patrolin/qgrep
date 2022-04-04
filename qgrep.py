@@ -1,3 +1,5 @@
+from sys import argv
+from argparse import ArgumentParser, BooleanOptionalAction
 from decimal import InvalidOperation
 from os import walk
 import re
@@ -12,8 +14,9 @@ class RuleNode:
         self.value: str | None = None
 
     def add(self, new):
+        ignoreLeft = self.nodeType == 2
         new.parent = self
-        if self.left == None:
+        if self.left == None and not ignoreLeft:
             self.left = new
         elif self.right == None:
             self.right = new
@@ -28,13 +31,26 @@ class RuleNode:
         parent.left = new
         self.parent = new
 
+    def insert_below(self, new):
+        left_child = cast(RuleNode, self.left)
+        new.parent = self
+        new.left = left_child
+        self.left = new
+        left_child.parent = new
+
+    def get_first_empty_parent(self):
+        acc = cast(RuleNode, self.parent)
+        while acc.parent != None and acc.right != None:
+            acc = acc.parent
+        return acc
+
     def __repr__(self) -> str:
         if self.nodeType == 0:
             return f"{repr(self.left)}"
         elif self.nodeType == 1:
             return f"\"{self.value}\""
         elif self.nodeType == 2:
-            return f"(not {repr(self.left)})"
+            return f"(not {repr(self.right)})"
         elif self.nodeType == 3:
             return f"({repr(self.left)} and {repr(self.right)})"
         elif self.nodeType == 4:
@@ -42,27 +58,30 @@ class RuleNode:
         else:
             return ""
 
-    def matches(self, line: str) -> bool:
+    def matches(self, line: str, is_case_sensitive: bool) -> bool:
         if self.nodeType == 0: # passthrough
-            return self.left.matches(line) if self.left != None else False
+            return self.left.matches(line, is_case_sensitive) if self.left != None else False
         elif self.nodeType == 1: # string
-            return cast(str, self.value) in line if type(self.value) == str else False
+            if type(self.value) != str: return False
+            line2 = line if is_case_sensitive else line.lower()
+            value2 = cast(str, self.value) if is_case_sensitive else cast(str, self.value).lower()
+            return value2 in line2
         elif self.nodeType == 2: # not
-            return not (self.left.matches(line) if self.left != None else False)
+            return not (self.right.matches(line, is_case_sensitive) if self.right != None else False)
         elif self.nodeType == 3: # and
-            return (self.left.matches(line) if self.left != None else False) \
-                and (self.right.matches(line) if self.right != None else False)
+            return (self.left.matches(line, is_case_sensitive) if self.left != None else False) \
+                and (self.right.matches(line, is_case_sensitive) if self.right != None else False)
         elif self.nodeType == 4: # or
-            return (self.left.matches(line) if self.left != None else False) \
-                or (self.right.matches(line) if self.right != None else False)
+            return (self.left.matches(line, is_case_sensitive) if self.left != None else False) \
+                or (self.right.matches(line, is_case_sensitive) if self.right != None else False)
         else:
             return False
 
 class InvalidArgument(Exception):
     pass
 
-def parseRules(ruleString: str) -> RuleNode:
-    tokens = re.finditer(r"(?:(\()|(\))|\"((?:\\?.)*?)\"|(\S*))", ruleString)
+def parseRules(ruleString: str, is_debug: bool) -> RuleNode:
+    tokens = re.finditer(r"(?:(\()|(\))|\"((?:\\?.)*?)\"|(\S+))", ruleString)
     root = RuleNode(0)
     current = root
     for token in tokens:
@@ -74,14 +93,12 @@ def parseRules(ruleString: str) -> RuleNode:
         elif right_bracket != None:
             while current.nodeType != 0:
                 current = cast(RuleNode, current.parent)
-            current = cast(RuleNode, current.parent)
+            current = current.get_first_empty_parent()
         elif string != None:
             node = RuleNode(1)
             node.value = string
             current.add(node)
-            current = node
-            while cast(RuleNode, current.parent).nodeType == 2:
-                current = cast(RuleNode, current.parent)
+            current = node.get_first_empty_parent()
         elif operator != None and operator != "":
             if operator == "not":
                 node = RuleNode(2)
@@ -89,45 +106,41 @@ def parseRules(ruleString: str) -> RuleNode:
                 current = node
             elif operator == "and":
                 node = RuleNode(3)
-                current.insert_above(node)
+                current.insert_below(node)
                 current = node
             elif operator == "or":
                 node = RuleNode(4)
-                current.insert_above(node)
+                current.insert_below(node)
                 current = node
             else:
                 raise InvalidArgument(f"{operator} is not a valid operator")
-    print(root)
+        #if is_debug: print(f"debug: {left_bracket or right_bracket or string or operator} {current}")
+    if is_debug: print(f"debug: {root}")
     return root
 
-class Rule:
-    def __init__(self, ruleString: str):
-        if ruleString.startswith("-"):
-            self.ruleType = 0
-            self.pattern = ruleString[1:]
-        else:
-            self.ruleType = 1
-            self.pattern = ruleString
-
-    def matches(self, string: str) -> bool:
-        return (re.search(self.pattern, string) != None) ^ (self.ruleType == 0)
-
-    def __repr__(self) -> str:
-        return f"Rule({self.ruleType}, {self.pattern})"
+argument_parser = ArgumentParser(description='Search files for strings.')
+argument_parser.add_argument('-d', action=BooleanOptionalAction, help='print verbose information')
+argument_parser.add_argument('-c', action=BooleanOptionalAction, help='use case sensitive comparisons')
 
 if __name__ == "__main__":
+    arguments = argument_parser.parse_args(argv[1:])
+    is_debug = arguments.d
+    is_case_sensitive = arguments.c
+    argumentsString = " " + "".join(argv[1:]) if len(argv) > 1 else ""
     while True:
-        match = re.search(r"(\S+)\s(.*)", input("qgrep: ").strip())
-        if match == None: continue
+        match = re.search(r"(\S+)\s(.*)", input(f"qgrep{argumentsString}: ").strip())
+        if match == None:
+            print("usage: <relative path> <rules>")
+            continue
         dir_path, ruleString = match.groups()
-        ruleNode = parseRules(ruleString)
+        ruleNode = parseRules(ruleString, is_debug)
         for (root, dirs, files) in walk(dir_path, topdown=True):
             for file in files:
                 path = f"{root}/{file}".replace("\\", "/")
                 try:
                     with open(path, "r", encoding="utf8") as f:
                         for line in f.readlines():
-                            if len(line) < 1000 and ruleNode.matches(line[:-1]):
+                            if len(line) < 1000 and ruleNode.matches(line[:-1], is_case_sensitive):
                                 print(f"{path}: {line[:-1]}")
                 except UnicodeDecodeError:
                     pass
