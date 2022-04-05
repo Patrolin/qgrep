@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from ast import arg
 from sys import argv
 from argparse import ArgumentParser, BooleanOptionalAction
 from decimal import InvalidOperation
