@@ -1,10 +1,18 @@
 #!/usr/bin/env python
+from ast import arg
 from sys import argv
 from argparse import ArgumentParser, BooleanOptionalAction
 from decimal import InvalidOperation
 from os import walk
 import re
 from typing import cast
+import unicodedata
+
+def normalize(string: str, is_case_sensitive: bool, is_accent_sensitive: bool, is_symbol_sensitive: bool) -> str:
+    acc = unicodedata.normalize("NFD", string) if is_symbol_sensitive else unicodedata.normalize("NFKD", string)
+    acc = acc if is_accent_sensitive else "".join(v for v in acc if not unicodedata.combining(v))
+    acc = acc if is_case_sensitive else acc.lower()
+    return acc
 
 class RuleNode:
     def __init__(self, nodeType: int):
@@ -59,22 +67,23 @@ class RuleNode:
         else:
             return ""
 
-    def matches(self, line: str, is_case_sensitive: bool) -> bool:
+    def matches(self, line: str, is_case_sensitive: bool, is_accent_sensitive: bool, is_symbol_sensitive: bool) -> bool:
         if self.nodeType == 0: # passthrough
-            return self.left.matches(line, is_case_sensitive) if self.left != None else False
+            return self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False
         elif self.nodeType == 1: # string
             if type(self.value) != str: return False
-            line2 = line if is_case_sensitive else line.lower()
-            value2 = cast(str, self.value) if is_case_sensitive else cast(str, self.value).lower()
+            line2 = normalize(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
+            value2 = normalize(cast(str, self.value), is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
             return value2 in line2
         elif self.nodeType == 2: # not
-            return not (self.right.matches(line, is_case_sensitive) if self.right != None else False)
+            return not (self.right.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
+                        if self.right != None else False)
         elif self.nodeType == 3: # and
-            return (self.left.matches(line, is_case_sensitive) if self.left != None else False) \
-                and (self.right.matches(line, is_case_sensitive) if self.right != None else False)
+            return (self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
+                and (self.right.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
         elif self.nodeType == 4: # or
-            return (self.left.matches(line, is_case_sensitive) if self.left != None else False) \
-                or (self.right.matches(line, is_case_sensitive) if self.right != None else False)
+            return (self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
+                or (self.right.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
         else:
             return False
 
@@ -119,33 +128,44 @@ def parseRules(ruleString: str, is_debug: bool) -> RuleNode:
     if is_debug: print(f"debug: {root}")
     return root
 
-argument_parser = ArgumentParser(description='Search files for strings.')
-argument_parser.add_argument('-d', action=BooleanOptionalAction, help='print verbose information')
-argument_parser.add_argument('-c', action=BooleanOptionalAction, help='use case sensitive comparisons')
-
 if __name__ == "__main__":
-    arguments = argument_parser.parse_args(argv[1:])
-    is_debug = arguments.d
-    is_case_sensitive = arguments.c
-    argumentsString = " " + "".join(argv[1:]) if len(argv) > 1 else ""
-    while True:
-        match = re.search(r"(\S+)\s(.*)", input(f"qgrep{argumentsString}: ").strip())
-        if match == None:
-            print("usage: <relative path> <rules>")
-            continue
-        dir_path, ruleString = match.groups()
-        try:
-            ruleNode = parseRules(ruleString, is_debug)
-        except Exception as error:
-            print(error)
-            continue
-        for (root, dirs, files) in walk(dir_path, topdown=True):
-            for file in files:
-                path = f"{root}/{file}".replace("\\", "/")
-                try:
-                    with open(path, "r", encoding="utf8") as f:
-                        for line in f.readlines():
-                            if len(line) < 1000 and ruleNode.matches(line[:-1], is_case_sensitive):
-                                print(f"{path}: {line[:-1]}")
-                except UnicodeDecodeError:
-                    pass
+    try:
+        argument_parser = ArgumentParser(description='Search files for strings.')
+        argument_parser.add_argument('-d', action=BooleanOptionalAction, help='print verbose information')
+        argument_parser.add_argument('-c', action=BooleanOptionalAction, help='use case sensitive comparisons')
+        argument_parser.add_argument('-a', action=BooleanOptionalAction, help='use accent sensitive comparisons')
+        argument_parser.add_argument('-s', action=BooleanOptionalAction, help='use symbol sensitive comparisons ("ﬁ" != "fi")')
+
+        arguments = argument_parser.parse_args(argv[1:])
+        is_debug = arguments.d
+        is_case_sensitive = arguments.c
+        is_accent_sensitive = arguments.a
+        is_symbol_sensitive = arguments.s
+
+        argumentsString = " " + "".join(argv[1:]) if len(argv) > 1 else ""
+        while True:
+            match = re.search(r"(\S+)\s(.*)", input(f"qgrep{argumentsString}: ").strip())
+            if match == None:
+                print("usage: <relative path> <rules>")
+                continue
+            dir_path, ruleString = match.groups()
+            try:
+                ruleNode = parseRules(ruleString, is_debug)
+            except Exception as error:
+                print(error)
+                continue
+            for (root, dirs, files) in walk(dir_path, topdown=True):
+                for file in files:
+                    path = f"{root}/{file}".replace("\\", "/")
+                    try:
+                        with open(path, "r", encoding="utf8") as f:
+                            for line in f.readlines():
+                                if len(line) < 1000 and ruleNode.matches( \
+                                    line[:-1], is_case_sensitive, is_accent_sensitive, is_symbol_sensitive
+                                ):
+                                    print(f"{path}: {line[:-1]}")
+                    except UnicodeDecodeError:
+                        pass
+    except KeyboardInterrupt:
+        print("^C", end="")
+        exit(0)
