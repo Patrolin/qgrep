@@ -132,8 +132,8 @@ if __name__ == "__main__":
     try:
         argument_parser = ArgumentParser(description='Search files for strings.')
         argument_parser.add_argument('-d', action=BooleanOptionalAction, help='print verbose information')
-        argument_parser.add_argument('-c', action=BooleanOptionalAction, help='use case sensitive comparisons')
-        argument_parser.add_argument('-a', action=BooleanOptionalAction, help='use accent sensitive comparisons')
+        argument_parser.add_argument('-c', action=BooleanOptionalAction, help='use case sensitive comparisons ("A" != "a")')
+        argument_parser.add_argument('-a', action=BooleanOptionalAction, help='use accent sensitive comparisons ("á" != "a")')
         argument_parser.add_argument('-s', action=BooleanOptionalAction, help='use symbol sensitive comparisons ("ﬁ" != "fi")')
 
         arguments = argument_parser.parse_args(argv[1:])

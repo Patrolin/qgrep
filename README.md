@@ -4,7 +4,7 @@ a windows version of grep <s>in zig-0.10.0-dev.1699+8b5d5f44e</s> in Python beca
 ## usage
 ```ps
 PS C:\Users\patri\Documents\qGrep> qgrep -h
-usage: qgrep.py [-h] [-d] [-c] [-a] [-b]
+usage: qgrep.py [-h] [-d] [-c] [-a] [-s]
 
 Search files for strings.
 
@@ -54,15 +54,14 @@ Accent sensitive flag
 ```py
 PS C:\Users\Patrolin\Documents\qGrep> qgrep -a
 qgrep -a: . "Á"
-./README.md:   -a          use accent sensitive comparisons ("á" != "a")
+./qgrep.py:         argument_parser.add_argument('-a', action=BooleanOptionalAction, help='use accent sensitive comparisons ("á" != "a")')
 ```
 
 Symbol sensitive flag
-PS C:\Users\Patrolin\Documents\qGrep> qgrep -s
 ```py
+PS C:\Users\Patrolin\Documents\qGrep> qgrep -s
 qgrep -s: . "ﬁ"
 ./qgrep.py:         argument_parser.add_argument('-s', action=BooleanOptionalAction, help='use symbol sensitive comparisons ("ﬁ" != "fi")')
-./README.md:   -s          use symbol sensitive comparisons ("ﬁ" != "fi")
 ```
 
 
