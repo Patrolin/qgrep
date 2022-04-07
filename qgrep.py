@@ -2,7 +2,6 @@
 from collections import namedtuple
 from sys import argv
 from argparse import ArgumentParser, BooleanOptionalAction
-from decimal import InvalidOperation
 from os import walk
 from enum import Enum
 import re
@@ -22,11 +21,14 @@ class OperatorType(Enum):
 
 RuleNodeTypeType = namedtuple("RuleNodeTypeType", ["id", "operatorType"])
 
+class NodeIsFull(Exception):
+    pass
+
 class RuleNodeType(Enum):
     AND = RuleNodeTypeType(0, OperatorType.BINARY)
     OR = RuleNodeTypeType(1, OperatorType.BINARY)
 
-    PASSTHROUGH = RuleNodeTypeType(2, OperatorType.UNARY)
+    ROOT = RuleNodeTypeType(2, OperatorType.UNARY)
     NOT = RuleNodeTypeType(3, OperatorType.UNARY)
 
     STRING = RuleNodeTypeType(4, OperatorType.LEAF)
@@ -47,8 +49,7 @@ class RuleNode:
         elif self.right == None and self.nodeType.value.operatorType == OperatorType.BINARY:
             self.right = new
         else:
-            raise InvalidOperation()
-        return new
+            raise NodeIsFull(repr(self))
 
     def insert_left(self, new):
         left_child = cast(RuleNode, self.left)
@@ -62,13 +63,13 @@ class RuleNode:
         while acc.parent != None:
             if acc.nodeType.value.operatorType == OperatorType.BINARY and acc.right == None \
             or acc.nodeType.value.operatorType == OperatorType.UNARY and acc.left == None \
-            or acc.nodeType == RuleNodeType.PASSTHROUGH:
+            or acc.nodeType == RuleNodeType.ROOT:
                 break
             acc = acc.parent
         return acc
 
     def __repr__(self) -> str:
-        if self.nodeType == RuleNodeType.PASSTHROUGH:
+        if self.nodeType == RuleNodeType.ROOT:
             return f"{repr(self.left)}"
         elif self.nodeType == RuleNodeType.NOT:
             return f"(not {repr(self.left)})"
@@ -82,7 +83,7 @@ class RuleNode:
             return ""
 
     def matches(self, line: str, is_case_sensitive: bool, is_accent_sensitive: bool, is_symbol_sensitive: bool) -> bool:
-        if self.nodeType == RuleNodeType.PASSTHROUGH:
+        if self.nodeType == RuleNodeType.ROOT:
             return self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False
         elif self.nodeType == RuleNodeType.NOT:
             return not (self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
@@ -95,27 +96,27 @@ class RuleNode:
                 or (self.right.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
         elif self.nodeType == RuleNodeType.STRING:
             if type(self.value) != str: return False
-            line2 = normalize(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
-            value2 = normalize(cast(str, self.value), is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
-            return value2 in line2
+            normalized_line = normalize(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
+            normalized_value = normalize(cast(str, self.value), is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
+            return normalized_value in normalized_line
         else:
             return False
 
-class InvalidArgument(Exception):
+class InvalidOperator(Exception):
     pass
 
 def parseRules(ruleString: str, is_debug: bool) -> RuleNode:
     tokens = re.finditer(r"(?:(\()|(\))|\"((?:\\?.)*?)\"|(\S+))", ruleString)
-    root = RuleNode(RuleNodeType.PASSTHROUGH)
+    root = RuleNode(RuleNodeType.ROOT)
     current = root
     for token in tokens:
         (left_bracket, right_bracket, string, operator) = token.groups()
         if left_bracket != None:
-            node = RuleNode(RuleNodeType.PASSTHROUGH)
+            node = RuleNode(RuleNodeType.ROOT)
             current.add(node)
             current = node
         elif right_bracket != None:
-            while current.nodeType != RuleNodeType.PASSTHROUGH:
+            while current.nodeType != RuleNodeType.ROOT:
                 current = cast(RuleNode, current.parent)
             current = current.get_first_free_parent()
         elif string != None:
@@ -137,7 +138,7 @@ def parseRules(ruleString: str, is_debug: bool) -> RuleNode:
                 current.insert_left(node)
                 current = node
             else:
-                raise InvalidArgument(f"{operator} is not a valid operator")
+                raise InvalidOperator(f"{operator}")
         #if is_debug: print(f"debug: {left_bracket or right_bracket or string or operator} {current}")
     if is_debug: print(f"debug: {root}")
     return root
@@ -166,7 +167,7 @@ if __name__ == "__main__":
             try:
                 ruleNode = parseRules(ruleString, is_debug)
             except Exception as error:
-                print(error)
+                print(repr(error))
                 continue
             for (root, dirs, files) in walk(dir_path, topdown=True):
                 for file in files:
