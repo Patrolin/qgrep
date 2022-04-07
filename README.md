@@ -25,14 +25,14 @@ qgrep: . "ářgůmënt"
 ./qgrep.py:                 raise InvalidArgument(f"{operator} is not a valid operator")
 ./qgrep.py:         argument_parser = ArgumentParser(description='Search files for strings.')
 ./qgrep.py:         argument_parser.add_argument('-d', action=BooleanOptionalAction, help='print verbose information')
-./qgrep.py:         argument_parser.add_argument('-c', action=BooleanOptionalAction, help='use case sensitive comparisons')
-./qgrep.py:         argument_parser.add_argument('-a', action=BooleanOptionalAction, help='use accent sensitive comparisons')
-./qgrep.py:         argument_parser.add_argument('-b', action=BooleanOptionalAction, help='use symbol sensitive comparisons ("ﬁ" != "fi")')
+./qgrep.py:         argument_parser.add_argument('-c', action=BooleanOptionalAction, help='use case sensitive comparisons ("A" != "a")')
+./qgrep.py:         argument_parser.add_argument('-a', action=BooleanOptionalAction, help='use accent sensitive comparisons ("á" != "a")')
+./qgrep.py:         argument_parser.add_argument('-s', action=BooleanOptionalAction, help='use symbol sensitive comparisons ("ﬁ" != "fi")')
 ./qgrep.py:         arguments = argument_parser.parse_args(argv[1:])
 ./qgrep.py:         is_debug = arguments.d
 ./qgrep.py:         is_case_sensitive = arguments.c
 ./qgrep.py:         is_accent_sensitive = arguments.a
-./qgrep.py:         is_symbol_sensitive = arguments.b
+./qgrep.py:         is_symbol_sensitive = arguments.s
 ./qgrep.py:         argumentsString = " " + "".join(argv[1:]) if len(argv) > 1 else ""
 ./qgrep.py:             match = re.search(r"(\S+)\s(.*)", input(f"qgrep{argumentsString}: ").strip())
 ./qgrep.zig:     // parse arguments

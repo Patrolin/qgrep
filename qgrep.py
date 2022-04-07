@@ -1,8 +1,10 @@
 #!/usr/bin/env python
+from collections import namedtuple
 from sys import argv
 from argparse import ArgumentParser, BooleanOptionalAction
 from decimal import InvalidOperation
 from os import walk
+from enum import Enum
 import re
 from typing import cast
 import unicodedata
@@ -13,8 +15,24 @@ def normalize(string: str, is_case_sensitive: bool, is_accent_sensitive: bool, i
     acc = acc if is_case_sensitive else acc.lower()
     return acc
 
+class OperatorType(Enum):
+    BINARY = 0
+    UNARY = 1
+    LEAF = 2
+
+RuleNodeTypeType = namedtuple("RuleNodeTypeType", ["id", "operatorType"])
+
+class RuleNodeType(Enum):
+    AND = RuleNodeTypeType(0, OperatorType.BINARY)
+    OR = RuleNodeTypeType(1, OperatorType.BINARY)
+
+    PASSTHROUGH = RuleNodeTypeType(2, OperatorType.UNARY)
+    NOT = RuleNodeTypeType(3, OperatorType.UNARY)
+
+    STRING = RuleNodeTypeType(4, OperatorType.LEAF)
+
 class RuleNode:
-    def __init__(self, nodeType: int):
+    def __init__(self, nodeType: RuleNodeType):
         self.parent: RuleNode | None = None
         self.left: RuleNode | None = None
         self.right: RuleNode | None = None
@@ -22,67 +40,64 @@ class RuleNode:
         self.value: str | None = None
 
     def add(self, new):
-        ignoreLeft = self.nodeType == 2
         new.parent = self
-        if self.left == None and not ignoreLeft:
+        if self.left == None and (self.nodeType.value.operatorType == OperatorType.BINARY
+                                  or self.nodeType.value.operatorType == OperatorType.UNARY):
             self.left = new
-        elif self.right == None:
+        elif self.right == None and self.nodeType.value.operatorType == OperatorType.BINARY:
             self.right = new
         else:
             raise InvalidOperation()
         return new
 
-    def insert_above(self, new):
-        parent = cast(RuleNode, self.parent)
-        new.parent = parent
-        new.left = self
-        parent.left = new
-        self.parent = new
-
-    def insert_below(self, new):
+    def insert_left(self, new):
         left_child = cast(RuleNode, self.left)
         new.parent = self
         new.left = left_child
         self.left = new
         left_child.parent = new
 
-    def get_first_empty_parent(self):
+    def get_first_free_parent(self):
         acc = cast(RuleNode, self.parent)
-        while acc.parent != None and acc.right != None:
+        while acc.parent != None:
+            if acc.nodeType.value.operatorType == OperatorType.BINARY and acc.right == None \
+            or acc.nodeType.value.operatorType == OperatorType.UNARY and acc.left == None \
+            or acc.nodeType == RuleNodeType.PASSTHROUGH:
+                break
             acc = acc.parent
         return acc
 
     def __repr__(self) -> str:
-        if self.nodeType == 0:
+        if self.nodeType == RuleNodeType.PASSTHROUGH:
             return f"{repr(self.left)}"
-        elif self.nodeType == 1:
-            return f"\"{self.value}\""
-        elif self.nodeType == 2:
-            return f"(not {repr(self.right)})"
-        elif self.nodeType == 3:
+        elif self.nodeType == RuleNodeType.NOT:
+            return f"(not {repr(self.left)})"
+        elif self.nodeType == RuleNodeType.AND:
             return f"({repr(self.left)} and {repr(self.right)})"
-        elif self.nodeType == 4:
+        elif self.nodeType == RuleNodeType.OR:
             return f"({repr(self.left)} or {repr(self.right)})"
+        elif self.nodeType == RuleNodeType.STRING:
+            return f"\"{self.value}\""
         else:
             return ""
 
     def matches(self, line: str, is_case_sensitive: bool, is_accent_sensitive: bool, is_symbol_sensitive: bool) -> bool:
-        if self.nodeType == 0: # passthrough
+        if self.nodeType == RuleNodeType.PASSTHROUGH:
             return self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False
-        elif self.nodeType == 1: # string
+        elif self.nodeType == RuleNodeType.NOT:
+            return not (self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
+                        if self.left != None else False)
+        elif self.nodeType == RuleNodeType.AND:
+            return (self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
+                and (self.right.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
+        elif self.nodeType == RuleNodeType.OR:
+            return (self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
+                or (self.right.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
+        elif self.nodeType == RuleNodeType.STRING:
             if type(self.value) != str: return False
             line2 = normalize(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
             value2 = normalize(cast(str, self.value), is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
             return value2 in line2
-        elif self.nodeType == 2: # not
-            return not (self.right.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
-                        if self.right != None else False)
-        elif self.nodeType == 3: # and
-            return (self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
-                and (self.right.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
-        elif self.nodeType == 4: # or
-            return (self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
-                or (self.right.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
         else:
             return False
 
@@ -91,35 +106,35 @@ class InvalidArgument(Exception):
 
 def parseRules(ruleString: str, is_debug: bool) -> RuleNode:
     tokens = re.finditer(r"(?:(\()|(\))|\"((?:\\?.)*?)\"|(\S+))", ruleString)
-    root = RuleNode(0)
+    root = RuleNode(RuleNodeType.PASSTHROUGH)
     current = root
     for token in tokens:
         (left_bracket, right_bracket, string, operator) = token.groups()
         if left_bracket != None:
-            node = RuleNode(0)
+            node = RuleNode(RuleNodeType.PASSTHROUGH)
             current.add(node)
             current = node
         elif right_bracket != None:
-            while current.nodeType != 0:
+            while current.nodeType != RuleNodeType.PASSTHROUGH:
                 current = cast(RuleNode, current.parent)
-            current = current.get_first_empty_parent()
+            current = current.get_first_free_parent()
         elif string != None:
-            node = RuleNode(1)
+            node = RuleNode(RuleNodeType.STRING)
             node.value = string
             current.add(node)
-            current = node.get_first_empty_parent()
+            current = node.get_first_free_parent()
         elif operator != None and operator != "":
             if operator == "not":
-                node = RuleNode(2)
+                node = RuleNode(RuleNodeType.NOT)
                 current.add(node)
                 current = node
             elif operator == "and":
-                node = RuleNode(3)
-                current.insert_below(node)
+                node = RuleNode(RuleNodeType.AND)
+                current.insert_left(node)
                 current = node
             elif operator == "or":
-                node = RuleNode(4)
-                current.insert_below(node)
+                node = RuleNode(RuleNodeType.OR)
+                current.insert_left(node)
                 current = node
             else:
                 raise InvalidArgument(f"{operator} is not a valid operator")
