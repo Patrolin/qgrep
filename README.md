@@ -19,7 +19,7 @@ options:
 Case insensitive by default
 ```py
 PS C:\Users\Patrolin\Documents\qGrep> qgrep
-qgrep: . "ářgůmënt"
+>> qgrep: . "ářgůmënt"
 ./qgrep.py: from argparse import ArgumentParser, BooleanOptionalAction
 ./qgrep.py: class InvalidArgument(Exception):
 ./qgrep.py:                 raise InvalidArgument(f"{operator} is not a valid operator")
@@ -42,7 +42,7 @@ qgrep: . "ářgůmënt"
 Case sensitive flag
 ```py
 PS C:\Users\Patrolin\Documents\qGrep> qgrep -c
-qgrep -c: . "Argument"
+>> qgrep -c: . "Argument"
 ./qgrep.py: from argparse import ArgumentParser, BooleanOptionalAction
 ./qgrep.py: class InvalidArgument(Exception):
 ./qgrep.py:                 raise InvalidArgument(f"{operator} is not a valid operator")
@@ -53,14 +53,14 @@ qgrep -c: . "Argument"
 Accent sensitive flag
 ```py
 PS C:\Users\Patrolin\Documents\qGrep> qgrep -a
-qgrep -a: . "Á"
+>> qgrep -a: . "Á"
 ./qgrep.py:         argument_parser.add_argument('-a', action=BooleanOptionalAction, help='use accent sensitive comparisons ("á" != "a")')
 ```
 
 Symbol sensitive flag
 ```py
 PS C:\Users\Patrolin\Documents\qGrep> qgrep -s
-qgrep -s: . "ﬁ"
+>> qgrep -s: . "ﬁ"
 ./qgrep.py:         argument_parser.add_argument('-s', action=BooleanOptionalAction, help='use symbol sensitive comparisons ("ﬁ" != "fi")')
 ```
 
@@ -68,14 +68,14 @@ qgrep -s: . "ﬁ"
 All binary operators are left-associative with no priority
 ```py
 PS C:\Users\Patrolin\Documents\qGrep> qgrep -d
-qgrep -d: . "for" and not "walk" or "while" and "try"
+>> qgrep -d: . "for" and not "walk" or "while" and "try"
 debug: ((("for" and (not "walk")) or "while") and "try")
 ./qgrep.zig:     while (try walker.next()) |walkerEntry| {
 ```
 
 Bracket support
 ```py
-qgrep -d: . "for" and not "walk" or ("while" and "try")
+>> qgrep -d: . "for" and not "walk" or ("while" and "try")
 debug: (("for" and (not "walk")) or ("while" and "try"))
 ./qgrep.py:     acc = acc if is_accent_sensitive else "".join(v for v in acc if not unicodedata.combining(v))
 ./qgrep.py:     for token in tokens:

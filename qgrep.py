@@ -144,6 +144,18 @@ def parseRules(ruleString: str, is_debug: bool) -> RuleNode:
     if is_debug: print(f"debug: {root}")
     return root
 
+class TextColor:
+    # Powershell has VT codes disabled by default...
+    BLACK = "\033[1;31m"
+    RED = "\033[1;32m"
+    GREEN = "\033[1;33m"
+    YELLOW = "\033[1;34m"
+    BLUE = "\033[1;35m"
+    MAGENTA = "\033[1;36m"
+    CYAN = "\033[1;37m"
+    WHITE = "\033[1;38m"
+    RESET = "\033[1;39m"
+
 if __name__ == "__main__":
     try:
         argument_parser = ArgumentParser(description='Search files for strings.')
@@ -160,7 +172,7 @@ if __name__ == "__main__":
 
         argumentsString = " " + "".join(argv[1:]) if len(argv) > 1 else ""
         while True:
-            match = re.search(r"(\S+)\s(.*)", input(f"qgrep{argumentsString}: ").strip())
+            match = re.search(r"(\S+)\s(.*)", input(f">> qgrep{argumentsString}: ").strip())
             if match == None:
                 print("usage: <relative path> <rules>")
                 continue
@@ -176,7 +188,7 @@ if __name__ == "__main__":
                         path = f"{root}/{file}".replace("\\", "/")
                         try:
                             with open(path, "r", encoding="utf8") as f:
-                                if re.search("[\n\r]", f.read(1000)) == None:
+                                if re.search(r"[\n\r]", f.read(1000)) == None:
                                     continue
                                 f.seek(0, 0)
                                 for line in f.readlines():
