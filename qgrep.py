@@ -2,6 +2,7 @@
 from collections import namedtuple
 from sys import argv
 from argparse import ArgumentParser, BooleanOptionalAction
+from glob import glob
 from os import walk
 from enum import Enum
 import re
@@ -169,18 +170,22 @@ if __name__ == "__main__":
             except Exception as error:
                 print(repr(error))
                 continue
-            for (root, dirs, files) in walk(dir_path, topdown=True):
-                for file in files:
-                    path = f"{root}/{file}".replace("\\", "/")
-                    try:
-                        with open(path, "r", encoding="utf8") as f:
-                            for line in f.readlines():
-                                if len(line) < 1000 and ruleNode.matches( \
-                                    line[:-1], is_case_sensitive, is_accent_sensitive, is_symbol_sensitive
-                                ):
-                                    print(f"{path}: {line[:-1]}")
-                    except UnicodeDecodeError:
-                        pass
+            for dir_path_match in glob(dir_path):
+                for (root, dirs, files) in walk(dir_path_match, topdown=True):
+                    for file in files:
+                        path = f"{root}/{file}".replace("\\", "/")
+                        try:
+                            with open(path, "r", encoding="utf8") as f:
+                                if re.search("[\n\r]", f.read(1000)) == None:
+                                    continue
+                                f.seek(0, 0)
+                                for line in f.readlines():
+                                    if len(line) < 1000 and ruleNode.matches( \
+                                        line[:-1], is_case_sensitive, is_accent_sensitive, is_symbol_sensitive
+                                    ):
+                                        print(f"{path}: {line[:-1]}")
+                        except UnicodeDecodeError:
+                            pass
     except KeyboardInterrupt:
         print("^C", end="")
         exit(0)
