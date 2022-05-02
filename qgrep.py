@@ -196,7 +196,7 @@ if __name__ == "__main__":
                                         line[:-1], is_case_sensitive, is_accent_sensitive, is_symbol_sensitive
                                     ):
                                         print(f"{path}: {line[:-1]}")
-                        except UnicodeDecodeError:
+                        except (UnicodeDecodeError, PermissionError):
                             pass
     except KeyboardInterrupt:
         print("^C", end="")
