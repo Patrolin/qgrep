@@ -7,16 +7,16 @@ pub fn main() !void {
     const arenaAllocator = arena.allocator();
     const argv = try std.process.argsAlloc(arenaAllocator);
     const stdout = std.io.getStdOut().writer();
-    
+
     // parse arguments
     if (argv.len < 2) return error.NotEnoughArguments;
     const word = argv[1];
-    
+
     // get cwd
     var buffer = [_]u8{undefined} ** 98302; // what the fuck?
     var cwdPath = try fs.realpath(".", &buffer);
     var cwdWithIterationFlag = try fs.openDirAbsolute(cwdPath, .{ .iterate = true, .access_sub_paths = true });
-    
+
     // print lines matching word
     var walker = try cwdWithIterationFlag.walk(arenaAllocator);
     while (try walker.next()) |walkerEntry| {
