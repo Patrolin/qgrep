@@ -11,7 +11,9 @@ import unicodedata
 
 def normalize(string: str, is_case_sensitive: bool, is_accent_sensitive: bool, is_symbol_sensitive: bool) -> str:
     acc = unicodedata.normalize("NFD", string) if is_symbol_sensitive else unicodedata.normalize("NFKD", string)
-    acc = acc if is_accent_sensitive else "".join(v for v in acc if not unicodedata.combining(v))
+    acc = acc if is_accent_sensitive else "".join(v for v in acc if not unicodedata.combining(v)) \
+        # should probably keep most combining characters?
+
     acc = acc if is_case_sensitive else acc.lower()
     return acc
 
@@ -191,11 +193,11 @@ if __name__ == "__main__":
                                 if re.search(r"[\n\r]", f.read(1000)) == None:
                                     continue
                                 f.seek(0, 0)
-                                for line in f.readlines():
+                                for i, line in enumerate(f.readlines()):
                                     if len(line) < 1000 and ruleNode.matches( \
                                         line[:-1], is_case_sensitive, is_accent_sensitive, is_symbol_sensitive
                                     ):
-                                        print(f"{path}: {line[:-1]}")
+                                        print(f"{path}:{i+1}; {line[:-1]}")
                         except (UnicodeDecodeError, PermissionError):
                             pass
     except KeyboardInterrupt:
