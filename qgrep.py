@@ -108,26 +108,72 @@ class RuleNode:
 class InvalidOperator(Exception):
     pass
 
+def parseString(s: str, i: int) -> tuple[str, int]:
+    acc = ""
+    if s[i] != "\"":
+        return acc, -i
+    while True:
+        i += 1
+        if i >= len(s): return acc, -i
+        if s[i] == "\"": return acc, i + 1
+        elif s[i] == "\\":
+            i += 1
+            if i >= len(s): return acc, -i
+            acc += s[i]
+        else:
+            acc += s[i]
+
+def tokenize(ruleString: str):
+    Token = tuple[str, str, str, str]
+    acc: list[Token] = []
+    i = 0
+    while i < len(ruleString):
+        if ruleString[i] == "(":
+            acc.append((ruleString[i], "", "", ""))
+        elif ruleString[i] == ")":
+            acc.append(("", ruleString[i], "", ""))
+        elif ruleString[i] == " ":
+            while ruleString[i] == " " and i < len(ruleString):
+                i += 1
+            continue
+        else:
+            if i >= len(ruleString): break
+            s, j = parseString(ruleString, i)
+            if j > 0:
+                acc.append(("", "", s, ""))
+            else:
+                try:
+                    j = ruleString[i:].index(" ") + i
+                except ValueError:
+                    j = len(ruleString)
+                acc.append(("", "", "", ruleString[i:j]))
+            i = j
+            continue
+        i += 1
+    return acc
+
 def parseRules(ruleString: str, is_debug: bool) -> RuleNode:
-    tokens = re.finditer(r"(?:(\()|(\))|\"((?:\\?.)*?)\"|(\S+))", ruleString)
+    tokens = tokenize(ruleString)
+    #print(list(re.finditer(r"(?:(\()|(\))|\"((?:\\?.)*?)\"|(\S+))", ruleString)))
+    #print("tokens", tokens)
     root = RuleNode(RuleNodeType.ROOT)
     current = root
     for token in tokens:
-        (left_bracket, right_bracket, string, operator) = token.groups()
-        if left_bracket != None:
+        (left_bracket, right_bracket, string, operator) = token
+        if left_bracket != "":
             node = RuleNode(RuleNodeType.ROOT)
             current.add(node)
             current = node
-        elif right_bracket != None:
+        elif right_bracket != "":
             while current.nodeType != RuleNodeType.ROOT:
                 current = cast(RuleNode, current.parent)
             current = current.get_first_free_parent()
-        elif string != None:
+        elif string != "":
             node = RuleNode(RuleNodeType.STRING)
             node.value = string
             current.add(node)
             current = node.get_first_free_parent()
-        elif operator != None and operator != "":
+        else:
             if operator == "not":
                 node = RuleNode(RuleNodeType.NOT)
                 current.add(node)
@@ -152,7 +198,7 @@ class TextColor:
     RED = "\033[1;32m"
     GREEN = "\033[1;33m"
     YELLOW = "\033[1;34m"
-    BLUE = "\033[1;35m"
+    BLUE = "\033[1;35m" # Todo(Patrolin): this is not blue
     MAGENTA = "\033[1;36m"
     CYAN = "\033[1;37m"
     WHITE = "\033[1;38m"
@@ -197,7 +243,7 @@ if __name__ == "__main__":
                                     if len(line) < 1000 and ruleNode.matches( \
                                         line[:-1], is_case_sensitive, is_accent_sensitive, is_symbol_sensitive
                                     ):
-                                        print(f"{path}:{i+1}; {line[:-1]}")
+                                        print(f"{path}:{i+1} {line[:-1]}") # Todo(Patrolin): print {full_path}\n{line}
                         except (UnicodeDecodeError, PermissionError):
                             pass
     except KeyboardInterrupt:
