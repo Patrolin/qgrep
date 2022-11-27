@@ -244,7 +244,7 @@ if __name__ == "__main__":
                                         line[:-1], is_case_sensitive, is_accent_sensitive, is_symbol_sensitive
                                     ):
                                         print(f"{path}:{i+1} {line[:-1]}") # Todo(Patrolin): print {full_path}\n{line}
-                        except (UnicodeDecodeError, PermissionError):
+                        except (UnicodeDecodeError, PermissionError, OSError): # wtf
                             pass
     except KeyboardInterrupt:
         print("^C", end="")
