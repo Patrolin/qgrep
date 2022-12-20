@@ -230,7 +230,9 @@ if __name__ == "__main__":
             except Exception as error:
                 print(repr(error))
                 continue
+            any_paths = False
             for dir_path_match in glob(dir_path):
+                any_paths = True
                 for (root, dirs, files) in walk(dir_path_match, topdown=True):
                     for file in files:
                         path = f"{root}/{file}".replace("\\", "/")
@@ -246,6 +248,8 @@ if __name__ == "__main__":
                                         print(f"{path}:{i+1} {line[:-1]}") # Todo(Patrolin): print {full_path}\n{line}
                         except (UnicodeDecodeError, PermissionError, OSError): # wtf
                             pass
+            if not any_paths:
+                print("no matching paths")
     except KeyboardInterrupt:
         print("^C", end="")
         exit(0)
