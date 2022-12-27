@@ -1,2 +1,2 @@
 @echo off
-python C:\Users\patri\Documents\Programming\qgrep\qgrep.py %*
+start python C:\Users\patri\Documents\Programming\qgrep\qgrep.py %*
