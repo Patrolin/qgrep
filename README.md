@@ -1,6 +1,9 @@
 # qGrep
 a windows version of grep <s>in zig-0.10.0-dev.1699+8b5d5f44e</s> in Python because Zig can't tell a file from a folder
 
+## install (windows)
+After installing Python 3, Add `%appdata%\..\Local\Programs\Python\Python310` to PATH and rename python.exe to python3.exe
+
 ## usage
 ```ps
 PS C:\Users\patri\Documents\qGrep> qgrep -h

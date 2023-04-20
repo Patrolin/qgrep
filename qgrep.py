@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from collections import namedtuple
 from sys import argv
 from argparse import ArgumentParser, BooleanOptionalAction
