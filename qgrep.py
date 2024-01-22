@@ -33,8 +33,9 @@ class RuleNodeType(Enum):
 
     ROOT = RuleNodeTypeType(2, OperatorType.UNARY)
     NOT = RuleNodeTypeType(3, OperatorType.UNARY)
+    FILE = RuleNodeTypeType(4, OperatorType.UNARY)
 
-    STRING = RuleNodeTypeType(4, OperatorType.LEAF)
+    STRING = RuleNodeTypeType(5, OperatorType.LEAF)
 
 class RuleNode:
     def __init__(self, nodeType: RuleNodeType):
@@ -72,36 +73,41 @@ class RuleNode:
         return acc
 
     def __repr__(self) -> str:
-        if self.nodeType == RuleNodeType.ROOT:
-            return f"{repr(self.left)}"
-        elif self.nodeType == RuleNodeType.NOT:
-            return f"(not {repr(self.left)})"
-        elif self.nodeType == RuleNodeType.AND:
+        if self.nodeType == RuleNodeType.AND:
             return f"({repr(self.left)} and {repr(self.right)})"
         elif self.nodeType == RuleNodeType.OR:
             return f"({repr(self.left)} or {repr(self.right)})"
+        elif self.nodeType == RuleNodeType.ROOT:
+            return f"{repr(self.left)}"
+        elif self.nodeType == RuleNodeType.NOT:
+            return f"(not {repr(self.left)})"
+        elif self.nodeType == RuleNodeType.FILE:
+            return f"(file {repr(self.left)})"
         elif self.nodeType == RuleNodeType.STRING:
             return f"\"{self.value}\""
         else:
             return ""
 
-    def matches(self, line: str, is_case_sensitive: bool, is_accent_sensitive: bool, is_symbol_sensitive: bool) -> bool:
-        if self.nodeType == RuleNodeType.ROOT:
-            return self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False
-        elif self.nodeType == RuleNodeType.NOT:
-            return not (self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
-                        if self.left != None else False)
-        elif self.nodeType == RuleNodeType.AND:
-            return (self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
-                and (self.right.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
+    def matches(self, filePath: str, line: str, is_case_sensitive: bool, is_accent_sensitive: bool, is_symbol_sensitive: bool) -> bool:
+        if self.nodeType == RuleNodeType.AND:
+            return (self.left.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
+                and (self.right.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
         elif self.nodeType == RuleNodeType.OR:
-            return (self.left.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
-                or (self.right.matches(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
+            return (self.left.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
+                or (self.right.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
+        elif self.nodeType == RuleNodeType.NOT:
+            return not (self.left.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
+                        if self.left != None else False)
+        elif self.nodeType == RuleNodeType.FILE:
+            return (self.left.matches(filePath, filePath, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
+                        if self.left != None else False)
         elif self.nodeType == RuleNodeType.STRING:
             if type(self.value) != str: return False
             normalized_line = normalize(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
             normalized_value = normalize(cast(str, self.value), is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
             return normalized_value in normalized_line
+        elif self.nodeType == RuleNodeType.ROOT:
+            return self.left.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False
         else:
             return False
 
@@ -174,17 +180,21 @@ def parseRules(ruleString: str, is_debug: bool) -> RuleNode:
             current.add(node)
             current = node.get_first_free_parent()
         else:
-            if operator == "not":
-                node = RuleNode(RuleNodeType.NOT)
-                current.add(node)
-                current = node
-            elif operator == "and":
+            if operator == "and":
                 node = RuleNode(RuleNodeType.AND)
                 current.insert_left(node)
                 current = node
             elif operator == "or":
                 node = RuleNode(RuleNodeType.OR)
                 current.insert_left(node)
+                current = node
+            elif operator == "not":
+                node = RuleNode(RuleNodeType.NOT)
+                current.add(node)
+                current = node
+            elif operator == "file":
+                node = RuleNode(RuleNodeType.FILE)
+                current.add(node)
                 current = node
             else:
                 raise InvalidOperator(f"{operator}")
@@ -234,8 +244,10 @@ if __name__ == "__main__":
             for dir_path_match in glob(dir_path):
                 any_paths = True
                 for (root, dirs, files) in walk(dir_path_match, topdown=True):
+                    root = root.replace("\\", "/")
+                    if root == "./.git" or root.startswith("./.git/"): continue
                     for file in files:
-                        path = f"{root}/{file}".replace("\\", "/")
+                        path = f"{root}/{file}"
                         try:
                             with open(path, "r", encoding="utf8") as f:
                                 if re.search(r"[\n\r]", f.read(1000)) == None:
@@ -243,7 +255,7 @@ if __name__ == "__main__":
                                 f.seek(0, 0)
                                 for i, line in enumerate(f.readlines()):
                                     if len(line) < 1000 and ruleNode.matches( \
-                                        line[:-1], is_case_sensitive, is_accent_sensitive, is_symbol_sensitive
+                                        path, line[:-1], is_case_sensitive, is_accent_sensitive, is_symbol_sensitive
                                     ):
                                         print(f"{path}:{i+1} {line[:-1]}") # Todo(Patrolin): print {full_path}\n{line}
                         except (UnicodeDecodeError, PermissionError, OSError): # wtf
