@@ -27,14 +27,20 @@ if __name__ == "__main__":
             except (UnicodeDecodeError, PermissionError, OSError): # wtf
                 pass
         if acc_file_lines:
-          if file_name: # qgrep.py
+          if file_name and extension not in {'md', 'rst'}: # qgrep.py
             loc_counter_groups[2][extension] += acc_file_lines
           elif extension.startswith('/'): # /LICENSE
-            loc_counter_groups[1][extension] += acc_file_lines
-          else: # .gitignore
             loc_counter_groups[0][extension] += acc_file_lines
+          else: # .gitignore
+            loc_counter_groups[1][extension] += acc_file_lines
   # print
-  for group in loc_counter_groups:
+  for group in loc_counter_groups[:2]:
+    loc_keys = sorted(group)
+    for k in loc_keys:
+      print(f".{k}: {group[k]}")
+  if loc_counter_groups[0] or loc_counter_groups[1]:
+    print("----------")
+  for group in loc_counter_groups[2:]:
     loc_keys = sorted(group)
     for k in loc_keys:
       print(f".{k}: {group[k]}")
