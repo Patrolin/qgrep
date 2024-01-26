@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from sys import argv
 from os import walk
 from collections import Counter

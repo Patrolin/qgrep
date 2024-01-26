@@ -1,208 +1,211 @@
 #!/usr/bin/env python3
-from collections import namedtuple
 from sys import argv
 from argparse import ArgumentParser, BooleanOptionalAction
 from glob import glob
 from os import walk
 from enum import Enum
 import re
-from typing import cast
+from typing import Any, cast
 import unicodedata
 
-def normalize(string: str, is_case_sensitive: bool, is_accent_sensitive: bool, is_symbol_sensitive: bool) -> str:
-    acc = unicodedata.normalize("NFD", string) if is_symbol_sensitive else unicodedata.normalize("NFKD", string)
-    acc = acc if is_accent_sensitive else "".join(v for v in acc if not unicodedata.combining(v)) \
-        # should probably keep most combining characters?
+# lexer
+class TokenType(Enum):
+    # leaf
+    STRING = 0
+    # unary
+    NOT = 1
+    FILE = 2
+    LBRACKET = 3,
+    RBRACKET = 4,
+    # binary
+    AND = 5
+    OR = 6
+class Slice:
+    def __init__(self, ptr: str, start: int|None = None, end: int|None = None):
+        self.ptr = ptr
+        self.start = start or 0
+        self.end = end or len(self.ptr)
+    def __repr__(self):
+        return self.ptr[self.start:self.end]
+    def __getitem__(self, key: int|slice) -> str:
+        if isinstance(key, slice):
+            start = self.start + key.start
+            end = self.start + (key.stop or 0)
+            return self.ptr[slice(start, end, key.step)]
+        else:
+            if key >= self.end: raise IndexError("slice index out of range")
+            return self.ptr[self.start + key]
+    def __len__(self):
+        return self.end - self.start
+class Token:
+    def __init__(self, slice_: Slice, type_: TokenType):
+        self.slice = slice_
+        self.type = type_
+    def __repr__(self):
+        return f"Token({self.type}, {self.slice.start}, {self.slice.end})"
+def lexStringToken(slice_: Slice):
+    i = 0
+    while i < len(slice_) and slice_[i] != '"':
+        i += 1 + (slice_[i] == '\\')
+    i = min(i, len(slice_)-1)
+    if slice_[i] != '"': raise ValueError(f"Unclosed string: {slice_}")
+    return Token(Slice(slice_.ptr, slice_.start, slice_.start+i), TokenType.STRING)
+def lexTokens(slice_: Slice) -> list[Token]:
+    acc_tokens: list[Token] = []
+    i = 0
+    while True:
+        while i < len(slice_) and slice_[i] == " ":
+            i += 1
+        if i >= len(slice_): break
+        if slice_[i] == '"':
+            string_token = lexStringToken(Slice(slice_.ptr, i+1, len(slice_.ptr)))
+            acc_tokens.append(string_token)
+            i = string_token.slice.end + 1
+        elif slice_[i:i+3] == "and":
+            acc_tokens.append(Token(Slice(slice_.ptr, slice_.start+i, slice_.start+i+3), TokenType.AND))
+            i += 3
+        elif slice_[i:i+2] == "or":
+            acc_tokens.append(Token(Slice(slice_.ptr, slice_.start+i, slice_.start+i+2), TokenType.OR))
+            i += 2
+        elif slice_[i:i+3] == "not":
+            acc_tokens.append(Token(Slice(slice_.ptr, slice_.start+i, slice_.start+i+3), TokenType.NOT))
+            i += 3
+        elif slice_[i:i+4] == "file":
+            acc_tokens.append(Token(Slice(slice_.ptr, slice_.start+i, slice_.start+i+4), TokenType.FILE))
+            i += 4
+        elif slice_[i] == "(":
+            acc_tokens.append(Token(Slice(slice_.ptr, slice_.start+i, slice_.start+i+1), TokenType.LBRACKET))
+            i += 1
+        elif slice_[i] == ")":
+            acc_tokens.append(Token(Slice(slice_.ptr, slice_.start+i, slice_.start+i+1), TokenType.RBRACKET))
+            i += 1
+        else:
+            raise ValueError(f"invalid token: {slice_.ptr[i:]}")
+    return acc_tokens
 
-    acc = acc if is_case_sensitive else acc.lower()
-    return acc
-
-# TODO: rewrite as jblow parser? https://www.youtube.com/watch?v=fIPO4G42wYE
-class OperatorType(Enum):
-    BINARY = 0
-    UNARY = 1
-    LEAF = 2
-
-RuleNodeTypeType = namedtuple("RuleNodeTypeType", ["id", "operatorType"])
-
-class NodeIsFull(Exception):
-    pass
-
-class RuleNodeType(Enum):
-    AND = RuleNodeTypeType(0, OperatorType.BINARY)
-    OR = RuleNodeTypeType(1, OperatorType.BINARY)
-
-    ROOT = RuleNodeTypeType(2, OperatorType.UNARY)
-    NOT = RuleNodeTypeType(3, OperatorType.UNARY)
-    FILE = RuleNodeTypeType(4, OperatorType.UNARY)
-
-    STRING = RuleNodeTypeType(5, OperatorType.LEAF)
-
+# parser
+class TokenView:
+    def __init__(self, tokens: list[Token]):
+        self.tokens = tokens
+        self.i = 0
+    def __repr__(self):
+        return f"TokenView({self.i}, {self.tokens})"
+    def nextToken(self) -> Token|None:
+        return self.tokens[self.i] if self.i < len(self.tokens) else None
+    def lookAhead(self, j: int) -> Token|None:
+        return self.tokens[self.i + j] if self.i + j < len(self.tokens) else None
+    def eatToken(self):
+        self.i += 1
 class RuleNode:
-    def __init__(self, nodeType: RuleNodeType):
-        self.parent: RuleNode | None = None
+    def __init__(self, type_: TokenType, value: Any = None):
+        self.type = type_
+        self.value = value
         self.left: RuleNode | None = None
         self.right: RuleNode | None = None
-        self.nodeType = nodeType
-        self.value: str | None = None
-
-    def add(self, new):
-        new.parent = self
-        if self.left == None and (self.nodeType.value.operatorType == OperatorType.BINARY
-                                  or self.nodeType.value.operatorType == OperatorType.UNARY):
-            self.left = new
-        elif self.right == None and self.nodeType.value.operatorType == OperatorType.BINARY:
-            self.right = new
-        else:
-            raise NodeIsFull(repr(self))
-
-    def insert_left(self, new):
-        left_child = cast(RuleNode, self.left)
-        new.parent = self
-        new.left = left_child
-        self.left = new
-        left_child.parent = new
-
-    def get_first_free_parent(self):
-        acc = cast(RuleNode, self.parent)
-        while acc.parent != None:
-            if acc.nodeType.value.operatorType == OperatorType.BINARY and acc.right == None \
-            or acc.nodeType.value.operatorType == OperatorType.UNARY and acc.left == None \
-            or acc.nodeType == RuleNodeType.ROOT:
-                break
-            acc = acc.parent
-        return acc
 
     def __repr__(self) -> str:
-        if self.nodeType == RuleNodeType.AND:
+        if self.type == TokenType.AND:
             return f"({repr(self.left)} and {repr(self.right)})"
-        elif self.nodeType == RuleNodeType.OR:
+        elif self.type == TokenType.OR:
             return f"({repr(self.left)} or {repr(self.right)})"
-        elif self.nodeType == RuleNodeType.ROOT:
-            return f"{repr(self.left)}"
-        elif self.nodeType == RuleNodeType.NOT:
+        elif self.type == TokenType.NOT:
             return f"(not {repr(self.left)})"
-        elif self.nodeType == RuleNodeType.FILE:
+        elif self.type == TokenType.FILE:
             return f"(file {repr(self.left)})"
-        elif self.nodeType == RuleNodeType.STRING:
+        elif self.type == TokenType.STRING:
             return f"\"{self.value}\""
         else:
             return ""
 
     def matches(self, filePath: str, line: str, is_case_sensitive: bool, is_accent_sensitive: bool, is_symbol_sensitive: bool) -> bool:
-        if self.nodeType == RuleNodeType.AND:
+        if self.type == TokenType.AND:
             return (self.left.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
                 and (self.right.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
-        elif self.nodeType == RuleNodeType.OR:
+        elif self.type == TokenType.OR:
             return (self.left.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
                 or (self.right.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
-        elif self.nodeType == RuleNodeType.NOT:
+        elif self.type == TokenType.NOT:
             return not (self.left.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
                         if self.left != None else False)
-        elif self.nodeType == RuleNodeType.FILE:
+        elif self.type == TokenType.FILE:
             return (self.left.matches(filePath, filePath, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
                         if self.left != None else False)
-        elif self.nodeType == RuleNodeType.STRING:
+        elif self.type == TokenType.STRING:
             if type(self.value) != str: return False
             normalized_line = normalize(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
             normalized_value = normalize(cast(str, self.value), is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
             return normalized_value in normalized_line
-        elif self.nodeType == RuleNodeType.ROOT:
-            return self.left.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False
         else:
             return False
-
-class InvalidOperator(Exception):
-    pass
-
-def parseString(s: str, i: int) -> tuple[str, int]:
-    acc = ""
-    if s[i] != "\"":
-        return acc, -i
-    while True:
-        i += 1
-        if i >= len(s): return acc, -i
-        if s[i] == "\"": return acc, i + 1
-        elif s[i] == "\\":
-            i += 1
-            if i >= len(s): return acc, -i
-            acc += s[i]
-        else:
-            acc += s[i]
-
-def tokenize(ruleString: str):
-    Token = tuple[str, str, str, str]
-    acc: list[Token] = []
-    i = 0
-    while i < len(ruleString):
-        if ruleString[i] == "(":
-            acc.append((ruleString[i], "", "", ""))
-        elif ruleString[i] == ")":
-            acc.append(("", ruleString[i], "", ""))
-        elif ruleString[i] == " ":
-            while ruleString[i] == " " and i < len(ruleString):
-                i += 1
-            continue
-        else:
-            if i >= len(ruleString): break
-            s, j = parseString(ruleString, i)
-            if j > 0:
-                acc.append(("", "", s, ""))
+def isUnary(token: Token) -> bool:
+    return (token.type == TokenType.NOT) or (token.type == TokenType.FILE)
+def parseLeafOrUnary(tokens: TokenView) -> RuleNode|None:
+    next_token = tokens.nextToken()
+    if next_token == None:
+        return None
+    elif next_token.type == TokenType.STRING:
+        acc_string_value = ""
+        i = 0
+        while i < len(next_token.slice):
+            if next_token.slice[i] == "\\":
+                acc_string_value += next_token.slice[i+1]
+                i += 2
             else:
-                try:
-                    j = ruleString[i:].index(" ") + i
-                except ValueError:
-                    j = len(ruleString)
-                acc.append(("", "", "", ruleString[i:j]))
-            i = j
-            continue
-        i += 1
+                acc_string_value += next_token.slice[i]
+                i += 1
+        tokens.eatToken()
+        return RuleNode(TokenType.STRING, acc_string_value)
+    elif isUnary(next_token):
+        node = RuleNode(next_token.type)
+        tokens.eatToken()
+        node.left = parseLeafOrUnary(tokens)
+        return node
+    elif next_token.type == TokenType.LBRACKET:
+        left_bracket_i = tokens.i
+        tokens.eatToken()
+        node = parseBinary(tokens, -1)
+        next_token = tokens.nextToken()
+        if (next_token == None) or (next_token.type != TokenType.RBRACKET): raise ValueError(f"mismatched brackets: {tokens.tokens[left_bracket_i:]}")
+        tokens.eatToken()
+        return node
+    raise ValueError(f"invalid leaf token: {next_token}")
+def isBinary(token: Token) -> bool:
+    return (token.type == TokenType.AND) or (token.type == TokenType.OR)
+def getPrecedence(token: Token) -> int:
+    return 0 # make everything be parsed left-to-right
+def parseBinaryRightwards(tokens: TokenView, left: RuleNode, minPrecedence: int) -> RuleNode:
+    next_token = tokens.nextToken()
+    if next_token == None or not isBinary(next_token): return left
+    next_precedence = getPrecedence(next_token)
+    if next_precedence <= minPrecedence: return left
+    tokens.eatToken()
+    right = parseBinary(tokens, next_precedence)
+    node = RuleNode(next_token.type)
+    node.left = left
+    node.right = right
+    return node
+def parseBinary(tokens: TokenView, minPrecedence: int) -> RuleNode|None:
+    left = parseLeafOrUnary(tokens)
+    while True:
+        node = parseBinaryRightwards(tokens, left, minPrecedence)
+        if node == left: break
+        left = node
+    return left
+
+def normalize(string: str, is_case_sensitive: bool, is_accent_sensitive: bool, is_symbol_sensitive: bool) -> str:
+    acc = unicodedata.normalize("NFD", string) if is_symbol_sensitive else unicodedata.normalize("NFKD", string)
+    acc = acc if is_accent_sensitive else "".join(v for v in acc if not unicodedata.combining(v))
+    acc = acc if is_case_sensitive else acc.lower()
     return acc
 
 def parseRules(ruleString: str, is_debug: bool) -> RuleNode:
-    tokens = tokenize(ruleString)
-    #print(list(re.finditer(r"(?:(\()|(\))|\"((?:\\?.)*?)\"|(\S+))", ruleString)))
-    #print("tokens", tokens)
-    root = RuleNode(RuleNodeType.ROOT)
-    current = root
-    for token in tokens:
-        (left_bracket, right_bracket, string, operator) = token
-        if left_bracket != "":
-            node = RuleNode(RuleNodeType.ROOT)
-            current.add(node)
-            current = node
-        elif right_bracket != "":
-            while current.nodeType != RuleNodeType.ROOT:
-                current = cast(RuleNode, current.parent)
-            current = current.get_first_free_parent()
-        elif string != "":
-            node = RuleNode(RuleNodeType.STRING)
-            node.value = string
-            current.add(node)
-            current = node.get_first_free_parent()
-        else:
-            node = None
-            if operator == "and":
-                node = RuleNode(RuleNodeType.AND)
-            elif operator == "or":
-                node = RuleNode(RuleNodeType.OR)
-            elif operator == "not":
-                node = RuleNode(RuleNodeType.NOT)
-            elif operator == "file":
-                node = RuleNode(RuleNodeType.FILE)
-            else:
-                raise InvalidOperator(f"{operator}")
-            if node.nodeType.value.operatorType == OperatorType.BINARY:
-                current.insert_left(node)
-                current = node
-            elif node.nodeType.value.operatorType == OperatorType.UNARY:
-                current.add(node)
-                current = node
-            else:
-                raise InvalidOperator(f"{operator}")
-        #if is_debug: print(f"debug: {left_bracket or right_bracket or string or operator} {current}")
-    if is_debug: print(f"debug: {root}")
-    return root
+    tokens = lexTokens(Slice(ruleString, 0, len(ruleString)))
+    token_view = TokenView(tokens)
+    rules = parseBinary(token_view, -1)
+    if token_view.i < len(tokens): raise ValueError(f"mismatched token {tokens[token_view.i:]}")
+    if rules == None: raise ValueError("empty ruleString")
+    if is_debug: print(f"debug: {rules}")
+    return rules
 
 class TextColor:
     # Powershell has VT codes disabled by default...

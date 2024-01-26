@@ -23,41 +23,41 @@ Case insensitive by default
 ```py
 PS C:\Users\Patrolin\Documents\qGrep> qgrep
 >> qgrep: . "ářgůmënt" and file "qgrep.py"
-./qgrep.py:4 from argparse import ArgumentParser, BooleanOptionalAction
-./qgrep.py:219         argument_parser = ArgumentParser(description='Search files for strings.')
-./qgrep.py:220         argument_parser.add_argument('-d', action=BooleanOptionalAction, help='print verbose information')
-./qgrep.py:221         argument_parser.add_argument('-c', action=BooleanOptionalAction, help='use case sensitive comparisons ("A" != "a")')
-./qgrep.py:222         argument_parser.add_argument('-a', action=BooleanOptionalAction, help='use accent sensitive comparisons ("á" != "a")')
-./qgrep.py:223         argument_parser.add_argument('-s', action=BooleanOptionalAction, help='use symbol sensitive comparisons ("ﬁ" != "fi")')
-./qgrep.py:225         arguments = argument_parser.parse_args(argv[1:])
-./qgrep.py:226         is_debug = arguments.d
-./qgrep.py:227         is_case_sensitive = arguments.c
-./qgrep.py:228         is_accent_sensitive = arguments.a
-./qgrep.py:229         is_symbol_sensitive = arguments.s
-./qgrep.py:231         argumentsString = " " + "".join(argv[1:]) if len(argv) > 1 else ""
-./qgrep.py:233             match = re.search(r"(\S+)\s(.*)", input(f">> qgrep{argumentsString}: ").strip())
+./qgrep.py:3 from argparse import ArgumentParser, BooleanOptionalAction
+./qgrep.py:224         argument_parser = ArgumentParser(description='Search files for strings.')
+./qgrep.py:225         argument_parser.add_argument('-d', action=BooleanOptionalAction, help='print verbose information')
+./qgrep.py:226         argument_parser.add_argument('-c', action=BooleanOptionalAction, help='use case sensitive comparisons ("A" != "a")')
+./qgrep.py:227         argument_parser.add_argument('-a', action=BooleanOptionalAction, help='use accent sensitive comparisons ("á" != "a")')
+./qgrep.py:228         argument_parser.add_argument('-s', action=BooleanOptionalAction, help='use symbol sensitive comparisons ("ﬁ" != "fi")')
+./qgrep.py:230         arguments = argument_parser.parse_args(argv[1:])
+./qgrep.py:231         is_debug = arguments.d
+./qgrep.py:232         is_case_sensitive = arguments.c
+./qgrep.py:233         is_accent_sensitive = arguments.a
+./qgrep.py:234         is_symbol_sensitive = arguments.s
+./qgrep.py:236         argumentsString = " " + "".join(argv[1:]) if len(argv) > 1 else ""
+./qgrep.py:238             match = re.search(r"(\S+)\s(.*)", input(f">> qgrep{argumentsString}: ").strip())
 ```
 
 Case sensitive flag
 ```py
 PS C:\Users\Patrolin\Documents\qGrep> qgrep -c
 >> qgrep -c: . "Argument" and file "grep.py"
-./qgrep.py:4 from argparse import ArgumentParser, BooleanOptionalAction
-./qgrep.py:219         argument_parser = ArgumentParser(description='Search files for strings.')
+./qgrep.py:3 from argparse import ArgumentParser, BooleanOptionalAction
+./qgrep.py:224         argument_parser = ArgumentParser(description='Search files for strings.')
 ```
 
 Accent sensitive flag
 ```py
 PS C:\Users\Patrolin\Documents\qGrep> qgrep -a
 >> qgrep -a: . "Á" and file "grep.py"
-./qgrep.py:222         argument_parser.add_argument('-a', action=BooleanOptionalAction, help='use accent sensitive comparisons ("á" != "a")')
+./qgrep.py:227         argument_parser.add_argument('-a', action=BooleanOptionalAction, help='use accent sensitive comparisons ("á" != "a")')
 ```
 
 Symbol sensitive flag
 ```py
 PS C:\Users\Patrolin\Documents\qGrep> qgrep -s
 >> qgrep -s: . "ﬁ" and file "grep.py"
-./qgrep.py:223         argument_parser.add_argument('-s', action=BooleanOptionalAction, help='use symbol sensitive comparisons ("ﬁ" != "fi")')
+./qgrep.py:228         argument_parser.add_argument('-s', action=BooleanOptionalAction, help='use symbol sensitive comparisons ("ﬁ" != "fi")')
 ```
 
 
@@ -66,14 +66,13 @@ All binary operators are left-associative with no priority
 PS C:\Users\Patrolin\Documents\qGrep> qgrep -d
 >> qgrep -d: . "with " or "for " and file "qgrep.py"
 debug: (("with " or "for ") and (file "qgrep.py"))
-./qgrep.py:14     acc = acc if is_accent_sensitive else "".join(v for v in acc if not unicodedata.combining(v)) \
-./qgrep.py:167     for token in tokens:
-./qgrep.py:219         argument_parser = ArgumentParser(description='Search files for strings.')
-./qgrep.py:244             for dir_path_match in glob(dir_path):
-./qgrep.py:246                 for (root, dirs, files) in walk(dir_path_match, topdown=True):
-./qgrep.py:249                     for file in files:
-./qgrep.py:252                             with open(path, "r", encoding="utf8") as f:
-./qgrep.py:256                                 for i, line in enumerate(f.readlines()):
+./qgrep.py:197     acc = acc if is_accent_sensitive else "".join(v for v in acc if not unicodedata.combining(v))
+./qgrep.py:224         argument_parser = ArgumentParser(description='Search files for strings.')
+./qgrep.py:249             for dir_path_match in glob(dir_path):
+./qgrep.py:251                 for (root, dirs, files) in walk(dir_path_match, topdown=True):
+./qgrep.py:254                     for file in files:
+./qgrep.py:257                             with open(path, "r", encoding="utf8") as f:
+./qgrep.py:261                                 for i, line in enumerate(f.readlines()):
 ```
 
 Bracket support
