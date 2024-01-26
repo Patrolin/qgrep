@@ -17,6 +17,7 @@ def normalize(string: str, is_case_sensitive: bool, is_accent_sensitive: bool, i
     acc = acc if is_case_sensitive else acc.lower()
     return acc
 
+# TODO: rewrite as jblow parser? https://www.youtube.com/watch?v=fIPO4G42wYE
 class OperatorType(Enum):
     BINARY = 0
     UNARY = 1
@@ -180,20 +181,21 @@ def parseRules(ruleString: str, is_debug: bool) -> RuleNode:
             current.add(node)
             current = node.get_first_free_parent()
         else:
+            node = None
             if operator == "and":
                 node = RuleNode(RuleNodeType.AND)
-                current.insert_left(node)
-                current = node
             elif operator == "or":
                 node = RuleNode(RuleNodeType.OR)
-                current.insert_left(node)
-                current = node
             elif operator == "not":
                 node = RuleNode(RuleNodeType.NOT)
-                current.add(node)
-                current = node
             elif operator == "file":
                 node = RuleNode(RuleNodeType.FILE)
+            else:
+                raise InvalidOperator(f"{operator}")
+            if node.nodeType.value.operatorType == OperatorType.BINARY:
+                current.insert_left(node)
+                current = node
+            elif node.nodeType.value.operatorType == OperatorType.UNARY:
                 current.add(node)
                 current = node
             else:
