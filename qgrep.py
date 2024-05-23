@@ -3,6 +3,7 @@ from sys import argv
 from argparse import ArgumentParser, BooleanOptionalAction
 from glob import glob
 from os import walk
+from os.path import getsize as getFileSize
 from enum import Enum
 import re
 from typing import Any, cast
@@ -219,6 +220,9 @@ class TextColor:
     WHITE = "\033[1;38m"
     RESET = "\033[1;39m"
 
+KIBI_BYTE = 1024
+MEBI_BYTE = 1024 * KIBI_BYTE
+MAX_FILE_SIZE = 20 * MEBI_BYTE
 if __name__ == "__main__":
     try:
         argument_parser = ArgumentParser(description='Search files for strings.')
@@ -253,6 +257,10 @@ if __name__ == "__main__":
                     if root == "./.git" or root.startswith("./.git/"): continue
                     for file in files:
                         path = f"{root}/{file}"
+                        file_size = getFileSize(path)
+                        if file_size > MAX_FILE_SIZE:
+                            print(f"skipping {path}")
+                            continue
                         try:
                             with open(path, "r", encoding="utf8") as f:
                                 if re.search(r"[\n\r]", f.read(1000)) == None:
