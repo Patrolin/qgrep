@@ -16,11 +16,12 @@ class TokenType(Enum):
     # unary
     NOT = 1
     FILE = 2
-    LBRACKET = 3,
-    RBRACKET = 4,
+    LINE = 3,
+    LBRACKET = 4,
+    RBRACKET = 5,
     # binary
-    AND = 5
-    OR = 6
+    AND = 6
+    OR = 7
 class Slice:
     def __init__(self, ptr: str, start: int|None = None, end: int|None = None):
         self.ptr = ptr
@@ -74,6 +75,9 @@ def lexTokens(slice_: Slice) -> list[Token]:
         elif slice_[i:i+4] == "file":
             acc_tokens.append(Token(Slice(slice_.ptr, slice_.start+i, slice_.start+i+4), TokenType.FILE))
             i += 4
+        elif slice_[i:i+4] == "line":
+            acc_tokens.append(Token(Slice(slice_.ptr, slice_.start+i, slice_.start+i+4), TokenType.LINE))
+            i += 4
         elif slice_[i] == "(":
             acc_tokens.append(Token(Slice(slice_.ptr, slice_.start+i, slice_.start+i+1), TokenType.LBRACKET))
             i += 1
@@ -113,24 +117,34 @@ class RuleNode:
             return f"(not {repr(self.left)})"
         elif self.type == TokenType.FILE:
             return f"(file {repr(self.left)})"
+        elif self.type == TokenType.LINE:
+            return f"(line {repr(self.left)})"
         elif self.type == TokenType.STRING:
             return f"\"{self.value}\""
         else:
             return ""
 
-    def matches(self, filePath: str, line: str, is_case_sensitive: bool, is_accent_sensitive: bool, is_symbol_sensitive: bool) -> bool:
+    def matches(self, filePath: str, lineNumber: int, line: str, is_case_sensitive: bool, is_accent_sensitive: bool, is_symbol_sensitive: bool) -> bool:
         if self.type == TokenType.AND:
-            return (self.left.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
-                and (self.right.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
+            return (self.left.matches(filePath, lineNumber, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
+                and (self.right.matches(filePath, lineNumber, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
         elif self.type == TokenType.OR:
-            return (self.left.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
-                or (self.right.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
+            return (self.left.matches(filePath, lineNumber, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.left != None else False) \
+                or (self.right.matches(filePath, lineNumber, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive) if self.right != None else False)
         elif self.type == TokenType.NOT:
-            return not (self.left.matches(filePath, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
+            return not (self.left.matches(filePath, lineNumber, line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
                         if self.left != None else False)
         elif self.type == TokenType.FILE:
-            return (self.left.matches(filePath, filePath, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
+            return (self.left.matches(filePath, lineNumber, filePath, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
                         if self.left != None else False)
+        elif self.type == TokenType.LINE:
+            wanted_line_string = str(self.left).removeprefix('"').removesuffix('"')
+            try:
+                wanted_line = int(wanted_line_string)
+                return lineNumber == wanted_line
+            except ValueError:
+                pass
+            raise ValueError(f"invalid line number: {self.left}")
         elif self.type == TokenType.STRING:
             if type(self.value) != str: return False
             normalized_line = normalize(line, is_case_sensitive, is_accent_sensitive, is_symbol_sensitive)
@@ -139,7 +153,7 @@ class RuleNode:
         else:
             return False
 def isUnary(token: Token) -> bool:
-    return (token.type == TokenType.NOT) or (token.type == TokenType.FILE)
+    return (token.type == TokenType.NOT) or (token.type == TokenType.FILE) or (token.type == TokenType.LINE)
 def parseLeafOrUnary(tokens: TokenView) -> RuleNode|None:
     next_token = tokens.nextToken()
     if next_token == None:
@@ -268,7 +282,7 @@ if __name__ == "__main__":
                                 f.seek(0, 0)
                                 for i, line in enumerate(f.readlines()):
                                     if len(line) < 1000 and ruleNode.matches( \
-                                        path, line[:-1], is_case_sensitive, is_accent_sensitive, is_symbol_sensitive
+                                        path, i+1, line[:-1], is_case_sensitive, is_accent_sensitive, is_symbol_sensitive
                                     ):
                                         print(f"{path}:{i+1} {line[:-1]}") # Todo(Patrolin): print {full_path}\n{line}
                         except (UnicodeDecodeError, PermissionError, OSError): # wtf
@@ -278,3 +292,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("^C", end="")
         exit(0)
+
+# TODO: add line operator
