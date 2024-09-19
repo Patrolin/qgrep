@@ -271,11 +271,11 @@ if __name__ == "__main__":
                     if root == "./.git" or root.startswith("./.git/"): continue
                     for file in files:
                         path = f"{root}/{file}"
-                        file_size = getFileSize(path)
-                        if file_size > MAX_FILE_SIZE:
-                            print(f"skipping {path}")
-                            continue
                         try:
+                            file_size = getFileSize(path) # NOTE: this can also throw OsError
+                            if file_size > MAX_FILE_SIZE:
+                                print(f"skipping {path}")
+                                continue
                             with open(path, "r", encoding="utf8") as f:
                                 if re.search(r"[\n\r]", f.read(1000)) == None:
                                     continue
