@@ -269,6 +269,11 @@ if __name__ == "__main__":
                 for (root, dirs, files) in walk(dir_path_match, topdown=True):
                     root = root.replace("\\", "/")
                     if root == "./.git" or root.startswith("./.git/"): continue
+                    for dir_ in dirs:
+                        if dir_ == "node_modules":
+                            print(f"skipping {root}/{dir_}/*")
+                            dirs.remove(dir_)
+                            continue
                     for file in files:
                         path = f"{root}/{file}"
                         try:
