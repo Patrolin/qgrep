@@ -264,6 +264,7 @@ if __name__ == "__main__":
                 print(repr(error))
                 continue
             any_paths = False
+            did_skip_node_modules = False
             for dir_path_match in glob(dir_path):
                 any_paths = True
                 for (root, dirs, files) in walk(dir_path_match, topdown=True):
@@ -271,7 +272,9 @@ if __name__ == "__main__":
                     if root == "./.git" or root.startswith("./.git/"): continue
                     for dir_ in dirs:
                         if dir_ == "node_modules":
-                            print(f"skipping {root}/{dir_}/*")
+                            if not did_skip_node_modules:
+                                print(f"skipping all */node_modules/*")
+                                did_skip_node_modules = True
                             dirs.remove(dir_)
                             continue
                     for file in files:
