@@ -17,6 +17,7 @@ options:
   -c          use case sensitive comparisons ("A" != "a")
   -a          use accent sensitive comparisons ("á" != "a")
   -s          use symbol sensitive comparisons ("ﬁ" != "fi")
+  -u          only print unique lines
 ```
 
 Case insensitive by default
