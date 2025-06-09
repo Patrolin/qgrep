@@ -301,7 +301,7 @@ if __name__ == "__main__":
                       print(f"{path}:{i+1} {line[:-1]}")
             except (UnicodeDecodeError, PermissionError, OSError): # wtf
               pass
-        if True:
+        if only_print_unique_lines:
           print("seen_lines_set:")
           for line in seen_lines_set:
             print(f"  {line}", end="")
