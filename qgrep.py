@@ -245,6 +245,7 @@ if __name__ == "__main__":
     argument_parser.add_argument('-a', action=BooleanOptionalAction, help='use accent sensitive comparisons ("á" != "a")')
     argument_parser.add_argument('-s', action=BooleanOptionalAction, help='use symbol sensitive comparisons ("ﬁ" != "fi")')
     argument_parser.add_argument('-u', action=BooleanOptionalAction, help="print lines only if we haven't seen them before")
+    argument_parser.add_argument('-n', action=BooleanOptionalAction, help="don't skip node_modules")
 
     arguments = argument_parser.parse_args(argv[1:])
     is_debug = arguments.d
@@ -252,6 +253,7 @@ if __name__ == "__main__":
     is_accent_sensitive = arguments.a
     is_symbol_sensitive = arguments.s
     only_print_unique_lines = arguments.u
+    should_skip_node_modules = not arguments.n
 
     argumentsString = " " + "".join(argv[1:]) if len(argv) > 1 else ""
     while True:
@@ -274,7 +276,7 @@ if __name__ == "__main__":
           root = root.replace("\\", "/")
           if root == "./.git" or root.startswith("./.git/"): continue
           for dir_ in dirs:
-            if dir_ == "node_modules":
+            if should_skip_node_modules and dir_ == "node_modules":
               if not did_skip_node_modules:
                 print(f"skipping all */node_modules/*")
                 did_skip_node_modules = True
