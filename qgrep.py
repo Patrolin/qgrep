@@ -255,7 +255,7 @@ if __name__ == "__main__":
     is_symbol_sensitive = arguments.s
     only_print_unique_lines = arguments.u
     should_skip_node_modules = not arguments.n
-    webstorm_ide_prefix = "at " if arguments.w else ""
+    print_format = "{2}\nat {0}:{1}" if arguments.w else "{0}:{1} {2}"
 
     argumentsString = " " + "".join(argv[1:]) if len(argv) > 1 else ""
     while True:
@@ -302,7 +302,7 @@ if __name__ == "__main__":
                     if only_print_unique_lines:
                       seen_lines_set.add(line)
                     else:
-                      print(f"{webstorm_ide_prefix}{path}:{i+1} {line[:-1]}")
+                      print(print_format.format(path, i+1, line[:-1]))
             except (UnicodeDecodeError, PermissionError, OSError): # wtf
               pass
         if only_print_unique_lines:
