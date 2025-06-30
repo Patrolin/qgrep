@@ -246,6 +246,7 @@ if __name__ == "__main__":
     argument_parser.add_argument('-s', action=BooleanOptionalAction, help='use symbol sensitive comparisons ("ﬁ" != "fi")')
     argument_parser.add_argument('-u', action=BooleanOptionalAction, help="print lines only if we haven't seen them before")
     argument_parser.add_argument('-n', action=BooleanOptionalAction, help="don't skip node_modules")
+    argument_parser.add_argument('-w', action=BooleanOptionalAction, help="put at before every path (Webstorm IDE is stupid)")
 
     arguments = argument_parser.parse_args(argv[1:])
     is_debug = arguments.d
@@ -254,6 +255,7 @@ if __name__ == "__main__":
     is_symbol_sensitive = arguments.s
     only_print_unique_lines = arguments.u
     should_skip_node_modules = not arguments.n
+    webstorm_ide_prefix = "at " if arguments.w else ""
 
     argumentsString = " " + "".join(argv[1:]) if len(argv) > 1 else ""
     while True:
@@ -300,7 +302,7 @@ if __name__ == "__main__":
                     if only_print_unique_lines:
                       seen_lines_set.add(line)
                     else:
-                      print(f"{path}:{i+1} {line[:-1]}")
+                      print(f"{webstorm_ide_prefix}{path}:{i+1} {line[:-1]}")
             except (UnicodeDecodeError, PermissionError, OSError): # wtf
               pass
         if only_print_unique_lines:
