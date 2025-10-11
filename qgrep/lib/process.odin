@@ -1,8 +1,10 @@
 package lib
 import "core:fmt"
+import "core:os"
 
 @(require_results)
-get_args :: proc(allocator := context.temp_allocator) -> (args: [dynamic]string) {
+get_args :: proc(allocator := context.temp_allocator) -> (args: ^[dynamic]string) {
+	args = new([dynamic]string, allocator = allocator)
 	args.allocator = allocator
 	when ODIN_OS == .Windows {
 		wargs := GetCommandLineW()
@@ -23,7 +25,7 @@ get_args :: proc(allocator := context.temp_allocator) -> (args: [dynamic]string)
 			for wargs[j] != 0 && (wargs[j] != end_char) {
 				j += 1
 			}
-			append(&args, copy_cwstr_to_string(&wargs[i], j - i, allocator = allocator))
+			append(args, copy_cwstr_to_string(&wargs[i], j - i, allocator = allocator))
 
 			i = j
 			if end_char != 0 && wargs[j] == end_char {
@@ -39,8 +41,31 @@ get_args :: proc(allocator := context.temp_allocator) -> (args: [dynamic]string)
 		i := 0
 		for c, j in args_file {
 			if c == 0 {
-				append(&args, args_file[i:j])
+				append(args, args_file[i:j])
 				i = j + 1
+			}
+		}
+	} else {
+		assert(false)
+	}
+	return
+}
+read_console_input :: proc(allocator := context.temp_allocator) -> (input: ^string) {
+	input = new(string, allocator = allocator)
+	sb := string_builder(allocator = allocator)
+	when ODIN_OS == .Windows {
+		for {
+			wcbuffer: [2048]u16 = ---
+			wchars_read: DWORD = ---
+			ok := bool(ReadConsoleW(Handle(os.stdin), &wcbuffer[0], len(wcbuffer), &wchars_read, nil))
+			fmt.assertf(ok, "Failed to read console input, err: %v", GetLastError())
+			wstr := wcbuffer[:wchars_read]
+			str := copy_cwstr_to_string(&wstr[0], len(wstr))
+			fmt.sbprint(&sb, str)
+			if ends_with(str, "\n") {
+				offset := ends_with(str, "\r\n") ? 2 : 1
+				acc := to_string(sb)
+				input^ = acc[:len(acc) - offset]
 			}
 		}
 	} else {

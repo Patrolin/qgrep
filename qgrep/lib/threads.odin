@@ -38,7 +38,7 @@ _get_odin_context :: proc(arena: ^ArenaAllocator, thread_context: ^ThreadContext
 	ctx.temp_allocator = arena_allocator(arena, page_reserve(VIRTUAL_MEMORY_TO_RESERVE))
 	return
 }
-run_multithreaded :: proc(main: proc(), thread_count: int = 0) {
+run_multicore :: proc(main: proc(), thread_count: int = 0) {
 	thread_count := thread_count
 	if thread_count == 0 {thread_count = get_thread_count()}
 
@@ -114,7 +114,8 @@ _create_os_barrier :: proc(barrier: ^OsBarrier, thread_count: int) {
 		assert(false)
 	}
 }
-barrier :: proc() {
+@(private = "file")
+barrier0 :: proc() {
 	thread_context := (^ThreadContext)(context.user_ptr)
 	when ODIN_OS == .Windows {
 		/* NOTE: spinlock 2000 times or sleep and wait for all threads to enter the barrier */
@@ -123,17 +124,22 @@ barrier :: proc() {
 		assert()
 	}
 }
-barrier_sync :: proc(value: ^$T) {
+@(private = "file")
+barrier1 :: proc(value: ^$T) {
 	thread_context := (^ThreadContext)(context.user_ptr)
 	shared_thread_context := &thread_context.all[0]
 	if thread_context.was_first {
 		shared_thread_context.value = uintptr(value^)
-		barrier()
+		barrier0()
 	} else {
-		barrier()
+		barrier0()
 		value^ = T(shared_thread_context.value)
 	}
 	barrier()
+}
+barrier :: proc {
+	barrier0,
+	barrier1,
 }
 sync_is_first :: proc() -> (is_first: bool) {
 	thread_context := (^ThreadContext)(context.user_ptr)

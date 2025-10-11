@@ -254,6 +254,7 @@ when ODIN_OS == .Windows {
 	// procs
 	foreign kernel32 {
 		GetCommandLineW :: proc() -> CWSTR ---
+		ReadConsoleW :: proc(stdin_handle: Handle, wcbuffer: [^]u16, wcbuffer_len: DWORD, wchars_read: ^DWORD, input_control: rawptr) -> BOOL ---
 		ExitProcess :: proc(uExitCode: CUINT) ---
 	}
 } else when ODIN_OS == .Linux {

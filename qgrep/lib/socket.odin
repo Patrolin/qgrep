@@ -136,7 +136,7 @@ create_server_socket :: proc(ioring: Ioring, server: ^Server, port: u16) {
 }
 @(private)
 _make_client :: proc(server: ^Server) -> (client: ^Client) {
-	client = new(Client) // TODO: how does one allocate a nonzerod struct in Odin?
+	client = new(Client, allocator = context.allocator) // TODO: how does one allocate a nonzerod struct in Odin?
 	client.ioring = server.ioring
 	client.async_write_file = FileHandle(INVALID_HANDLE)
 	return
