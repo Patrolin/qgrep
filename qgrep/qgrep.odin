@@ -35,7 +35,7 @@ main_multicore :: proc() {
 		lib.barrier()
 	}
 }
-qgrep_multithreaded :: proc(options: ^QGrepOptions, input: ^string) {
+qgrep_multicore :: proc(options: ^QGrepOptions, input: ^string) {
 	file_walk: ^lib.FileWalk = ---
 	if lib.sync_is_first() {
 		file_walk = lib.make_file_walk()
