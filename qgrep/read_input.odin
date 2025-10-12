@@ -4,7 +4,7 @@ import "lib"
 
 TokenType :: enum {
 	None,
-	// whitespace
+	// ignore
 	Whitespace,
 	// values
 	String,
@@ -17,7 +17,7 @@ TokenType :: enum {
 	Or,
 	Then,
 }
-read_and_parse_input :: proc() {
+read_and_parse_console_input :: proc() {
 	input := lib.read_console_input("qgrep: ")
 	parse_pattern :: proc(parser: ^lib.Parser, prev_token_type: int) -> (token: lib.Token, operator_precedence: int) {
 		i := parser.start

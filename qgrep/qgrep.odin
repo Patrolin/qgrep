@@ -30,7 +30,7 @@ main_multicore :: proc() {
 	for {
 		free_all(context.temp_allocator)
 		if lib.sync_is_first() {
-			read_and_parse_input()
+			read_and_parse_console_input()
 		}
 		lib.barrier()
 	}
