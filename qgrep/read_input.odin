@@ -28,11 +28,11 @@ read_and_parse_input :: proc() {
 		}
 		j := lib.index_ascii(parser.str, i, " ")
 		if j == i {
+			operator_precedence = int(lib.OpType.Ignore)
 			token.type = int(TokenType.Whitespace)
 			j := i
 			for j < len(parser.str) && parser.str[j] == ' ' {j += 1}
 			token.slice = parser.str[i:j]
-			return token, int(lib.OpType.Ignore)
 		} else {
 			token.slice = parser.str[i:j]
 			switch token.slice {
@@ -45,16 +45,16 @@ read_and_parse_input :: proc() {
 			case "and":
 				token.type = int(TokenType.And)
 			case "or":
-				token.type = int(TokenType.And)
+				token.type = int(TokenType.Or)
 			case "then":
-				token.type = int(TokenType.And)
+				token.type = int(TokenType.Then)
 			case:
 				operator_precedence = int(lib.OpType.Value)
 				token.type = int(TokenType.Number)
 			/* TODO: validate numbers */
 			}
-			return token, operator_precedence
 		}
+		return
 	}
 	pattern := lib.parse(input^, parse_pattern)
 	lib.print_ast(pattern)
