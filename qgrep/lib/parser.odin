@@ -37,8 +37,8 @@ report_parser_error :: proc(parser: ^Parser, error: string) {
 
 @(private = "file")
 _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: int, allocator := context.temp_allocator) -> (node: ^ASTNode) {
-	prev_node_unary_end := prev_node
-	prev_node_unary_end_is_value := false
+	prev_node_unary_tail := prev_node
+	prev_node_unary_tail_is_value := false
 	prev_node := prev_node
 	token: Token
 	node = new(ASTNode, allocator = allocator)
@@ -53,21 +53,25 @@ _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: i
 			_parser_eat_token(parser, token)
 		case OpType.Value, OpType.Unary:
 			node.token = token
-			if prev_node_unary_end_is_value {
+			if prev_node_unary_tail_is_value {
 				report_parser_error(parser, "Cannot have two values in a row")
 				return
 			}
 			_parser_eat_token(parser, token)
-			if prev_node_unary_end == nil {
+			if prev_node == nil {
 				prev_node = node
 			} else {
-				prev_node_unary_end.left = node
+				prev_node_unary_tail.left = node
 			}
-			prev_node_unary_end = node
-			prev_node_unary_end_is_value = OpType(operator_precedence) == .Value
+			prev_node_unary_tail = node
+			prev_node_unary_tail_is_value = OpType(operator_precedence) == .Value
 			node = new(ASTNode, allocator = allocator)
 		case:
 			// binary
+			if prev_node == nil {
+				report_parser_error(parser, "Cannot have binary op without a value")
+				return
+			}
 			if operator_precedence < min_precedence {break}
 			_parser_eat_token(parser, token)
 			node.token = token

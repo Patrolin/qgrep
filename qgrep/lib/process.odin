@@ -50,7 +50,8 @@ get_args :: proc(allocator := context.temp_allocator) -> (args: ^[dynamic]string
 	}
 	return
 }
-read_console_input :: proc(allocator := context.temp_allocator) -> (input: ^string) {
+read_console_input :: proc(prompt: string, allocator := context.temp_allocator) -> (input: ^string) {
+	fmt.print(prompt)
 	input = new(string, allocator = allocator)
 	sb := string_builder(allocator = allocator)
 	when ODIN_OS == .Windows {
