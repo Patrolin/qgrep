@@ -66,6 +66,7 @@ read_console_input :: proc(allocator := context.temp_allocator) -> (input: ^stri
 				offset := ends_with(str, "\r\n") ? 2 : 1
 				acc := to_string(sb)
 				input^ = acc[:len(acc) - offset]
+				break
 			}
 		}
 	} else {
