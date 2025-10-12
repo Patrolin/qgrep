@@ -37,11 +37,11 @@ read_and_parse_input :: proc() {
 			token.slice = parser.str[i:j]
 			switch token.slice {
 			case "not":
+				operator_precedence = int(lib.OpType.Unary)
 				token.type = int(TokenType.Not)
-				operator_precedence = int(lib.OpType.Unary)
 			case "file":
-				token.type = int(TokenType.File)
 				operator_precedence = int(lib.OpType.Unary)
+				token.type = int(TokenType.File)
 			case "and":
 				token.type = int(TokenType.And)
 			case "or":
