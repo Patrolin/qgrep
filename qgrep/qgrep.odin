@@ -9,7 +9,7 @@ QGrepOptions :: struct {
 }
 
 main :: proc() {
-	lib.run_multicore(main_multicore)
+	lib.run_multicore(main_multicore, 1)
 }
 main_multicore :: proc() {
 	args: ^[dynamic]string = ---
@@ -29,13 +29,16 @@ main_multicore :: proc() {
 
 	for {
 		free_all(context.temp_allocator)
+		pattern: ^lib.ASTNode = ---
 		if lib.sync_is_first() {
-			read_and_parse_console_input()
+			pattern = read_and_parse_console_input()
 		}
-		lib.barrier()
+		lib.barrier(&pattern)
+
+		qgrep_multicore(options, pattern)
 	}
 }
-qgrep_multicore :: proc(options: ^QGrepOptions, input: ^string) {
+qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 	file_walk: ^lib.FileWalk = ---
 	if lib.sync_is_first() {
 		file_walk = lib.make_file_walk()

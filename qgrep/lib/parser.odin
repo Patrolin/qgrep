@@ -1,4 +1,5 @@
 package lib
+import "base:intrinsics"
 import "core:fmt"
 
 TokenType :: int
@@ -19,10 +20,14 @@ ASTNode :: struct {
 	using token: Token,
 	left, right: ^ASTNode,
 }
+#assert(size_of(ASTNode) == 40)
+
 Token :: struct {
 	slice: string,
 	type:  TokenType,
 }
+#assert(size_of(Token) == 24)
+
 ParserProc :: proc(parser: ^Parser, prev_token_type: TokenType) -> (token: Token, operator_precedence: int)
 
 @(private = "file")
@@ -44,8 +49,8 @@ _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: i
 	node = new(ASTNode, allocator = allocator)
 	for parser.keep_going {
 		token, operator_precedence := parser.parser_proc(parser, token.type)
-		fmt.printfln("token: %v, %v", token, operator_precedence)
-		if len(token.slice) == 0 {
+		if intrinsics.expect(!parser.keep_going, false) {break}
+		if intrinsics.expect(len(token.slice) == 0, false) {
 			report_parser_error(parser, "Cannot have token of length 0")
 		}
 		switch OpType(operator_precedence) {
@@ -90,7 +95,7 @@ _parse_upwards :: proc(parser: ^Parser, min_precedence: int, allocator := contex
 	}
 	return prev_node
 }
-parse :: proc(str: string, parser_proc: ParserProc, allocator := context.temp_allocator) -> ^ASTNode {
+parse :: proc(str: string, parser_proc: ParserProc, allocator := context.temp_allocator) -> (node: ^ASTNode, error: string) {
 	parser := Parser {
 		str         = str,
 		start       = 0,
@@ -99,8 +104,7 @@ parse :: proc(str: string, parser_proc: ParserProc, allocator := context.temp_al
 		error       = "",
 	}
 	result := _parse_upwards(&parser, 0, allocator = allocator)
-	if len(parser.error) > 0 {fmt.printfln("Error: %v", parser.error)}
-	return result
+	return result, parser.error
 }
 print_ast :: proc(node: ^ASTNode, indent: int = 0) {
 	indent_str := repeat(" ", indent)
