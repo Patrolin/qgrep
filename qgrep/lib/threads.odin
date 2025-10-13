@@ -83,12 +83,12 @@ run_multicore :: proc(main: proc(), thread_count: int = 0) {
 	main()
 }
 
-// synchronization
-Lock :: distinct bool
-
+// locks
 mfence :: #force_inline proc "contextless" () {
 	intrinsics.atomic_thread_fence(.Seq_Cst)
 }
+
+Lock :: distinct bool
 @(require_results)
 get_lock :: #force_inline proc "contextless" (lock: ^Lock) -> (acquired: bool) {
 	old_value := intrinsics.atomic_exchange(lock, true)
@@ -105,6 +105,7 @@ release_lock :: #force_inline proc "contextless" (lock: ^Lock) {
 	intrinsics.atomic_store(lock, false)
 }
 
+// barriers
 @(private = "file")
 _create_os_barrier :: proc(barrier: ^OsBarrier, thread_count: int) {
 	thread_count_i32 := i32(downcast_u32(thread_count))
@@ -114,8 +115,17 @@ _create_os_barrier :: proc(barrier: ^OsBarrier, thread_count: int) {
 		assert(false)
 	}
 }
+@(require_results)
+sync_is_first :: proc() -> (is_first: bool) {
+	thread_context := (^ThreadContext)(context.user_ptr)
+	shared_thread_context := &thread_context.all[0]
+	old_value := intrinsics.atomic_add(&shared_thread_context.is_first, 1)
+	is_first = old_value % uint(len(thread_context.all)) == 0
+	thread_context.was_first = is_first /* NOTE: `was_first` will only be read by the same thread, no need to synchronize */
+	return
+}
 @(private = "file")
-barrier0 :: proc() {
+_barrier :: proc() {
 	thread_context := (^ThreadContext)(context.user_ptr)
 	when ODIN_OS == .Windows {
 		/* NOTE: spinlock 2000 times or sleep and wait for all threads to enter the barrier */
@@ -125,27 +135,36 @@ barrier0 :: proc() {
 	}
 }
 @(private = "file")
-barrier1 :: proc(value: ^$T) {
+_barrier_scatter :: proc(value: ^$T) {
 	thread_context := (^ThreadContext)(context.user_ptr)
 	shared_thread_context := &thread_context.all[0]
 	if thread_context.was_first {
 		shared_thread_context.value = uintptr(value^)
-		barrier0()
+		_barrier()
 	} else {
-		barrier0()
+		_barrier()
 		value^ = T(shared_thread_context.value)
 	}
-	barrier()
+	// ensure all values have been read
+	_barrier()
 }
 barrier :: proc {
-	barrier0,
-	barrier1,
+	_barrier,
+	_barrier_scatter,
 }
-sync_is_first :: proc() -> (is_first: bool) {
+@(require_results)
+barrier_gather :: proc(value: $T, allocator := context.temp_allocator) -> (result: [dynamic]T, is_first: bool) {
 	thread_context := (^ThreadContext)(context.user_ptr)
-	shared_thread_context := &thread_context.all[0]
-	old_value := intrinsics.atomic_add(&shared_thread_context.is_first, 1)
-	is_first = old_value % uint(len(thread_context.all)) == 0
-	thread_context.was_first = is_first
+	thread_context.value = uintptr(T)
+	_barrier()
+	is_first = sync_is_first()
+	if is_first {
+		result.allocator = allocator
+		for ctx in thread_context.all {
+			append(&result, T(ctx.value))
+		}
+	}
+	// ensure all values have been read
+	_barrier()
 	return
 }
