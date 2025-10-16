@@ -5,7 +5,7 @@ import "core:fmt"
 import "lib"
 
 QGrepOptions :: struct {
-	include_dot_paths:      bool,
+	include_dot_dirs:       bool,
 	webstorm_compatibility: bool,
 }
 
@@ -22,15 +22,15 @@ main_multicore :: proc() {
 			switch arg {
 			case "webstorm":
 				options.webstorm_compatibility = true
-			case "dotpaths":
-				options.include_dot_paths = true
+			case "dotdirs":
+				options.include_dot_dirs = true
 			case:
 				fmt.printfln("Unknown argument: '%v'", arg)
 				fallthrough
 			case "help":
 				fmt.println("Usage:")
 				fmt.println("  qgrep -webstorm: print links in WebStorm-compatible format")
-				fmt.println("  qgrep -dotpaths: disable default filter `not file (\"./\" then \"/\")`")
+				fmt.println("  qgrep -dotdirs: disable default filter `not path (\"./\" then \"/\")`")
 				lib.exit_process(1)
 			}
 		}
@@ -65,13 +65,16 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 			current_index, ok = intrinsics.atomic_compare_exchange_strong(&file_walk.current_index, current_index, current_index + 1)
 			if ok {
 				file_path := file_walk.file_paths[current_index]
-				// not file ("/." then "/")
-				i := lib.index(file_path, 0, "/.")
-				j := lib.index(file_path, i, "/")
-				if j != len(file_path) {continue}
-				// filter
-
-				/* TODO: read the file and filter by user input */
+				// default filter `not path ("/." then "/")`
+				if !options.include_dot_dirs {
+					i := lib.index(file_path, 0, "/.")
+					j := lib.index(file_path, i, "/")
+					if j != len(file_path) {continue}
+				}
+				// filter path
+				/* TODO: filter path by user input */
+				// filter line
+				/* TODO: read the file and filter lines by user input */
 				fmt.printfln("thread %v: %v", context.user_index, file_path)
 			}
 		}
