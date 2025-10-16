@@ -54,8 +54,7 @@ _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: i
 	for parser.keep_going {
 		token, operator_precedence := parser.parser_proc(parser, token.type)
 		//fmt.printfln("_parse_downwards: %v, %v", token, operator_precedence)
-		if intrinsics.expect(!parser.keep_going, false) {break}
-		if intrinsics.expect(len(token.slice) == 0, false) {
+		if intrinsics.expect(len(token.slice) == 0 || !parser.keep_going, false) {
 			report_parser_error(parser, "Cannot have token of length 0")
 			break
 		}
