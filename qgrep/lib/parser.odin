@@ -43,6 +43,7 @@ report_parser_error :: proc(parser: ^Parser, error: string) {
 	if parser.error == "" {parser.error = error}
 }
 
+/* parse `A + B * ...` as `A + [B * ...]` */
 @(private = "file")
 _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: int, allocator := context.temp_allocator) -> (node: ^ASTNode) {
 	/* NOTE: unary head or binary op */
@@ -93,8 +94,8 @@ _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: i
 			if parser.bracket_count == 0 {
 				report_parser_error(parser, "Unclosed right bracket")
 			}
+			// close until we find the matching left bracket
 			parser.keep_going = false
-			/* NOTE: close until we find the matching left bracket */
 			break
 		case:
 			// binary
@@ -117,13 +118,14 @@ _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: i
 	}
 	return prev_node
 }
+/* parse `A * B + ...` as `[A * B] + ...` */
 @(private = "file")
 _parse_upwards :: proc(parser: ^Parser, min_precedence: int, allocator := context.temp_allocator) -> (prev_node: ^ASTNode) {
 	for parser.keep_going {
 		//fmt.printfln("_parse_upwards: '%v', %v, %v", parser.str[parser.start:], min_precedence, prev_node)
 		prev_node = _parse_downwards(parser, prev_node, min_precedence, allocator = allocator)
 	}
-	/* NOTE: reset after right bracket */
+	/* NOTE: reset after right bracket, or binary op with lower precedence */
 	parser.keep_going = parser.error == "" && parser.start < len(parser.str)
 	return prev_node
 }
