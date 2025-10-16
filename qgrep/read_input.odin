@@ -6,6 +6,9 @@ TokenType :: enum {
 	None,
 	// ignore
 	Whitespace,
+	// brackets
+	LeftBracket,
+	RightBracket,
 	// values
 	String,
 	Number,
@@ -27,7 +30,19 @@ read_and_parse_console_input :: proc() -> ^lib.ASTNode {
 		// parse
 		parse_pattern :: proc(parser: ^lib.Parser, prev_token_type: int) -> (token: lib.Token, operator_precedence: int) {
 			i := parser.start
-			if parser.str[i] == '"' {
+			first_char := parser.str[i]
+			switch first_char {
+			case '(':
+				operator_precedence = int(lib.OpType.LeftBracket)
+				token.type = int(TokenType.LeftBracket)
+				token.slice = parser.str[i:i + 1]
+				return
+			case ')':
+				operator_precedence = int(lib.OpType.RightBracket)
+				token.type = int(TokenType.RightBracket)
+				token.slice = parser.str[i:i + 1]
+				return
+			case '"':
 				operator_precedence = int(lib.OpType.Value)
 				token.type = int(TokenType.String)
 				/* TODO: parse strings with backslash escapes */
@@ -61,6 +76,7 @@ read_and_parse_console_input :: proc() -> ^lib.ASTNode {
 					token.type = int(TokenType.Line)
 				case "and":
 					token.type = int(TokenType.And)
+					operator_precedence = 1
 				case "or":
 					token.type = int(TokenType.Or)
 				case "then":
@@ -98,12 +114,9 @@ simplify_pattern_in_place :: proc(node: ^lib.ASTNode, is_topmost_or := true) -> 
 	if node.right != nil {
 		is_index_multi &= simplify_pattern_in_place(node.right, next_is_topmost_or)
 	}
-	fmt.printfln("simp.2: %v", is_index_multi)
+
 	if bool(is_index_multi) && is_topmost_or {
-		fmt.printfln("IndexMulti")
 		node.type = int(TokenType.IndexMulti)
 	}
-
-	fmt.printfln("ret: %v, %v, %v", node.token, is_index_multi, int(TokenType(node.type) == .String))
 	return is_index_multi | int(TokenType(node.type) == .String)
 }

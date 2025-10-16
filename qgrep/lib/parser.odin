@@ -4,17 +4,20 @@ import "core:fmt"
 
 TokenType :: int
 OpType :: enum {
-	Ignore = -1,
-	Value  = -2,
-	Unary  = -3,
+	Ignore       = -1,
+	Value        = -2,
+	Unary        = -3,
+	LeftBracket  = -4,
+	RightBracket = -5,
 }
 
 Parser :: struct {
-	str:         string,
-	start:       int,
-	parser_proc: ParserProc `fmt:"-"`,
-	keep_going:  bool,
-	error:       string,
+	str:           string,
+	start:         int,
+	parser_proc:   ParserProc `fmt:"-"`,
+	keep_going:    bool,
+	error:         string,
+	bracket_count: int,
 }
 ASTNode :: struct {
 	using token: Token,
@@ -37,30 +40,33 @@ _parser_eat_token :: #force_inline proc(parser: ^Parser, token: Token) {
 }
 report_parser_error :: proc(parser: ^Parser, error: string) {
 	parser.keep_going = false
-	parser.error = error
+	if parser.error == "" {parser.error = error}
 }
 
 @(private = "file")
 _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: int, allocator := context.temp_allocator) -> (node: ^ASTNode) {
+	/* NOTE: unary head or binary op */
+	prev_node := prev_node
 	prev_node_unary_tail := prev_node
 	prev_node_unary_tail_is_value := false
-	prev_node := prev_node
 	token: Token
-	node = new(ASTNode, allocator = allocator)
 	for parser.keep_going {
 		token, operator_precedence := parser.parser_proc(parser, token.type)
+		//fmt.printfln("_parse_downwards: %v, %v", token, operator_precedence)
 		if intrinsics.expect(!parser.keep_going, false) {break}
 		if intrinsics.expect(len(token.slice) == 0, false) {
 			report_parser_error(parser, "Cannot have token of length 0")
+			break
 		}
 		switch OpType(operator_precedence) {
 		case OpType.Ignore:
 			_parser_eat_token(parser, token)
 		case OpType.Value, OpType.Unary:
+			node = new(ASTNode, allocator = allocator)
 			node.token = token
 			if prev_node_unary_tail_is_value {
 				report_parser_error(parser, "Cannot have two values in a row")
-				return
+				break
 			}
 			_parser_eat_token(parser, token)
 			if prev_node == nil {
@@ -70,20 +76,43 @@ _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: i
 			}
 			prev_node_unary_tail = node
 			prev_node_unary_tail_is_value = OpType(operator_precedence) == .Value
-			node = new(ASTNode, allocator = allocator)
+		case OpType.LeftBracket:
+			// left bracket
+			_parser_eat_token(parser, token)
+			parser.bracket_count += 1
+			prev_node = _parse_upwards(parser, -1, allocator = allocator)
+			// right bracket
+			token, operator_precedence := parser.parser_proc(parser, token.type)
+			if OpType(operator_precedence) != .RightBracket {
+				report_parser_error(parser, "Unclosed left bracket")
+				break
+			}
+			parser.bracket_count -= 1
+			_parser_eat_token(parser, token)
+		case OpType.RightBracket:
+			if parser.bracket_count == 0 {
+				report_parser_error(parser, "Unclosed right bracket")
+			}
+			parser.keep_going = false
+			/* NOTE: close until we find the matching left bracket */
+			break
 		case:
 			// binary
 			if prev_node == nil {
 				report_parser_error(parser, "Cannot have binary op without a value")
-				return
+				break
 			}
-			if operator_precedence < min_precedence {break}
+			if operator_precedence <= min_precedence {
+				/* NOTE: if `operator_precedence == min_precedence` we always do left-to-right associative to reduce confusion */
+				parser.keep_going = false
+				break
+			}
 			_parser_eat_token(parser, token)
+			node = new(ASTNode, allocator = allocator)
 			node.token = token
 			node.left = prev_node
 			node.right = _parse_upwards(parser, operator_precedence, allocator = allocator)
 			prev_node = node
-			node = new(ASTNode, allocator = allocator)
 		}
 	}
 	return prev_node
@@ -91,8 +120,11 @@ _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: i
 @(private = "file")
 _parse_upwards :: proc(parser: ^Parser, min_precedence: int, allocator := context.temp_allocator) -> (prev_node: ^ASTNode) {
 	for parser.keep_going {
+		//fmt.printfln("_parse_upwards: '%v', %v, %v", parser.str[parser.start:], min_precedence, prev_node)
 		prev_node = _parse_downwards(parser, prev_node, min_precedence, allocator = allocator)
 	}
+	/* NOTE: reset after right bracket */
+	parser.keep_going = parser.error == "" && parser.start < len(parser.str)
 	return prev_node
 }
 parse :: proc(str: string, parser_proc: ParserProc, allocator := context.temp_allocator) -> (node: ^ASTNode, error: string) {
@@ -103,7 +135,7 @@ parse :: proc(str: string, parser_proc: ParserProc, allocator := context.temp_al
 		keep_going  = true,
 		error       = "",
 	}
-	result := _parse_upwards(&parser, 0, allocator = allocator)
+	result := _parse_upwards(&parser, -1, allocator = allocator)
 	return result, parser.error
 }
 print_ast :: proc(node: ^ASTNode, indent: int = 0) {
