@@ -102,8 +102,10 @@ _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: i
 				report_parser_error(parser, "Cannot have binary op without a value")
 				break
 			}
+			/* NOTE: The full algorithm would be:
+				`if operator_precedence < min_precedence || (operator_precedence == min_precedence && operator_is_left_associative(...)) {}`
+				however right-to-left associativity is confusing, so we're not doing it */
 			if operator_precedence <= min_precedence {
-				/* NOTE: if `operator_precedence == min_precedence` we always do left-to-right associative to reduce confusion */
 				parser.keep_going = false
 				break
 			}
