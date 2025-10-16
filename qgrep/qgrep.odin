@@ -7,6 +7,7 @@ import "lib"
 QGrepOptions :: struct {
 	include_dot_dirs:       bool,
 	webstorm_compatibility: bool,
+	debug:                  bool,
 }
 
 main :: proc() {
@@ -24,6 +25,8 @@ main_multicore :: proc() {
 				options.webstorm_compatibility = true
 			case "dotdirs":
 				options.include_dot_dirs = true
+			case "debug":
+				options.debug = true
 			case:
 				fmt.printfln("Unknown argument: '%v'", arg)
 				fallthrough
@@ -31,6 +34,7 @@ main_multicore :: proc() {
 				fmt.println("Usage:")
 				fmt.println("  qgrep -webstorm: print links in WebStorm-compatible format")
 				fmt.println("  qgrep -dotdirs: disable default filter `not path (\"./\" then \"/\")`")
+				fmt.println("  qgrep -debug: print the pattern parsed from user input")
 				lib.exit_process(1)
 			}
 		}
@@ -42,10 +46,14 @@ main_multicore :: proc() {
 		pattern: ^lib.ASTNode = ---
 		if lib.sync_is_first() {
 			pattern = read_and_parse_console_input()
+			if options.debug {
+				lib.print_ast(pattern)
+				continue
+			}
 		}
 		lib.barrier(&pattern)
 
-		//qgrep_multicore(options, pattern)
+		qgrep_multicore(options, pattern)
 	}
 }
 qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {

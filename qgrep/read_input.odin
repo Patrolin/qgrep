@@ -101,7 +101,6 @@ read_and_parse_console_input :: proc() -> ^lib.ASTNode {
 		}
 		// simplify
 		simplify_pattern_in_place(pattern)
-		lib.print_ast(pattern)
 		return pattern
 	}
 }
