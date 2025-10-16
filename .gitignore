@@ -2,4 +2,5 @@
 *.cpp
 *.obj
 *.exe
+*.bin
 *.out

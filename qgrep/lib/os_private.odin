@@ -306,6 +306,24 @@ when ODIN_OS == .Windows {
 		EnterSynchronizationBarrier :: proc(barrier: ^SYNCHRONIZATION_BARRIER, flags: BarrierFlags) -> BOOL ---
 		DeleteSynchronizationBarrier :: proc(barrier: ^SYNCHRONIZATION_BARRIER) -> BOOL ---
 	}
+} else when ODIN_OS == .Linux {
+	CloneFlags :: bit_set[enum {}; CUINT]
+	clone3 :: #force_inline proc "system" (procedure: ThreadProc, stack: [^]byte, flags: CloneFlags, param: rawptr) -> (thread_id: int) {
+		/* TODO: what in the heck is a trampoline??? */
+		assert_contextless(false)
+		result := intrinsics.syscall(linux.SYS_clone3)
+		return int(result)
+	}
+	futex_wait :: #force_inline proc "system" (address: ^u32, expected: u32) -> (errno: int) {
+		FUTEX_WAIT :: 0
+		result := intrinsics.syscall(linux.SYS_futex, uintptr(address), FUTEX_WAIT, uintptr(expected), 0)
+		return int(result)
+	}
+	futex_wake :: #force_inline proc "system" (address: ^u32, count: i32) -> (errno: int) {
+		FUTEX_WAKE :: 1
+		result := intrinsics.syscall(linux.SYS_futex, uintptr(address), FUTEX_WAKE, uintptr(count), 0)
+		return int(result)
+	}
 } else {
 	//#assert(false)
 }

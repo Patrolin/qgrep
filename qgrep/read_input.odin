@@ -23,10 +23,11 @@ TokenType :: enum {
 	// simplified ops
 	IndexMulti,
 }
-read_and_parse_console_input :: proc() -> ^lib.ASTNode {
+read_and_parse_console_input_until_valid_pattern :: proc(input_prompt: string) -> ^lib.ASTNode {
 	for {
+		free_all(context.temp_allocator)
 		// read console input
-		input := lib.read_console_input("qgrep: ")
+		input := lib.read_console_input(input_prompt)
 		// parse
 		parse_pattern :: proc(parser: ^lib.Parser, prev_token_type: int) -> (token: lib.Token, operator_precedence: int) {
 			i := parser.start

@@ -49,9 +49,11 @@ make_file_walk :: proc(allocator := context.temp_allocator) -> ^FileWalk {
 	file_walk.file_paths.allocator = allocator
 	return file_walk
 }
-walk_files :: proc(dir_path: string, file_walk: ^FileWalk) {
+/* Walk files if `start_path` is a directory, walk the file if `start_path` is a file.
+*/
+walk_files :: proc(start_path: string, file_walk: ^FileWalk) {
 	when ODIN_OS == .Windows {
-		path_to_search := fmt.tprint(dir_path, "*", sep = "\\")
+		path_to_search := fmt.tprint(start_path, "*", sep = "\\")
 		wpath_to_search := copy_string_to_cwstr(path_to_search)
 		find_result: WIN32_FIND_DATAW
 		find := FindFirstFileW(&wpath_to_search[0], &find_result)
@@ -62,21 +64,30 @@ walk_files :: proc(dir_path: string, file_walk: ^FileWalk) {
 
 				if relative_path != "." && relative_path != ".." {
 					is_dir := find_result.dwFileAttributes >= {.FILE_ATTRIBUTE_DIRECTORY}
-					next_path := fmt.tprint(dir_path, relative_path, sep = "/")
+					next_path := fmt.tprint(start_path, relative_path, sep = "/")
 					if is_dir {walk_files(next_path, file_walk)} else {append(&file_walk.file_paths, next_path)}
 				}
 				if FindNextFileW(find, &find_result) == false {break}
 			}
 			FindClose(find)
+		} else {
+			file := open_file_for_reading(start_path)
+			if file != FileHandle(INVALID_HANDLE) {
+				close_file(file)
+				append(&file_walk.file_paths, start_path)
+			}
 		}
 	} else when ODIN_OS == .Linux {
 		cbuffer: [WINDOWS_MAX_PATH]byte = ---
-		cdir_path, _ := copy_to_cstring(dir_path, cbuffer[:])
+		cdir_path, _ := copy_to_cstring(start_path, cbuffer[:])
 		dir := DirHandle(open(cdir_path, {.O_DIRECTORY}))
-		if Errno(dir) == .ENOTDIR {
-			callback(dir_path, data)
-		} else {
-			assert(dir >= 0)
+		#partial switch Errno(dir) {
+		case .ENOENT:
+		/* noop */
+		case .ENOTDIR:
+			append(&file_walk.file_paths, start_path)
+		case:
+			fmt.assertf(dir >= 0, "dir: %v", Errno(dir))
 			dir_entries_buffer: [4096]byte
 			bytes_written := get_directory_entries_64b(dir, &dir_entries_buffer[0], len(dir_entries_buffer))
 			assert(bytes_written >= 0)
@@ -91,7 +102,7 @@ walk_files :: proc(dir_path: string, file_walk: ^FileWalk) {
 
 				if relative_path != "." && relative_path != ".." {
 					is_dir := dirent.type == .Dir
-					next_path := fmt.tprint(dir_path, relative_path, sep = "/")
+					next_path := fmt.tprint(start_path, relative_path, sep = "/")
 					if is_dir {walk_files(next_path, file_walk)} else {append(&file_walk.file_paths, next_path)}
 				}
 				offset += int(dirent.size)

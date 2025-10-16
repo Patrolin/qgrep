@@ -4,48 +4,23 @@ import "base:intrinsics"
 import "core:fmt"
 import "lib"
 
-QGrepOptions :: struct {
-	include_dot_dirs:       bool,
-	webstorm_compatibility: bool,
-	debug:                  bool,
-}
-
 main :: proc() {
-	lib.run_multicore(main_multicore, 1)
+	file_walk := lib.make_file_walk()
+	lib.run_multicore(main_multicore)
 }
 main_multicore :: proc() {
-	args: ^[dynamic]string = ---
+	// parse args
 	options: ^QGrepOptions = ---
 	if lib.sync_is_first() {
-		args = lib.get_args()
-		options = new(QGrepOptions, allocator = context.allocator)
-		for arg in args[1:] {
-			switch arg {
-			case "webstorm":
-				options.webstorm_compatibility = true
-			case "dotdirs":
-				options.include_dot_dirs = true
-			case "debug":
-				options.debug = true
-			case:
-				fmt.printfln("Unknown argument: '%v'", arg)
-				fallthrough
-			case "help":
-				fmt.println("Usage:")
-				fmt.println("  qgrep -webstorm: print links in WebStorm-compatible format")
-				fmt.println("  qgrep -dotdirs: disable default filter `not path (\"./\" then \"/\")`")
-				fmt.println("  qgrep -debug: print the pattern parsed from user input")
-				lib.exit_process(1)
-			}
-		}
+		options = parse_args(allocator = context.allocator)
 	}
 	lib.barrier(&options)
 
 	for {
-		free_all(context.temp_allocator)
+		// read input until we get a valid pattern
 		pattern: ^lib.ASTNode = ---
 		if lib.sync_is_first() {
-			pattern = read_and_parse_console_input()
+			pattern = read_and_parse_console_input_until_valid_pattern(options.input_prompt)
 			if options.debug {
 				lib.print_ast(pattern)
 				continue
@@ -53,19 +28,24 @@ main_multicore :: proc() {
 		}
 		lib.barrier(&pattern)
 
+		// print lines filtered by the pattern
 		qgrep_multicore(options, pattern)
 	}
 }
 qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
+	// make a shared list of files
 	file_walk: ^lib.FileWalk = ---
 	if lib.sync_is_first() {
 		file_walk = lib.make_file_walk()
 	}
 	lib.barrier(&file_walk)
 
+	// asynchronously compute the list of files
 	if lib.sync_is_first() {
-		lib.walk_files(".", file_walk)
+		dir_path := options.path_prefix != "" ? options.path_prefix : "."
+		lib.walk_files(dir_path, file_walk)
 	}
+	// asynchronously walk the list of files
 	for {
 		current_index := intrinsics.atomic_load(&file_walk.current_index)
 		ok: bool

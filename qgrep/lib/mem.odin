@@ -4,9 +4,11 @@ import "core:fmt"
 import "core:mem"
 
 // constants
+/* https://github.com/odin-lang/Odin/blob/master/src/build_settings.cpp#L1935 */
+STACK_SIZE :: 1 << 20
 /* NOTE: SSD block sizes are 512B or 4KiB */
 SSD_BLOCK_SIZE :: 512
-VIRTUAL_MEMORY_TO_RESERVE :: 1 << 16
+VIRTUAL_MEMORY_TO_RESERVE :: STACK_SIZE
 
 PAGE_SIZE_EXPONENT :: 12
 PAGE_SIZE :: 1 << PAGE_SIZE_EXPONENT

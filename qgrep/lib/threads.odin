@@ -16,6 +16,11 @@ when ODIN_OS == .Windows {
 		handle: ThreadHandle,
 	}
 	OsBarrier :: SYNCHRONIZATION_BARRIER
+} else when ODIN_OS == .Linux {
+	OsBarrier :: struct {
+		gen: u32,
+		is_last:  uint,
+	}
 } else {
 	//#assert(false)
 }
@@ -61,20 +66,29 @@ run_multicore :: proc(main: proc(), thread_count: int = 0) {
 		}
 	}
 	// launch threads
+	thread_proc :: proc "system" (param: rawptr) -> (exit_code: u32) {
+		thread_context := (^ThreadContext)(param)
+		arena: ArenaAllocator = ---
+		context = _get_odin_context(&arena, thread_context)
+		thread_context.main()
+		return
+	}
 	for thread_index in 1 ..< thread_count {
 		param := &thread_contexts[thread_index]
 		stack_size := Size(0)
-		thread_proc :: proc "system" (param: rawptr) -> (exit_code: u32) {
-			thread_context := (^ThreadContext)(param)
-			arena: ArenaAllocator = ---
-			context = _get_odin_context(&arena, thread_context)
-			// run
-			thread_context.main()
-			return
-		}
 		when ODIN_OS == .Windows {
 			thread_handle := CreateThread(nil, stack_size, thread_proc, param, 0, nil)
 			fmt.assertf(thread_handle != 0, "Failed to launch a thread")
+		} else when ODIN_OS == .Linux {
+			/* TODO:
+				stack = page_reserve(STACK_SIZE)
+				void* stack_top = (char*)stack + STACK_SIZE;
+				(or just pass stack=nil)
+				flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_THREAD | CLONE_SYSVSEM
+			*/
+			thread_id := clone3()
+			fmt.assertf(thread_id >= 0, "Failed to launch a thread, err: %v", Errno(thread_id))
+			assert(false, "uhh")
 		} else {
 			assert(false)
 		}
@@ -111,6 +125,8 @@ _create_os_barrier :: proc(barrier: ^OsBarrier, thread_count: int) {
 	thread_count_i32 := i32(downcast_u32(thread_count))
 	when ODIN_OS == .Windows {
 		InitializeSynchronizationBarrier(barrier, thread_count_i32)
+	} else when ODIN_OS == .Linux {
+		barrier^ = {}
 	} else {
 		assert(false)
 	}
@@ -130,8 +146,23 @@ _barrier :: proc() {
 	when ODIN_OS == .Windows {
 		/* NOTE: spinlock 2000 times or sleep and wait for all threads to enter the barrier */
 		EnterSynchronizationBarrier(thread_context.barrier_ptr, {.SYNCHRONIZATION_BARRIER_FLAGS_NO_DELETE})
+	} else when ODIN_OS == .Linux {
+		barrier := thread_context.barrier_ptr
+		if intrinsics.atomic_add(&barrier.is_last, 1) % len(thread_context.all) == 0 {
+			// wake all threads
+			fmt.printfln("thread %v: WAKE", context.user_index)
+			barrier.gen += 1
+			assert(futex_wake(&barrier.gen, max(i32)) == 0)
+		} else {
+			// wait for all threads
+			gen := intrinsics.atomic_load(&barrier.gen)
+			for intrinsics.atomic_load(&barrier.gen) == gen {
+				fmt.printfln("thread %v: SLEEP", context.user_index)
+				assert(futex_wait(&barrier.gen, gen) == 0)
+			}
+		}
 	} else {
-		assert()
+		assert(false)
 	}
 }
 @(private = "file")
