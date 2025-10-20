@@ -46,7 +46,7 @@ parse_args :: proc(allocator := context.temp_allocator) -> (options: ^QGrepOptio
 			lib.exit_process(1)
 		}
 	}
-	fmt.sbprint(&input_prompt_sb, ":")
+	fmt.sbprint(&input_prompt_sb, ": ")
 	options.input_prompt = lib.to_string(input_prompt_sb)
 	return
 }

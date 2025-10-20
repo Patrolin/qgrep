@@ -21,7 +21,13 @@ Parser :: struct {
 }
 ASTNode :: struct {
 	using token: Token,
-	left, right: ^ASTNode,
+	using _:     struct #raw_union {
+		user_data:          rawptr,
+		value:              ^ASTNode,
+		using binary_value: struct {
+			left, right: ^ASTNode,
+		},
+	},
 }
 #assert(size_of(ASTNode) == 40)
 
@@ -77,10 +83,23 @@ _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: i
 			prev_node_unary_tail = node
 			prev_node_unary_tail_is_value = OpType(operator_precedence) == .Value
 		case OpType.LeftBracket:
-			// left bracket
+			// value
+			if prev_node_unary_tail_is_value {
+				report_parser_error(parser, "Cannot have two values in a row")
+				break
+			}
 			_parser_eat_token(parser, token)
+			// left bracket
 			parser.bracket_count += 1
-			prev_node = _parse_upwards(parser, -1, allocator = allocator)
+			node = _parse_upwards(parser, -1, allocator = allocator)
+			// value
+			if prev_node == nil {
+				prev_node = node
+			} else {
+				prev_node_unary_tail.left = node
+			}
+			prev_node_unary_tail = node
+			prev_node_unary_tail_is_value = true
 			// right bracket
 			token, operator_precedence := parser.parser_proc(parser, token.type)
 			if OpType(operator_precedence) != .RightBracket {

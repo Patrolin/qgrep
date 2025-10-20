@@ -18,8 +18,8 @@ when ODIN_OS == .Windows {
 	OsBarrier :: SYNCHRONIZATION_BARRIER
 } else when ODIN_OS == .Linux {
 	OsBarrier :: struct {
-		gen: u32,
-		is_last:  uint,
+		gen:     u32,
+		is_last: uint,
 	}
 } else {
 	//#assert(false)
@@ -186,7 +186,7 @@ barrier :: proc {
 @(require_results)
 barrier_gather :: proc(value: $T, allocator := context.temp_allocator) -> (result: [dynamic]T, is_first: bool) {
 	thread_context := (^ThreadContext)(context.user_ptr)
-	thread_context.value = uintptr(T)
+	thread_context.value = uintptr(value)
 	_barrier()
 	is_first = sync_is_first()
 	if is_first {

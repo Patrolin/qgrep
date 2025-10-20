@@ -21,10 +21,7 @@ main_multicore :: proc() {
 		pattern: ^lib.ASTNode = ---
 		if lib.sync_is_first() {
 			pattern = read_and_parse_console_input_until_valid_pattern(options.input_prompt)
-			if options.debug {
-				lib.print_ast(pattern)
-				continue
-			}
+			if options.debug {lib.print_ast(pattern)}
 		}
 		lib.barrier(&pattern)
 
@@ -46,6 +43,7 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 		lib.walk_files(dir_path, file_walk)
 	}
 	// asynchronously walk the list of files
+	found_matching_path := false
 	for {
 		current_index := intrinsics.atomic_load(&file_walk.current_index)
 		ok: bool
@@ -53,14 +51,14 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 			current_index, ok = intrinsics.atomic_compare_exchange_strong(&file_walk.current_index, current_index, current_index + 1)
 			if ok {
 				file_path := file_walk.file_paths[current_index]
-				// default filter `not path ("/." then "/")`
+				// default filter path
 				if !options.include_dot_dirs {
-					i := lib.index(file_path, 0, "/.")
-					j := lib.index(file_path, i, "/")
-					if j != len(file_path) {continue}
+					if default_filter_path(file_path) < 0 {continue}
 				}
 				// filter path
-				/* TODO: filter path by user input */
+				_, found := filter_path(file_path, pattern, 0, false)
+				if found < 0 {continue}
+				found_matching_path = true
 				// filter line
 				/* TODO: read the file and filter lines by user input */
 				fmt.printfln("thread %v: %v", context.user_index, file_path)
@@ -68,5 +66,77 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 		}
 		if intrinsics.atomic_load(&file_walk.have_all_file_paths) {break}
 	}
+	found_matching_path_all, is_first := lib.barrier_gather(found_matching_path)
+	// print found_matching_path
+	if is_first {
+		for v in found_matching_path_all {
+			found_matching_path ||= v
+		}
+		if !found_matching_path {fmt.printfln("No matching paths.")}
+	}
 	lib.barrier()
+}
+/* `found`: 1 if true, 0 if undefined, -1 if false */
+default_filter_path :: proc(file_path: string) -> (found: int) {
+	// not ("/." then "/")
+	i := lib.index(file_path, 0, "/.")
+	j := lib.index(file_path, i, "/")
+	return j != len(file_path) ? -1 : 1
+}
+/* `end`: index after the match \
+	`found`: 1 if true, 0 if undefined, -1 if false */
+filter_path :: proc(file_path: string, node: ^lib.ASTNode, start: int, is_file_unary: bool) -> (end: int, found: int) {
+	end = start
+	found = -1
+	#partial switch TokenType(node.type) {
+	case:
+		fmt.assertf(false, "Invalid token type: %v", TokenType(node.type))
+	case .String:
+		if is_file_unary {
+			/* TODO: parse string and put it in `node.user_data` */
+			substr := node.slice[1:len(node.slice) - 1]
+			found_index := lib.index(file_path, start, substr)
+			if found_index < len(file_path) {
+				end = found_index + len(substr)
+				found = 1
+			}
+		} else {
+			found = 0
+		}
+	// unary ops
+	case .Not:
+		end, found = filter_path(file_path, node.value, start, is_file_unary)
+		found = -found
+	case .File:
+		end, found = filter_path(file_path, node.value, start, true)
+	case .Line:
+		found = 0
+	// binary ops
+	case .And:
+		left_end, left_found := filter_path(file_path, node.left, start, is_file_unary)
+		right_end, right_found := filter_path(file_path, node.right, start, is_file_unary)
+		if left_found >= 0 && right_found >= 0 {
+			end = max(left_end, right_end)
+			found = min(left_found, right_found)
+		}
+	case .Or:
+		left_end, left_found := filter_path(file_path, node.left, start, is_file_unary)
+		right_end, right_found := filter_path(file_path, node.right, start, is_file_unary)
+		if left_found >= 0 || right_found >= 0 {
+			end = max(left_end, right_end)
+			found = min(left_found, right_found)
+		}
+	case .Then:
+		left_end, left_found := filter_path(file_path, node.left, start, is_file_unary)
+		right_end, right_found := filter_path(file_path, node.right, end, is_file_unary)
+		if left_found >= 0 && right_found >= 0 {
+			end = right_end
+			found = min(left_found, right_found)
+		}
+	// simplified ops
+	case .IndexMulti:
+		/* TODO: parse dynamic array and put it in `node.user_data` */
+		fmt.assertf(false, "TODO: index_multi()")
+	}
+	return
 }
