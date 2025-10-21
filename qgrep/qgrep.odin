@@ -135,7 +135,7 @@ filter_path :: proc(file_path: string, node: ^lib.ASTNode, start: int, is_file_u
 			end = min(left_end, right_end)
 		}
 	case .Then:
-		/* TODO?: technically we don't need to run `node.right` if `left_found == 0` */
+		/* NOTE: we always need to run both sides in order to check for undefined */
 		left_end, left_found := filter_path(file_path, node.left, start, is_file_unary)
 		right_end, right_found := filter_path(file_path, node.right, end, is_file_unary)
 		/* TODO: report error */
