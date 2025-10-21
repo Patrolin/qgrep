@@ -1,4 +1,4 @@
-// odin run qgrep -default-to-nil-allocator -no-entry-point
+// odin run qgrep -default-to-nil-allocator
 package main
 import "base:intrinsics"
 import "core:fmt"
@@ -57,7 +57,7 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 				}
 				// filter path
 				_, found := filter_path(file_path, pattern, 0, false)
-				if found < 0 {continue}
+				if found == 0 {continue}
 				found_matching_path = true
 				// filter line
 				/* TODO: read the file and filter lines by user input */
@@ -76,18 +76,18 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 	}
 	lib.barrier()
 }
-/* `found`: 1 if true, 0 if undefined, -1 if false */
+/* `found`: -1 if undefined, 0 if false, 1 if true */
 default_filter_path :: proc(file_path: string) -> (found: int) {
-	// not ("/." then "/")
+	// not file ("/." then "/")
 	i := lib.index(file_path, 0, "/.")
 	j := lib.index(file_path, i, "/")
-	return j != len(file_path) ? -1 : 1
+	return int(j != len(file_path))
 }
 /* `end`: index after the match \
-	`found`: 1 if true, 0 if undefined, -1 if false */
+	`found`: -1 if undefined, 0 if false, 1 if true */
 filter_path :: proc(file_path: string, node: ^lib.ASTNode, start: int, is_file_unary: bool) -> (end: int, found: int) {
 	end = start
-	found = -1
+	found = 0
 	#partial switch TokenType(node.type) {
 	case:
 		fmt.assertf(false, "Invalid token type: %v", TokenType(node.type))
@@ -101,38 +101,46 @@ filter_path :: proc(file_path: string, node: ^lib.ASTNode, start: int, is_file_u
 				found = 1
 			}
 		} else {
-			found = 0
+			found = -1
 		}
 	// unary ops
 	case .Not:
 		end, found = filter_path(file_path, node.value, start, is_file_unary)
-		found = -found
+		found = found >= 0 ? 1 - found : found
 	case .File:
 		end, found = filter_path(file_path, node.value, start, true)
 	case .Line:
-		found = 0
+		found = -1
 	// binary ops
 	case .And:
 		left_end, left_found := filter_path(file_path, node.left, start, is_file_unary)
 		right_end, right_found := filter_path(file_path, node.right, start, is_file_unary)
-		if left_found >= 0 && right_found >= 0 {
-			end = max(left_end, right_end)
+		end = max(left_end, right_end)
+		if right_found < 0 {
+			found = left_found
+		} else if left_found < 0 {
+			found = right_found
+		} else {
 			found = min(left_found, right_found)
 		}
 	case .Or:
 		left_end, left_found := filter_path(file_path, node.left, start, is_file_unary)
 		right_end, right_found := filter_path(file_path, node.right, start, is_file_unary)
-		if left_found >= 0 || right_found >= 0 {
-			end = max(left_end, right_end)
-			found = min(left_found, right_found)
+		found = max(left_found, right_found)
+		if right_found < 0 {
+			end = left_end
+		} else if left_found < 0 {
+			end = right_end
+		} else {
+			end = min(left_end, right_end)
 		}
 	case .Then:
 		left_end, left_found := filter_path(file_path, node.left, start, is_file_unary)
 		right_end, right_found := filter_path(file_path, node.right, end, is_file_unary)
-		if left_found >= 0 && right_found >= 0 {
-			end = right_end
-			found = min(left_found, right_found)
-		}
+		/* TODO: report error */
+		fmt.assertf(left_found >= 0 && right_found >= 0, "Invalid then statement")
+		end = right_end
+		found = min(left_found, right_found)
 	// simplified ops
 	case .IndexMulti:
 		/* TODO: parse dynamic array and put it in `node.user_data` */
