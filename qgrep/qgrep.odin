@@ -86,18 +86,18 @@ default_filter_path :: proc(file_path: string) -> (found: int) {
 /* `end`: index after the match \
 	`found`: -1 if undefined, 0 if false, 1 if true */
 filter_path :: proc(file_path: string, node: ^lib.ASTNode, start: int, is_file_unary: bool) -> (end: int, found: int) {
-	end = start
-	found = 0
 	#partial switch TokenType(node.type) {
 	case:
 		fmt.assertf(false, "Invalid token type: %v", TokenType(node.type))
 	case .ParsedString:
 		if is_file_unary {
-			substr := node.str
-			found_index := lib.index(file_path, start, substr)
+			found_index := lib.index(file_path, start, node.str)
 			if found_index < len(file_path) {
-				end = found_index + len(substr)
+				end = found_index + len(node.str)
 				found = 1
+			} else {
+				end = start
+				found = 0
 			}
 		} else {
 			found = -1
@@ -109,6 +109,7 @@ filter_path :: proc(file_path: string, node: ^lib.ASTNode, start: int, is_file_u
 	case .File:
 		end, found = filter_path(file_path, node.value, start, true)
 	case .Line:
+		end = start
 		found = -1
 	// binary ops
 	case .And:
@@ -134,6 +135,7 @@ filter_path :: proc(file_path: string, node: ^lib.ASTNode, start: int, is_file_u
 			end = min(left_end, right_end)
 		}
 	case .Then:
+		/* TODO?: technically we don't need to run `node.right` if `left_found == 0` */
 		left_end, left_found := filter_path(file_path, node.left, start, is_file_unary)
 		right_end, right_found := filter_path(file_path, node.right, end, is_file_unary)
 		/* TODO: report error */
