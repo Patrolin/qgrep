@@ -56,7 +56,7 @@ _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: i
 	prev_node := prev_node
 	prev_node_unary_tail := prev_node
 	prev_node_unary_tail_is_value := false
-	token: Token
+	token: Token = ---
 	for parser.keep_going {
 		token, operator_precedence := parser.parser_proc(parser, token.type)
 		//fmt.printfln("_parse_downwards: %v, %v", token, operator_precedence)
@@ -67,47 +67,35 @@ _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: i
 		switch OpType(operator_precedence) {
 		case OpType.Ignore:
 			_parser_eat_token(parser, token)
-		case OpType.Value, OpType.Unary:
-			node = new(ASTNode, allocator = allocator)
-			node.token = token
+		case OpType.Value, OpType.Unary, OpType.LeftBracket:
 			if prev_node_unary_tail_is_value {
 				report_parser_error(parser, "Cannot have two values in a row")
 				break
 			}
 			_parser_eat_token(parser, token)
+			if OpType(operator_precedence) == .LeftBracket {
+				// left bracket
+				parser.bracket_count += 1
+				node = _parse_upwards(parser, -1, allocator = allocator)
+				// right bracket
+				token, operator_precedence := parser.parser_proc(parser, token.type)
+				if OpType(operator_precedence) != .RightBracket {
+					report_parser_error(parser, "Unclosed left bracket")
+					break
+				}
+				parser.bracket_count -= 1
+				_parser_eat_token(parser, token)
+			} else {
+				node = new(ASTNode, allocator = allocator)
+				node.token = token
+			}
 			if prev_node == nil {
 				prev_node = node
 			} else {
 				prev_node_unary_tail.left = node
 			}
 			prev_node_unary_tail = node
-			prev_node_unary_tail_is_value = OpType(operator_precedence) == .Value
-		case OpType.LeftBracket:
-			// value
-			if prev_node_unary_tail_is_value {
-				report_parser_error(parser, "Cannot have two values in a row")
-				break
-			}
-			_parser_eat_token(parser, token)
-			// left bracket
-			parser.bracket_count += 1
-			node = _parse_upwards(parser, -1, allocator = allocator)
-			// value
-			if prev_node == nil {
-				prev_node = node
-			} else {
-				prev_node_unary_tail.left = node
-			}
-			prev_node_unary_tail = node
-			prev_node_unary_tail_is_value = true
-			// right bracket
-			token, operator_precedence := parser.parser_proc(parser, token.type)
-			if OpType(operator_precedence) != .RightBracket {
-				report_parser_error(parser, "Unclosed left bracket")
-				break
-			}
-			parser.bracket_count -= 1
-			_parser_eat_token(parser, token)
+			prev_node_unary_tail_is_value = OpType(operator_precedence) != .Unary
 		case OpType.RightBracket:
 			if parser.bracket_count == 0 {
 				report_parser_error(parser, "Unclosed right bracket")
