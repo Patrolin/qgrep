@@ -91,9 +91,8 @@ filter_path :: proc(file_path: string, node: ^lib.ASTNode, start: int, is_file_u
 	#partial switch TokenType(node.type) {
 	case:
 		fmt.assertf(false, "Invalid token type: %v", TokenType(node.type))
-	case .String:
+	case .ParsedString:
 		if is_file_unary {
-			/* TODO: parse string and put it in `node.user_data` */
 			substr := node.str
 			found_index := lib.index(file_path, start, substr)
 			if found_index < len(file_path) {

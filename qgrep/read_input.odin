@@ -21,7 +21,8 @@ TokenType :: enum {
 	Or,
 	Then,
 	// simplified ops
-	IndexMulti,
+	ParsedString = -1,
+	IndexMulti = -2,
 }
 read_and_parse_console_input_until_valid_pattern :: proc(input_prompt: string) -> ^lib.ASTNode {
 	for {
@@ -107,6 +108,7 @@ read_and_parse_console_input_until_valid_pattern :: proc(input_prompt: string) -
 	}
 }
 simplify_pattern_first_pass :: proc(node: ^lib.ASTNode, is_topmost_or := true) -> (is_index_multi: int) {
+	// find places to merge `or`s
 	next_is_topmost_or := is_topmost_or && TokenType(node.type) != .Or
 	is_index_multi = int(TokenType(node.type) == .Or)
 	if node.left != nil {
@@ -125,6 +127,7 @@ simplify_pattern_second_pass :: proc(node: ^lib.ASTNode) {
 	#partial switch TokenType(node.type) {
 	case .String:
 		{
+			// parse strings
 			sb := lib.string_builder()
 			slice := node.slice[1:len(node.slice) - 1]
 			for i := 0; i < len(slice); i += 1 {
@@ -140,9 +143,11 @@ simplify_pattern_second_pass :: proc(node: ^lib.ASTNode) {
 					fmt.sbprint(&sb, rune(char))
 				}
 			}
+			node.type = int(TokenType.ParsedString)
 			node.str = lib.to_string(sb)
 		}
 	case .IndexMulti:
+		// merge `or`s
 		fmt.assertf(false, "TODO: merge strings into an array")
 	case:
 		if node.left != nil {simplify_pattern_second_pass(node.left)}

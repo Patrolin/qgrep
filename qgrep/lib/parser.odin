@@ -22,17 +22,15 @@ Parser :: struct {
 ASTNode :: struct {
 	using token: Token,
 	using _:     struct #raw_union {
-		value:              ^ASTNode,
-		using binary_value: struct {
+		user_data: rawptr,
+		str:       string,
+		value:     ^ASTNode,
+		using _:   struct {
 			left, right: ^ASTNode,
 		},
 	},
-	using _:     struct #raw_union {
-		user_data: rawptr,
-		str:       string,
-	},
 }
-#assert(size_of(ASTNode) == 56)
+#assert(size_of(ASTNode) == 40)
 
 Token :: struct {
 	slice: string,
@@ -154,6 +152,7 @@ parse :: proc(str: string, parser_proc: ParserProc, allocator := context.temp_al
 print_ast :: proc(node: ^ASTNode, indent: int = 0) {
 	indent_str := repeat(" ", indent)
 	fmt.printfln("%v", node.token)
+	if node.type < 0 {return} /* NOTE: negative node types are used for custom data */
 	if node.left != nil {
 		fmt.printf("%v- ", indent_str)
 		print_ast(node.left, indent + 1)
