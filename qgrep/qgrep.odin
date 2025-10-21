@@ -53,7 +53,7 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 				file_path := file_walk.file_paths[current_index]
 				// default filter path
 				if !options.include_dot_dirs {
-					if default_filter_path(file_path) < 0 {continue}
+					if default_filter_path(file_path) == 0 {continue}
 				}
 				// filter path
 				_, found := filter_path(file_path, pattern, 0, false)
@@ -81,7 +81,7 @@ default_filter_path :: proc(file_path: string) -> (found: int) {
 	// not file ("/." then "/")
 	i := lib.index(file_path, 0, "/.")
 	j := lib.index(file_path, i, "/")
-	return int(j != len(file_path))
+	return j == len(file_path) ? 1 : 0
 }
 /* `end`: index after the match \
 	`found`: -1 if undefined, 0 if false, 1 if true */
@@ -94,7 +94,7 @@ filter_path :: proc(file_path: string, node: ^lib.ASTNode, start: int, is_file_u
 	case .String:
 		if is_file_unary {
 			/* TODO: parse string and put it in `node.user_data` */
-			substr := node.slice[1:len(node.slice) - 1]
+			substr := node.str
 			found_index := lib.index(file_path, start, substr)
 			if found_index < len(file_path) {
 				end = found_index + len(substr)

@@ -22,14 +22,17 @@ Parser :: struct {
 ASTNode :: struct {
 	using token: Token,
 	using _:     struct #raw_union {
-		user_data:          rawptr,
 		value:              ^ASTNode,
 		using binary_value: struct {
 			left, right: ^ASTNode,
 		},
 	},
+	using _:     struct #raw_union {
+		user_data: rawptr,
+		str:       string,
+	},
 }
-#assert(size_of(ASTNode) == 40)
+#assert(size_of(ASTNode) == 56)
 
 Token :: struct {
 	slice: string,

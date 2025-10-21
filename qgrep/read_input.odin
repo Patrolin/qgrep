@@ -101,22 +101,51 @@ read_and_parse_console_input_until_valid_pattern :: proc(input_prompt: string) -
 			continue
 		}
 		// simplify
-		simplify_pattern_in_place(pattern)
+		simplify_pattern_first_pass(pattern)
+		simplify_pattern_second_pass(pattern)
 		return pattern
 	}
 }
-simplify_pattern_in_place :: proc(node: ^lib.ASTNode, is_topmost_or := true) -> (is_index_multi: int) {
+simplify_pattern_first_pass :: proc(node: ^lib.ASTNode, is_topmost_or := true) -> (is_index_multi: int) {
 	next_is_topmost_or := is_topmost_or && TokenType(node.type) != .Or
 	is_index_multi = int(TokenType(node.type) == .Or)
 	if node.left != nil {
-		is_index_multi &= simplify_pattern_in_place(node.left, next_is_topmost_or)
+		is_index_multi &= simplify_pattern_first_pass(node.left, next_is_topmost_or)
 	}
 	if node.right != nil {
-		is_index_multi &= simplify_pattern_in_place(node.right, next_is_topmost_or)
+		is_index_multi &= simplify_pattern_first_pass(node.right, next_is_topmost_or)
 	}
 
 	if bool(is_index_multi) && is_topmost_or {
 		node.type = int(TokenType.IndexMulti)
 	}
 	return is_index_multi | int(TokenType(node.type) == .String)
+}
+simplify_pattern_second_pass :: proc(node: ^lib.ASTNode) {
+	#partial switch TokenType(node.type) {
+	case .String:
+		{
+			sb := lib.string_builder()
+			slice := node.slice[1:len(node.slice) - 1]
+			for i := 0; i < len(slice); i += 1 {
+				char := slice[i]
+				if char == '\\' {
+					i += 1
+					if i < len(slice) {
+						fmt.sbprint(&sb, rune(slice[i]))
+					} else {
+						fmt.assertf(false, "Invalid escape")
+					}
+				} else {
+					fmt.sbprint(&sb, rune(char))
+				}
+			}
+			node.str = lib.to_string(sb)
+		}
+	case .IndexMulti:
+		fmt.assertf(false, "TODO: merge strings into an array")
+	case:
+		if node.left != nil {simplify_pattern_second_pass(node.left)}
+		if node.right != nil {simplify_pattern_second_pass(node.right)}
+	}
 }
