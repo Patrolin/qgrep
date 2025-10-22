@@ -43,12 +43,15 @@ _get_odin_context :: proc(arena: ^ArenaAllocator, thread_context: ^ThreadContext
 	ctx.temp_allocator = arena_allocator(arena, page_reserve(VIRTUAL_MEMORY_TO_RESERVE))
 	return
 }
-run_multicore :: proc(main: proc(), thread_count: int = 0) {
+init_console :: proc() {
 	when ODIN_OS == .Windows {
 		SetConsoleOutputCP(.CP_UTF8)
 	} else {
 		//assert(false)
 	}
+}
+run_multicore :: proc(main: proc(), thread_count: int = 0) {
+	init_console()
 
 	thread_count := thread_count
 	if thread_count == 0 {thread_count = get_thread_count()}

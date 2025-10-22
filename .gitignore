@@ -5,3 +5,5 @@
 *.pdb
 *.bin
 *.out
+
+unicode/gen/*.txt

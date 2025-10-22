@@ -1,8 +1,8 @@
 // odin run qgrep -default-to-nil-allocator
 package main
+import "../lib"
 import "base:intrinsics"
 import "core:fmt"
-import "lib"
 
 // TODO: case insensitive, accent insensitive
 

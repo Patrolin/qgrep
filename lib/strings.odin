@@ -1,14 +1,10 @@
 package lib
 import "base:intrinsics"
 import "core:bytes"
-import "core:strings"
 
 // ascii
 @(private)
-_AsciiBitset :: distinct [2]u64
-@(private)
-_ASCII_MAX_CHAR :: 127
-#assert((_ASCII_MAX_CHAR >> 6) < len(_AsciiBitset))
+_AsciiBitset :: distinct [4]u64
 
 index_ascii_char :: proc "c" (str: string, start: int, ascii_char: byte) -> (middle: int) {
 	/* TODO: do SIMD in a better way */
@@ -20,15 +16,15 @@ index_ascii :: proc "c" (str: string, start: int, ascii_chars: string) -> (middl
 	if len(ascii_chars) == 1 {
 		return index_ascii_char(str, start, ascii_chars[0])
 	} else {
-		as: _AsciiBitset
+		set: _AsciiBitset
 		for i in 0 ..< len(ascii_chars) {
-			char := ascii_chars[i]
-			assert_contextless(char <= _ASCII_MAX_CHAR)
-			as[char >> 6] |= 1 << uint(char & 63)
+			c := ascii_chars[i]
+			set[c >> 6] |= 1 << uint(c & 63)
 		}
 		for i in start ..< len(str) {
 			c := str[i]
-			if as[c >> 6] & (1 << (c & 63)) != 0 {return i}
+			/* NOTE: we need to be able to run this on utf8 strings! */
+			if set[c >> 6] & (1 << (c & 63)) != 0 {return i}
 		}
 		return len(str)
 	}
@@ -63,6 +59,12 @@ starts_with :: proc "c" (str, prefix: string) -> bool {
 }
 ends_with :: proc "c" (str, suffix: string) -> bool {
 	return len(str) >= len(suffix) && str[len(str) - len(suffix):] == suffix
+}
+trim_prefix :: proc "c" (str, suffix: string) -> string {
+	return ends_with(str, suffix) ? str[:len(str) - len(suffix)] : str
+}
+trim_suffix :: proc "c" (str, suffix: string) -> string {
+	return ends_with(str, suffix) ? str[:len(str) - len(suffix)] : str
 }
 
 @(private)

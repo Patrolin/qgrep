@@ -1,6 +1,6 @@
 package main
+import "../lib"
 import "core:fmt"
-import "lib"
 
 QGrepOptions :: struct {
 	include_dot_dirs:       bool,

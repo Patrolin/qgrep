@@ -1,12 +1,15 @@
 package main
+import "../lib"
+import "../unicode"
 import "core:fmt"
-import "core:unicode"
-import "lib"
 
 /* TODO: make our own unicode library... */
 normalize_string :: proc(str: string, options: ^QGrepOptions, allocator := context.temp_allocator) -> string {
 	str := str
 	//str = unicodedata.normalize("NFD", string) if is_symbol_sensitive else unicodedata.normalize("NFKD", string)
+	if !options.symbol_sensitive {
+		str = unicode.to_foldcase(str)
+	}
 	if !options.accent_sensitive {
 		sb := lib.string_builder(allocator = allocator)
 		for rune in str {
