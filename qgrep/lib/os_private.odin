@@ -252,9 +252,11 @@ when ODIN_OS == .Windows {
 // process
 when ODIN_OS == .Windows {
 	// procs
+	@(default_calling_convention = "system")
 	foreign kernel32 {
 		GetCommandLineW :: proc() -> CWSTR ---
 		ReadConsoleW :: proc(stdin_handle: Handle, wcbuffer: [^]u16, wcbuffer_len: DWORD, wchars_read: ^DWORD, input_control: rawptr) -> BOOL ---
+		SetConsoleOutputCP :: proc(code_page: CodePage) -> BOOL ---
 		ExitProcess :: proc(uExitCode: CUINT) ---
 	}
 } else when ODIN_OS == .Linux {
@@ -298,6 +300,7 @@ when ODIN_OS == .Windows {
 	};DWORD]
 
 	// procs
+	@(default_calling_convention = "system")
 	foreign kernel32 {
 		Sleep :: proc(ms: DWORD) ---
 		/* Return the new `ThreadHandle`, or `0` */
@@ -307,7 +310,7 @@ when ODIN_OS == .Windows {
 		DeleteSynchronizationBarrier :: proc(barrier: ^SYNCHRONIZATION_BARRIER) -> BOOL ---
 	}
 } else when ODIN_OS == .Linux {
-	CloneFlags :: bit_set[enum {}; CUINT]
+	CloneFlags :: bit_set[enum {};CUINT]
 	clone3 :: #force_inline proc "system" (procedure: ThreadProc, stack: [^]byte, flags: CloneFlags, param: rawptr) -> (thread_id: int) {
 		/* TODO: what in the heck is a trampoline??? */
 		assert_contextless(false)
@@ -369,6 +372,7 @@ when ODIN_OS == .Windows {
 	};DWORD]
 
 	// procs
+	@(default_calling_convention = "system")
 	foreign kernel32 {
 		SetUnhandledExceptionFilter :: proc(filter_callback: TOP_LEVEL_EXCEPTION_FILTER) -> TOP_LEVEL_EXCEPTION_FILTER ---
 		VirtualAlloc :: proc(address: rawptr, size: Size, type_flags: AllocTypeFlags, protect_flags: AllocProtectFlags) -> rawptr ---

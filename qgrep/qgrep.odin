@@ -21,7 +21,7 @@ main_multicore :: proc() {
 		// read input until we get a valid pattern
 		pattern: ^lib.ASTNode = ---
 		if lib.sync_is_first() {
-			pattern = read_and_parse_console_input_until_valid_pattern(options.input_prompt)
+			pattern = read_and_parse_console_input_until_valid_pattern(options)
 			if options.debug {lib.print_ast(pattern)}
 		}
 		lib.barrier(&pattern)

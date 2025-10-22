@@ -44,6 +44,12 @@ _get_odin_context :: proc(arena: ^ArenaAllocator, thread_context: ^ThreadContext
 	return
 }
 run_multicore :: proc(main: proc(), thread_count: int = 0) {
+	when ODIN_OS == .Windows {
+		SetConsoleOutputCP(.CP_UTF8)
+	} else {
+		//assert(false)
+	}
+
 	thread_count := thread_count
 	if thread_count == 0 {thread_count = get_thread_count()}
 

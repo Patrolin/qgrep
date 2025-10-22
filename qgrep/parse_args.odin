@@ -5,6 +5,9 @@ import "lib"
 QGrepOptions :: struct {
 	include_dot_dirs:       bool,
 	webstorm_compatibility: bool,
+	case_sensitive:         bool,
+	accent_sensitive:       bool,
+	symbol_sensitive:       bool,
 	debug:                  bool,
 	path_prefix:            string,
 	input_prompt:           string,
@@ -20,13 +23,22 @@ parse_args :: proc(allocator := context.temp_allocator) -> (options: ^QGrepOptio
 		switch arg {
 		case "-webstorm":
 			options.webstorm_compatibility = true
-			fmt.sbprint(&input_prompt_sb, " -webstorm")
+			fmt.sbprintf(&input_prompt_sb, " %v", arg)
 		case "-dotdirs":
 			options.include_dot_dirs = true
-			fmt.sbprint(&input_prompt_sb, " -dotdirs")
+			fmt.sbprintf(&input_prompt_sb, " %v", arg)
+		case "-case":
+			options.case_sensitive = true
+			fmt.sbprintf(&input_prompt_sb, " %v", arg)
+		case "-accent":
+			options.accent_sensitive = true
+			fmt.sbprintf(&input_prompt_sb, " %v", arg)
+		case "-symbol":
+			options.symbol_sensitive = true
+			fmt.sbprintf(&input_prompt_sb, " %v", arg)
 		case "-debug":
 			options.debug = true
-			fmt.sbprint(&input_prompt_sb, " -debug")
+			fmt.sbprintf(&input_prompt_sb, " %v", arg)
 		case "-dir":
 			i += 1
 			fmt.assertf(i < len(args), "Missing value for -path [string]")

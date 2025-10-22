@@ -1,5 +1,4 @@
 package lib
-import "base:intrinsics"
 import "core:fmt"
 import "core:strings"
 
@@ -22,4 +21,9 @@ repeat :: proc(str: string, count: int, allocator := context.temp_allocator) -> 
 		fmt.sbprint(&sb, str)
 	}
 	return to_string(sb)
+}
+lowercase :: proc(str: string, allocator := context.temp_allocator) -> string {
+	res, err := strings.to_lower(str, allocator = allocator)
+	assert_contextless(err == nil)
+	return res
 }

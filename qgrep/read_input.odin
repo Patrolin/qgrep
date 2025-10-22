@@ -1,6 +1,26 @@
 package main
 import "core:fmt"
+import "core:unicode"
 import "lib"
+
+/* TODO: make our own unicode library... */
+normalize_string :: proc(str: string, options: ^QGrepOptions, allocator := context.temp_allocator) -> string {
+	str := str
+	//str = unicodedata.normalize("NFD", string) if is_symbol_sensitive else unicodedata.normalize("NFKD", string)
+	if !options.accent_sensitive {
+		sb := lib.string_builder(allocator = allocator)
+		for rune in str {
+			if !unicode.is_combining(rune) {
+				fmt.sbprint(&sb, rune)
+			}
+		}
+		str = lib.to_string(sb)
+	}
+	if !options.case_sensitive {
+		str = lib.lowercase(str)
+	}
+	return str
+}
 
 TokenType :: enum {
 	None,
@@ -24,11 +44,11 @@ TokenType :: enum {
 	ParsedString = -1,
 	IndexMulti = -2,
 }
-read_and_parse_console_input_until_valid_pattern :: proc(input_prompt: string) -> ^lib.ASTNode {
+read_and_parse_console_input_until_valid_pattern :: proc(options: ^QGrepOptions) -> ^lib.ASTNode {
 	for {
 		free_all(context.temp_allocator)
 		// read console input
-		input := lib.read_console_input(input_prompt)
+		input := lib.read_console_input(options.input_prompt)
 		// parse
 		parse_pattern :: proc(parser: ^lib.Parser, prev_token_type: int) -> (token: lib.Token, operator_precedence: int) {
 			i := parser.start
@@ -105,7 +125,7 @@ read_and_parse_console_input_until_valid_pattern :: proc(input_prompt: string) -
 		// simplify
 		/* TODO: implement IndexMulti */
 		//simplify_pattern_first_pass(pattern)
-		simplify_pattern_second_pass(pattern)
+		simplify_pattern_second_pass(pattern, options)
 		return pattern
 	}
 }
@@ -125,7 +145,7 @@ simplify_pattern_first_pass :: proc(node: ^lib.ASTNode, is_topmost_or := true) -
 	}
 	return is_index_multi | int(TokenType(node.type) == .String)
 }
-simplify_pattern_second_pass :: proc(node: ^lib.ASTNode) {
+simplify_pattern_second_pass :: proc(node: ^lib.ASTNode, options: ^QGrepOptions) {
 	#partial switch TokenType(node.type) {
 	case .String:
 		{
@@ -145,14 +165,15 @@ simplify_pattern_second_pass :: proc(node: ^lib.ASTNode) {
 					fmt.sbprint(&sb, rune(char))
 				}
 			}
+			parsed_string := lib.to_string(sb)
 			node.type = int(TokenType.ParsedString)
-			node.str = lib.to_string(sb)
+			node.str = normalize_string(parsed_string, options)
 		}
 	case .IndexMulti:
 		// merge `or`s
 		fmt.assertf(false, "TODO: merge strings into an array")
 	case:
-		if node.left != nil {simplify_pattern_second_pass(node.left)}
-		if node.right != nil {simplify_pattern_second_pass(node.right)}
+		if node.left != nil {simplify_pattern_second_pass(node.left, options)}
+		if node.right != nil {simplify_pattern_second_pass(node.right, options)}
 	}
 }
