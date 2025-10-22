@@ -5,7 +5,6 @@ import "core:fmt"
 import "lib"
 
 main :: proc() {
-	file_walk := lib.make_file_walk()
 	lib.run_multicore(main_multicore)
 }
 main_multicore :: proc() {
@@ -50,18 +49,19 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 		for current_index < len(file_walk.file_paths) {
 			current_index, ok = intrinsics.atomic_compare_exchange_strong(&file_walk.current_index, current_index, current_index + 1)
 			if ok {
-				file_path := file_walk.file_paths[current_index]
+				info: FilterInfo
+				info.file_path = file_walk.file_paths[current_index]
 				// default filter path
 				if !options.include_dot_dirs {
-					if default_filter_path(file_path) == 0 {continue}
+					if default_filter_path(info.file_path) == 0 {continue}
 				}
 				// filter path
-				_, found := filter_path(file_path, pattern, 0, false)
+				_, found := filter_path(&info, pattern, 0, .String)
 				if found == 0 {continue}
 				found_matching_path = true
 				// filter line
 				/* TODO: read the file and filter lines by user input */
-				fmt.printfln("thread %v: %v", context.user_index, file_path)
+				fmt.printfln("thread %v: %v", context.user_index, info)
 			}
 		}
 		if intrinsics.atomic_load(&file_walk.have_all_file_paths) {break}
@@ -83,38 +83,61 @@ default_filter_path :: proc(file_path: string) -> (found: int) {
 	j := lib.index(file_path, i, "/")
 	return j == len(file_path) ? 1 : 0
 }
+FilterInfo :: struct {
+	file_path:   string,
+	line_number: int,
+	line:        string,
+}
+FilterType :: enum {
+	String,
+	File,
+	Line,
+}
 /* `end`: index after the match \
 	`found`: -1 if undefined, 0 if false, 1 if true */
-filter_path :: proc(file_path: string, node: ^lib.ASTNode, start: int, is_file_unary: bool) -> (end: int, found: int) {
+filter_path :: proc(info: ^FilterInfo, node: ^lib.ASTNode, start: int, filter_type: FilterType) -> (end: int, found: int) {
 	#partial switch TokenType(node.type) {
 	case:
 		fmt.assertf(false, "Invalid token type: %v", TokenType(node.type))
-	case .ParsedString:
-		if is_file_unary {
-			found_index := lib.index(file_path, start, node.str)
-			if found_index < len(file_path) {
-				end = found_index + len(node.str)
-				found = 1
-			} else {
-				end = start
-				found = 0
-			}
+	case .Number:
+		fmt.assertf(filter_type == .Line, "Misplaced integer")
+		if info.line_number != 0 {
+			assert(false)
 		} else {
 			found = -1
 		}
+	case .ParsedString:
+		switch filter_type {
+		case .File:
+			{
+				found_index := lib.index(info.file_path, start, node.str)
+				if found_index < len(info.file_path) {
+					end = found_index + len(node.str)
+					found = 1
+				} else {
+					end = start
+					found = 0
+				}
+			}
+		case .Line, .String:
+			if info.line_number != 0 {
+				assert(false)
+			} else {
+				found = -1
+			}
+		}
 	// unary ops
 	case .Not:
-		end, found = filter_path(file_path, node.value, start, is_file_unary)
+		end, found = filter_path(info, node.value, start, filter_type)
 		found = found >= 0 ? 1 - found : found
 	case .File:
-		end, found = filter_path(file_path, node.value, start, true)
+		end, found = filter_path(info, node.value, start, .File)
 	case .Line:
-		end = start
-		found = -1
+		end, found = filter_path(info, node.value, start, .Line)
 	// binary ops
 	case .And:
-		left_end, left_found := filter_path(file_path, node.left, start, is_file_unary)
-		right_end, right_found := filter_path(file_path, node.right, start, is_file_unary)
+		left_end, left_found := filter_path(info, node.left, start, filter_type)
+		right_end, right_found := filter_path(info, node.right, start, filter_type)
 		end = max(left_end, right_end)
 		if right_found < 0 {
 			found = left_found
@@ -124,8 +147,8 @@ filter_path :: proc(file_path: string, node: ^lib.ASTNode, start: int, is_file_u
 			found = min(left_found, right_found)
 		}
 	case .Or:
-		left_end, left_found := filter_path(file_path, node.left, start, is_file_unary)
-		right_end, right_found := filter_path(file_path, node.right, start, is_file_unary)
+		left_end, left_found := filter_path(info, node.left, start, filter_type)
+		right_end, right_found := filter_path(info, node.right, start, filter_type)
 		found = max(left_found, right_found)
 		if right_found < 0 {
 			end = left_end
@@ -136,8 +159,8 @@ filter_path :: proc(file_path: string, node: ^lib.ASTNode, start: int, is_file_u
 		}
 	case .Then:
 		/* NOTE: we always need to run both sides in order to check for undefined */
-		left_end, left_found := filter_path(file_path, node.left, start, is_file_unary)
-		right_end, right_found := filter_path(file_path, node.right, end, is_file_unary)
+		left_end, left_found := filter_path(info, node.left, start, filter_type)
+		right_end, right_found := filter_path(info, node.right, end, filter_type)
 		/* TODO: report error */
 		fmt.assertf(left_found >= 0 && right_found >= 0, "Invalid then statement")
 		end = right_end
