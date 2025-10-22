@@ -100,7 +100,7 @@ filter_path :: proc(info: ^FilterInfo, node: ^lib.ASTNode, start: int, filter_ty
 	case:
 		fmt.assertf(false, "Invalid token type: %v", TokenType(node.type))
 	case .Number:
-		fmt.assertf(filter_type == .Line, "Misplaced integer")
+		fmt.assertf(filter_type == .Line, "Misplaced integer: %v", node.slice)
 		if info.line_number != 0 {
 			assert(false)
 		} else {

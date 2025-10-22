@@ -47,7 +47,6 @@ read_and_parse_console_input_until_valid_pattern :: proc(input_prompt: string) -
 			case '"':
 				operator_precedence = int(lib.OpType.Value)
 				token.type = int(TokenType.String)
-				/* TODO: parse strings with backslash escapes */
 				j := lib.index_ascii_char(parser.str, i + 1, '"')
 				if j == len(parser.str) {
 					error := fmt.tprintf("Unterminated string: %v", parser.str[i:j])
