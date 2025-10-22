@@ -10,4 +10,4 @@
         - https://www.unicode.org/Public/UCD/latest/ucd/CaseFolding.txt
 2. Put it in this folder.
 3. `odin run unicode/gen`
-4. `odin test unicode`
+4. `odin test unicode` TODO: write some tests
