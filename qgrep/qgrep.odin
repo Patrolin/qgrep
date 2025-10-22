@@ -1,12 +1,12 @@
 // odin run qgrep -default-to-nil-allocator
+// odin build qgrep -default-to-nil-allocator -o:speed
 package main
 import "../lib"
 import "base:intrinsics"
 import "core:fmt"
 
-// TODO: case insensitive, accent insensitive
-
 main :: proc() {
+	/* TODO: run multicore, write to a log and sort the log after */
 	lib.run_multicore(main_multicore, 1)
 }
 main_multicore :: proc() {
@@ -53,10 +53,9 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 			if ok {
 				info: FilterInfo
 				info.file_path = file_walk.file_paths[current_index]
-				// default filter path
-				if !options.include_dot_dirs {
-					if default_path_filter(info.file_path) == 0 {continue}
-				}
+				// default filters
+				if !options.include_dot_dirs && default_dotdir_filter(info.file_path) == 0 {continue}
+				if !options.include_binary_files && default_binary_file_filter(info.file_path) == 0 {continue}
 				// filter path
 				_, found := filter_by_pattern(&info, pattern, 0, .String)
 				if found == 0 {continue}
@@ -102,12 +101,20 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 	lib.barrier()
 }
 /* `found`: -1 if undefined, 0 if false, 1 if true */
-default_path_filter :: proc(file_path: string) -> (found: int) {
+default_dotdir_filter :: proc(file_path: string) -> (found: int) {
 	// not file ("/." then "/")
 	i := lib.index(file_path, 0, "/.")
 	j := lib.index(file_path, i, "/")
 	return j == len(file_path) ? 1 : 0
 }
+default_binary_file_filter :: proc(file_path: string) -> (found: int) {
+	BINARY_SUFFIXES :: []string{".pyc", ".pdb", ".bin", ".exe", ".out"}
+	for suffix in BINARY_SUFFIXES {
+		if lib.ends_with(file_path, suffix) {return 0}
+	}
+	return 1
+}
+
 FilterInfo :: struct {
 	file_path:   string,
 	line_number: int,
@@ -132,9 +139,11 @@ filter_by_pattern :: proc(info: ^FilterInfo, node: ^lib.ASTNode, start: int, fil
 			found = -1
 		}
 	case .ParsedString:
+		fmt.assertf(node.str != "", "Failed to parse string")
 		switch filter_type {
 		case .File:
 			{
+				assert(false)
 				found_index := lib.index(info.file_path, start, node.str)
 				if found_index < len(info.file_path) {
 					end = found_index + len(node.str)

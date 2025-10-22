@@ -4,13 +4,17 @@ import "../unicode"
 import "core:fmt"
 
 /* TODO: make our own unicode library... */
-normalize_string :: proc(str: string, options: ^QGrepOptions, allocator := context.temp_allocator) -> string {
-	str := str
-	//str = unicodedata.normalize("NFD", string) if is_symbol_sensitive else unicodedata.normalize("NFKD", string)
-	if !options.symbol_sensitive {
-		str = unicode.to_foldcase(str)
+normalize_string :: proc(input: string, options: ^QGrepOptions, allocator := context.temp_allocator) -> string {
+	str := input
+	if options.symbol_sensitive {
+		str = unicode.normalize_nfd(str)
+	} else {
+		str = unicode.normalize_nfkd(str)
 	}
+	assert_contextless(input == "" || str != "")
+
 	if !options.accent_sensitive {
+		/* NOTE: `str` must be in NFD or NFKD form at this point */
 		sb := lib.string_builder(allocator = allocator)
 		for rune in str {
 			if !unicode.is_combining(rune) {
@@ -19,6 +23,7 @@ normalize_string :: proc(str: string, options: ^QGrepOptions, allocator := conte
 		}
 		str = lib.to_string(sb)
 	}
+
 	if !options.case_sensitive {
 		str = lib.lowercase(str)
 	}
