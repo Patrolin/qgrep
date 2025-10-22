@@ -33,6 +33,16 @@ index_ascii :: proc "c" (str: string, start: int, ascii_chars: string) -> (middl
 		return len(str)
 	}
 }
+last_index_ascii_char :: proc "c" (str: string, ascii_char: byte) -> (start: int) {
+	/* TODO: do SIMD in a better way */
+	index_or_err := #force_inline bytes.last_index_byte(transmute([]u8)str, ascii_char)
+	return index_or_err == -1 ? -1 : index_or_err
+}
+
+// newlines
+index_newline :: proc "c" (str: string, start: int) -> (end: int) {
+	return index_ascii(str, start, "\r\n")
+}
 index_ignore_newline :: proc "c" (str: string, start: int) -> (end: int) {
 	j := start
 	if j < len(str) && str[j] == '\r' {j += 1}
@@ -45,11 +55,6 @@ index_ignore_newlines :: proc "c" (str: string, start: int) -> (end: int) {
 		j += 1
 	}
 	return j
-}
-last_index_ascii_char :: proc "c" (str: string, ascii_char: byte) -> (start: int) {
-	/* TODO: do SIMD in a better way */
-	index_or_err := #force_inline bytes.last_index_byte(transmute([]u8)str, ascii_char)
-	return index_or_err == -1 ? -1 : index_or_err
 }
 
 // strings

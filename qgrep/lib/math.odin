@@ -40,6 +40,9 @@ downcast_u32 :: #force_inline proc(value: int, loc := #caller_location) -> u32 {
 	fmt.assertf(int(value_u32) == value, "Value too big for u32: %v", value, loc = loc)
 	return value_u32
 }
+saturate_u32 :: #force_inline proc(value: int, loc := #caller_location) -> u32 {
+	return u32(min(value, int(max(u32))))
+}
 
 ptr_add :: #force_inline proc(ptr: rawptr, offset: int) -> [^]byte {
 	return ([^]byte)(uintptr(ptr) + uintptr(offset))

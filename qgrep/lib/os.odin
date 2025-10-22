@@ -5,7 +5,7 @@ when ODIN_OS == .Windows {
 	Handle :: distinct uintptr
 	FileHandle :: distinct Handle
 } else when ODIN_OS == .Linux {
-	FileHandle :: distinct CINT
+	FileHandle :: distinct CUINT
 	Handle :: FileHandle
 } else {
 	//#assert(false)

@@ -4,8 +4,10 @@ import "base:intrinsics"
 import "core:fmt"
 import "lib"
 
+// TODO: case insensitive, accent insensitive
+
 main :: proc() {
-	lib.run_multicore(main_multicore)
+	lib.run_multicore(main_multicore, 1)
 }
 main_multicore :: proc() {
 	// parse args
@@ -53,15 +55,38 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 				info.file_path = file_walk.file_paths[current_index]
 				// default filter path
 				if !options.include_dot_dirs {
-					if default_filter_path(info.file_path) == 0 {continue}
+					if default_path_filter(info.file_path) == 0 {continue}
 				}
 				// filter path
-				_, found := filter_path(&info, pattern, 0, .String)
+				_, found := filter_by_pattern(&info, pattern, 0, .String)
 				if found == 0 {continue}
 				found_matching_path = true
 				// filter line
-				/* TODO: read the file and filter lines by user input */
-				fmt.printfln("thread %v: %v", context.user_index, info)
+				file := lib.open_file_for_reading(info.file_path)
+				fmt.assertf(file != lib.FileHandle(lib.INVALID_HANDLE), "failed to open file")
+				buffer: [4096]byte = ---
+				read_start := 0
+				bytes_read := 1
+				for bytes_read != 0 {
+					if bytes_read != 0 {
+						bytes_read = lib.read_from_file(file, buffer[read_start:])
+					}
+					slice := transmute(string)(buffer[:read_start + bytes_read])
+					for len(slice) >= 512 || (len(slice) > 0 && bytes_read == 0) {
+						i := lib.index_newline(slice, 0)
+						info.line_number += 1
+						info.line = slice[:i]
+						//fmt.printfln("-- '%v'", info.line)
+						_, found := filter_by_pattern(&info, pattern, 0, .String)
+						if found != 0 {
+							fmt.printfln("%v:%v %v", info.file_path, info.line_number, info.line)
+						}
+						j := lib.index_ignore_newline(slice, i)
+						slice = slice[j:]
+					}
+					lib.copy(transmute([]byte)slice, buffer[:])
+					read_start = len(slice)
+				}
 			}
 		}
 		if intrinsics.atomic_load(&file_walk.have_all_file_paths) {break}
@@ -77,7 +102,7 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 	lib.barrier()
 }
 /* `found`: -1 if undefined, 0 if false, 1 if true */
-default_filter_path :: proc(file_path: string) -> (found: int) {
+default_path_filter :: proc(file_path: string) -> (found: int) {
 	// not file ("/." then "/")
 	i := lib.index(file_path, 0, "/.")
 	j := lib.index(file_path, i, "/")
@@ -95,7 +120,7 @@ FilterType :: enum {
 }
 /* `end`: index after the match \
 	`found`: -1 if undefined, 0 if false, 1 if true */
-filter_path :: proc(info: ^FilterInfo, node: ^lib.ASTNode, start: int, filter_type: FilterType) -> (end: int, found: int) {
+filter_by_pattern :: proc(info: ^FilterInfo, node: ^lib.ASTNode, start: int, filter_type: FilterType) -> (end: int, found: int) {
 	#partial switch TokenType(node.type) {
 	case:
 		fmt.assertf(false, "Invalid token type: %v", TokenType(node.type))
@@ -119,7 +144,22 @@ filter_path :: proc(info: ^FilterInfo, node: ^lib.ASTNode, start: int, filter_ty
 					found = 0
 				}
 			}
-		case .Line, .String:
+		case .String:
+			{
+				if info.line_number == 0 {
+					found = -1
+					break
+				}
+				found_index := lib.index(info.line, start, node.str)
+				if found_index < len(info.line) {
+					end = found_index + len(node.str)
+					found = 1
+				} else {
+					end = start
+					found = 0
+				}
+			}
+		case .Line:
 			if info.line_number != 0 {
 				assert(false)
 			} else {
@@ -128,16 +168,16 @@ filter_path :: proc(info: ^FilterInfo, node: ^lib.ASTNode, start: int, filter_ty
 		}
 	// unary ops
 	case .Not:
-		end, found = filter_path(info, node.value, start, filter_type)
+		end, found = filter_by_pattern(info, node.value, start, filter_type)
 		found = found >= 0 ? 1 - found : found
 	case .File:
-		end, found = filter_path(info, node.value, start, .File)
+		end, found = filter_by_pattern(info, node.value, start, .File)
 	case .Line:
-		end, found = filter_path(info, node.value, start, .Line)
+		end, found = filter_by_pattern(info, node.value, start, .Line)
 	// binary ops
 	case .And:
-		left_end, left_found := filter_path(info, node.left, start, filter_type)
-		right_end, right_found := filter_path(info, node.right, start, filter_type)
+		left_end, left_found := filter_by_pattern(info, node.left, start, filter_type)
+		right_end, right_found := filter_by_pattern(info, node.right, start, filter_type)
 		end = max(left_end, right_end)
 		if right_found < 0 {
 			found = left_found
@@ -147,8 +187,8 @@ filter_path :: proc(info: ^FilterInfo, node: ^lib.ASTNode, start: int, filter_ty
 			found = min(left_found, right_found)
 		}
 	case .Or:
-		left_end, left_found := filter_path(info, node.left, start, filter_type)
-		right_end, right_found := filter_path(info, node.right, start, filter_type)
+		left_end, left_found := filter_by_pattern(info, node.left, start, filter_type)
+		right_end, right_found := filter_by_pattern(info, node.right, start, filter_type)
 		found = max(left_found, right_found)
 		if right_found < 0 {
 			end = left_end
@@ -159,10 +199,10 @@ filter_path :: proc(info: ^FilterInfo, node: ^lib.ASTNode, start: int, filter_ty
 		}
 	case .Then:
 		/* NOTE: we always need to run both sides in order to check for undefined */
-		left_end, left_found := filter_path(info, node.left, start, filter_type)
-		right_end, right_found := filter_path(info, node.right, end, filter_type)
+		left_end, left_found := filter_by_pattern(info, node.left, start, filter_type)
+		right_end, right_found := filter_by_pattern(info, node.right, left_end, filter_type)
 		/* TODO: report error */
-		fmt.assertf(left_found >= 0 && right_found >= 0, "Invalid then statement")
+		fmt.assertf(left_found >= 0 && right_found >= 0 || left_found == right_found, "Invalid then statement")
 		end = right_end
 		found = min(left_found, right_found)
 	// simplified ops

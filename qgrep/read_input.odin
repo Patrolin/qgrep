@@ -75,13 +75,15 @@ read_and_parse_console_input_until_valid_pattern :: proc(input_prompt: string) -
 				case "line":
 					operator_precedence = int(lib.OpType.Unary)
 					token.type = int(TokenType.Line)
+				case "or":
+					token.type = int(TokenType.Or)
+					operator_precedence = 0
 				case "and":
 					token.type = int(TokenType.And)
 					operator_precedence = 1
-				case "or":
-					token.type = int(TokenType.Or)
 				case "then":
 					token.type = int(TokenType.Then)
+					operator_precedence = 2
 				case:
 					if TokenType(prev_token_type) == .Line {
 						operator_precedence = int(lib.OpType.Value)
@@ -101,7 +103,8 @@ read_and_parse_console_input_until_valid_pattern :: proc(input_prompt: string) -
 			continue
 		}
 		// simplify
-		simplify_pattern_first_pass(pattern)
+		/* TODO: implement IndexMulti */
+		//simplify_pattern_first_pass(pattern)
 		simplify_pattern_second_pass(pattern)
 		return pattern
 	}
