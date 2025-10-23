@@ -54,8 +54,7 @@ when ODIN_OS == .Windows {
 
 	@(require_results)
 	copy_cwstr_to_string :: proc(cwstr: CWSTR, wlen := -1, allocator := context.temp_allocator) -> string {
-		wlen_cint := CINT(wlen)
-		assert(int(wlen_cint) == wlen)
+		wlen_cint := downcast_cint(wlen)
 		if intrinsics.expect(wlen_cint == 0, false) {return ""}
 
 		cstr_len := WideCharToMultiByte(.CP_UTF8, {.WC_ERR_INVALID_CHARS}, cwstr, wlen_cint, nil, 0, nil, nil)
@@ -63,16 +62,16 @@ when ODIN_OS == .Windows {
 		str_len := cstr_len - (wlen == -1 ? 1 : 0)
 		if intrinsics.expect(str_len == 0, false) {return ""}
 
-		str_buf := make([]byte, cstr_len, allocator = allocator)
+		str_buf, err := make([]byte, cstr_len, allocator = allocator)
+		fmt.assertf(err == nil, "err: %v", err)
 		written_bytes := WideCharToMultiByte(.CP_UTF8, {.WC_ERR_INVALID_CHARS}, cwstr, wlen_cint, &str_buf[0], cstr_len, nil, nil)
-		assert(written_bytes == cstr_len)
+		fmt.assertf(written_bytes == cstr_len, "Failed to convert to cwstr: %v, %v", written_bytes, cstr_len)
 		return string(str_buf[:str_len])
 	}
 	@(require_results)
 	copy_string_to_cwstr :: proc(str: string, allocator := context.temp_allocator, loc := #caller_location) -> []u16 {
 		str_len := len(str)
-		str_len_cint := CINT(str_len)
-		assert(int(str_len_cint) == str_len, loc = loc)
+		str_len_cint := downcast_cint(str_len)
 
 		wlen := MultiByteToWideChar(.CP_UTF8, {.MB_ERR_INVALID_CHARS}, raw_data(str), str_len_cint, nil, 0)
 		assert(wlen != 0, loc = loc)

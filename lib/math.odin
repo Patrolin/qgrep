@@ -35,6 +35,14 @@ CLONGLONG :: i64
 CULONGLONG :: u64
 
 // int procs
+downcast_cint :: #force_inline proc(value: int, loc := #caller_location) -> CINT {
+	value_cint := CINT(value)
+	fmt.assertf(int(value_cint) == value, "Value too big for cint: %v", value, loc = loc)
+	return value_cint
+}
+saturate_cint :: #force_inline proc(value: int, loc := #caller_location) -> CINT {
+	return CINT(min(value, int(max(CINT))))
+}
 downcast_u32 :: #force_inline proc(value: int, loc := #caller_location) -> u32 {
 	value_u32 := u32(value)
 	fmt.assertf(int(value_u32) == value, "Value too big for u32: %v", value, loc = loc)

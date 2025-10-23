@@ -120,6 +120,16 @@ arena_allocator :: proc(arena_allocator: ^ArenaAllocator, buffer: []byte) -> mem
 	arena_allocator^ = ArenaAllocator{buffer_start, buffer_end, buffer_start, false}
 	return mem.Allocator{arena_allocator_proc, arena_allocator}
 }
+sub_arena :: proc() -> mem.Allocator {
+	assert(ODIN_DEFAULT_TO_NIL_ALLOCATOR == true)
+	assert(false)
+	arena := (^ArenaAllocator)(context.temp_allocator.data)
+	sub_arena := new(ArenaAllocator, allocator = context.temp_allocator)
+	sub_arena.buffer_start = arena.next_ptr
+	sub_arena.buffer_end = arena.buffer_end
+	sub_arena.next_ptr = arena.next_ptr
+	return mem.Allocator{arena_allocator_proc, sub_arena}
+}
 arena_allocator_proc :: proc(
 	allocator: rawptr,
 	mode: mem.Allocator_Mode,
@@ -131,6 +141,7 @@ arena_allocator_proc :: proc(
 	data: []byte,
 	err: mem.Allocator_Error,
 ) {
+	assert(ODIN_DEFAULT_TO_NIL_ALLOCATOR == true)
 	arena_allocator := (^ArenaAllocator)(allocator)
 	// assert single threaded
 	ok := get_lock(&arena_allocator.lock)

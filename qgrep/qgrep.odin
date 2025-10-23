@@ -5,6 +5,14 @@ import "../lib"
 import "base:intrinsics"
 import "core:fmt"
 
+FileWalk :: struct {
+	file_paths:           [dynamic]string,
+	have_all_file_paths:  bool,
+	current_index:        int,
+	include_node_modules: bool,
+	include_dot_dirs:     bool,
+}
+
 main :: proc() {
 	/* TODO: run multicore, write to a log and sort the log after */
 	lib.run_multicore(main_multicore, 1)
@@ -26,24 +34,56 @@ main_multicore :: proc() {
 		}
 		lib.barrier(&pattern)
 
-		// print lines filtered by the pattern
-		qgrep_multicore(options, pattern)
+		// make a shared list of files
+		file_walk: ^FileWalk = ---
+		if lib.sync_is_first() {
+			file_walk := new(FileWalk, allocator = context.temp_allocator)
+			file_walk.file_paths = {}
+			file_walk.file_paths.allocator = context.temp_allocator
+			file_walk.include_node_modules = options.include_node_modules
+			file_walk.include_dot_dirs = options.include_dot_dirs
+		}
+		lib.barrier(&file_walk)
+
+		fmt.printfln("f.0: %p", file_walk)
+		// asynchronously compute the list of files
+		if lib.sync_is_first() {
+			dir_path := options.path_prefix != "" ? options.path_prefix : "."
+			lib.walk_paths(dir_path, file_walk, proc(path: string, user_data: rawptr, is_dir: bool) -> (keep_going: bool) {
+				fmt.printfln("walk_proc: '%v', %p, %v", path, user_data, is_dir)
+				fw := (^FileWalk)(user_data)
+				if is_dir {
+					fmt.printfln("ayaya.0")
+					fmt.printfln("ayaya.1: %x", fw.current_index)
+					if !fw.include_node_modules && lib.ends_with(path, "node_modules") {return false}
+					fmt.printfln("ayaya.2")
+					if !fw.include_dot_dirs {
+						i := lib.index(path, 0, "/.")
+						j := lib.index(path, i, "/")
+						fmt.printfln("ayaya.3")
+						return j != len(path)
+					}
+				} else {
+					BINARY_SUFFIXES :: []string{".pyc", ".pdb", ".bin", ".exe", ".out"}
+					for suffix in BINARY_SUFFIXES {
+						if lib.ends_with(path, suffix) {return is_dir}
+					}
+					file_paths := &fw.file_paths
+					append(file_paths, path)
+				}
+				return is_dir
+			})
+			fmt.printfln("foo")
+			intrinsics.atomic_store(&file_walk.have_all_file_paths, true)
+			fmt.printfln("foo.1")
+			fmt.printfln("wa: %v", file_walk.file_paths[:4])
+		}
+		// asynchronously print lines filtered by the pattern
+		qgrep_multicore(options, pattern, file_walk)
 	}
 }
-qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
-	// make a shared list of files
-	file_walk: ^lib.FileWalk = ---
-	if lib.sync_is_first() {
-		file_walk = lib.make_file_walk()
-	}
-	lib.barrier(&file_walk)
-
-	// asynchronously compute the list of files
-	if lib.sync_is_first() {
-		dir_path := options.path_prefix != "" ? options.path_prefix : "."
-		lib.walk_files(dir_path, file_walk)
-	}
-	// asynchronously walk the list of files
+qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode, file_walk: ^FileWalk) {
+	context.temp_allocator = lib.sub_arena()
 	found_matching_path := false
 	for {
 		current_index := intrinsics.atomic_load(&file_walk.current_index)
@@ -51,11 +91,9 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 		for current_index < len(file_walk.file_paths) {
 			current_index, ok = intrinsics.atomic_compare_exchange_strong(&file_walk.current_index, current_index, current_index + 1)
 			if ok {
+				free_all(context.temp_allocator)
 				info: FilterInfo
 				info.file_path = file_walk.file_paths[current_index]
-				// default filters
-				if !options.include_dot_dirs && default_dotdir_filter(info.file_path) == 0 {continue}
-				if !options.include_binary_files && default_binary_file_filter(info.file_path) == 0 {continue}
 				// filter path
 				_, found := filter_by_pattern(&info, pattern, 0, .String)
 				if found == 0 {continue}
@@ -103,20 +141,6 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 		if !found_matching_path {fmt.printfln("No matching paths.")}
 	}
 	lib.barrier()
-}
-/* `found`: -1 if undefined, 0 if false, 1 if true */
-default_dotdir_filter :: proc(file_path: string) -> (found: int) {
-	// not file ("/." then "/")
-	i := lib.index(file_path, 0, "/.")
-	j := lib.index(file_path, i, "/")
-	return j == len(file_path) ? 1 : 0
-}
-default_binary_file_filter :: proc(file_path: string) -> (found: int) {
-	BINARY_SUFFIXES :: []string{".pyc", ".pdb", ".bin", ".exe", ".out"}
-	for suffix in BINARY_SUFFIXES {
-		if lib.ends_with(file_path, suffix) {return 0}
-	}
-	return 1
 }
 
 FilterInfo :: struct {

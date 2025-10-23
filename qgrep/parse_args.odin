@@ -4,6 +4,7 @@ import "core:fmt"
 
 QGrepOptions :: struct {
 	include_dot_dirs:       bool,
+	include_node_modules:   bool,
 	include_binary_files:   bool,
 	webstorm_compatibility: bool,
 	case_sensitive:         bool,
@@ -27,6 +28,9 @@ parse_args :: proc(allocator := context.temp_allocator) -> (options: ^QGrepOptio
 			fmt.sbprintf(&input_prompt_sb, " %v", arg)
 		case "-dotdirs":
 			options.include_dot_dirs = true
+			fmt.sbprintf(&input_prompt_sb, " %v", arg)
+		case "-node_modules":
+			options.include_node_modules = true
 			fmt.sbprintf(&input_prompt_sb, " %v", arg)
 		case "-binary":
 			options.include_binary_files = true

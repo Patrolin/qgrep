@@ -36,11 +36,15 @@ ThreadContext :: struct #align (64) {
 
 @(private = "file")
 _get_odin_context :: proc(arena: ^ArenaAllocator, thread_context: ^ThreadContext) -> (ctx: runtime.Context) {
+	when ODIN_DEFAULT_TO_NIL_ALLOCATOR {
+		ctx.allocator = runtime.Allocator{half_fit_allocator_proc, &global_allocator}
+		ctx.temp_allocator = arena_allocator(arena, page_reserve(VIRTUAL_MEMORY_TO_RESERVE))
+	} else {
+		ctx = runtime.default_context()
+	}
 	ctx.user_index = thread_context.thread_index
 	ctx.user_ptr = thread_context
 	ctx.assertion_failure_proc = runtime.default_assertion_failure_proc
-	ctx.allocator = runtime.Allocator{half_fit_allocator_proc, &global_allocator}
-	ctx.temp_allocator = arena_allocator(arena, page_reserve(VIRTUAL_MEMORY_TO_RESERVE))
 	return
 }
 init_console :: proc() {
@@ -58,8 +62,10 @@ run_multicore :: proc(main: proc(), thread_count: int = 0) {
 
 	arena: ArenaAllocator = ---
 	init_page_fault_handler()
-	shared_allocator := half_fit_allocator(&global_allocator, page_reserve(VIRTUAL_MEMORY_TO_RESERVE))
-	context.allocator = shared_allocator
+	when ODIN_DEFAULT_TO_NIL_ALLOCATOR {
+		shared_allocator := half_fit_allocator(&global_allocator, page_reserve(VIRTUAL_MEMORY_TO_RESERVE))
+		context.allocator = shared_allocator
+	}
 	shared_barrier: OsBarrier
 	_create_os_barrier(&shared_barrier, thread_count)
 	thread_contexts := make([]ThreadContext, thread_count)

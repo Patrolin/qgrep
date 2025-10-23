@@ -73,6 +73,7 @@ half_fit_allocator_proc :: proc(
 	data: []byte,
 	err: mem.Allocator_Error,
 ) {
+	assert(ODIN_DEFAULT_TO_NIL_ALLOCATOR == true)
 	half_fit := (^HalfFitAllocator)(allocator_data)
 	wait_for_lock(&half_fit.lock)
 	defer release_lock(&half_fit.lock)

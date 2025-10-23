@@ -34,24 +34,15 @@ move_path_atomically :: proc(src_path, dest_path: string) {
 		assert(false)
 	}
 }
-/* NOTE: We only support up to `wlen(dir) + 1 + wlen(relative_file_path) < MAX_PATH (259 utf16 chars + null terminator)`. \
+WalkFilesProc :: proc(path: string, user_data: rawptr, is_dir: bool) -> (keep_going: bool)
+/* Walk files if `start_path` is a directory, walk the file if `start_path` is a file.
+  NOTE: We only support up to `wlen(dir) + 1 + wlen(relative_file_path) < MAX_PATH (259 utf16 chars + null terminator)`. \
 	While we *can* give windows long paths as input, it has no way to return long paths back to us. \
 	Windows gives us (somewhat) relative paths, so we could theoretically extend support to `wlen(relative_file_path) < MAX_PATH`. \
 	But that doesn't really change much.
 */
-FileWalk :: struct {
-	file_paths:          [dynamic]string,
-	have_all_file_paths: bool,
-	current_index:       int,
-}
-make_file_walk :: proc(allocator := context.temp_allocator) -> ^FileWalk {
-	file_walk := new(FileWalk, allocator = allocator)
-	file_walk.file_paths.allocator = allocator
-	return file_walk
-}
-/* Walk files if `start_path` is a directory, walk the file if `start_path` is a file.
-*/
-walk_files :: proc(start_path: string, file_walk: ^FileWalk) {
+walk_paths :: proc(start_path: string, user_data: rawptr, walk_proc: WalkFilesProc) {
+	fmt.printfln("walk_paths: %v, %v, %v", start_path, user_data, walk_proc)
 	when ODIN_OS == .Windows {
 		path_to_search := fmt.tprint(start_path, "*", sep = "\\")
 		wpath_to_search := copy_string_to_cwstr(path_to_search)
@@ -60,12 +51,14 @@ walk_files :: proc(start_path: string, file_walk: ^FileWalk) {
 		if find != FindFile(INVALID_HANDLE) {
 			for {
 				relative_path := copy_cwstr_to_string(&find_result.cFileName[0])
-				assert(relative_path != "")
+				fmt.assertf(relative_path != "", "Failed to walk files: '%v'", path_to_search)
 
 				if relative_path != "." && relative_path != ".." {
-					is_dir := find_result.dwFileAttributes >= {.FILE_ATTRIBUTE_DIRECTORY}
 					next_path := fmt.tprint(start_path, relative_path, sep = "/")
-					if is_dir {walk_files(next_path, file_walk)} else {append(&file_walk.file_paths, next_path)}
+					is_dir := find_result.dwFileAttributes >= {.FILE_ATTRIBUTE_DIRECTORY}
+					keep_going := walk_proc(next_path, user_data, is_dir)
+					fmt.printfln("keep_going: %v", is_dir && keep_going)
+					if is_dir && keep_going {walk_paths(next_path, user_data, walk_proc)}
 				}
 				if FindNextFileW(find, &find_result) == false {break}
 			}
@@ -74,7 +67,7 @@ walk_files :: proc(start_path: string, file_walk: ^FileWalk) {
 			file := open_file_for_reading(start_path)
 			if file != FileHandle(INVALID_HANDLE) {
 				close_file(file)
-				append(&file_walk.file_paths, start_path)
+				walk_proc(start_path, user_data, false)
 			}
 		}
 	} else when ODIN_OS == .Linux {
@@ -85,7 +78,7 @@ walk_files :: proc(start_path: string, file_walk: ^FileWalk) {
 		case .ENOENT:
 		/* noop */
 		case .ENOTDIR:
-			append(&file_walk.file_paths, start_path)
+			walk_proc(start_path, user_data, false)
 		case:
 			fmt.assertf(dir >= 0, "dir: %v", Errno(dir))
 			dir_entries_buffer: [4096]byte
@@ -101,9 +94,10 @@ walk_files :: proc(start_path: string, file_walk: ^FileWalk) {
 				relative_path := string_from_cstring(crelative_path, len_lower_bound)
 
 				if relative_path != "." && relative_path != ".." {
-					is_dir := dirent.type == .Dir
 					next_path := fmt.tprint(start_path, relative_path, sep = "/")
-					if is_dir {walk_files(next_path, file_walk)} else {append(&file_walk.file_paths, next_path)}
+					is_dir := dirent.type == .Dir
+					keep_going := walk_proc(next_path, user_data, is_dir)
+					if is_dir && keep_going {walk_paths(next_path, user_data, walk_proc)}
 				}
 				offset += int(dirent.size)
 			}
@@ -111,7 +105,6 @@ walk_files :: proc(start_path: string, file_walk: ^FileWalk) {
 	} else {
 		assert(false)
 	}
-	intrinsics.atomic_store(&file_walk.have_all_file_paths, true)
 }
 
 // read
