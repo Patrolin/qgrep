@@ -2,6 +2,7 @@ package main
 import "../lib"
 import "../unicode"
 import "core:fmt"
+import "core:strconv"
 
 /* TODO: make our own unicode library... */
 normalize_string :: proc(input: string, options: ^QGrepOptions, allocator := context.temp_allocator) -> string {
@@ -39,7 +40,7 @@ TokenType :: enum {
 	RightBracket,
 	// values
 	String,
-	Number,
+	Int,
 	// unary ops
 	Not,
 	File,
@@ -49,8 +50,9 @@ TokenType :: enum {
 	Or,
 	Then,
 	// simplified ops
-	ParsedString = -1,
-	IndexMulti = -2,
+	ParsedInt = -1,
+	ParsedString = -2,
+	IndexMulti = -3,
 }
 read_and_parse_console_input_until_valid_pattern :: proc(options: ^QGrepOptions) -> ^lib.ASTNode {
 	for {
@@ -58,7 +60,7 @@ read_and_parse_console_input_until_valid_pattern :: proc(options: ^QGrepOptions)
 		// read console input
 		input := lib.read_console_input(options.input_prompt)
 		// parse
-		parse_pattern :: proc(parser: ^lib.Parser, prev_token_type: int) -> (token: lib.Token, operator_precedence: int) {
+		parse_pattern :: proc(parser: ^lib.Parser, prev_node: ^lib.ASTNode) -> (token: lib.Token, operator_precedence: int) {
 			i := parser.start
 			first_char := parser.str[i]
 			switch first_char {
@@ -113,9 +115,9 @@ read_and_parse_console_input_until_valid_pattern :: proc(options: ^QGrepOptions)
 					token.type = int(TokenType.Then)
 					operator_precedence = 2
 				case:
-					if TokenType(prev_token_type) == .Line {
+					if prev_node != nil && TokenType(prev_node.type) == .Line {
 						operator_precedence = int(lib.OpType.Value)
-						token.type = int(TokenType.Number)
+						token.type = int(TokenType.Int)
 						/* TODO: validate numbers */
 					} else {
 						error := fmt.tprintf("Invalid token: '%v'", token.slice)
@@ -155,6 +157,13 @@ simplify_pattern_first_pass :: proc(node: ^lib.ASTNode, is_topmost_or := true) -
 }
 simplify_pattern_second_pass :: proc(node: ^lib.ASTNode, options: ^QGrepOptions) {
 	#partial switch TokenType(node.type) {
+	case .Int:
+		{
+			value, ok := strconv.parse_int(node.slice)
+			fmt.assertf(ok, "Failed to parse int: '%v'", node.slice)
+			node.type = int(TokenType.ParsedInt)
+			node.int = value
+		}
 	case .String:
 		{
 			// parse strings

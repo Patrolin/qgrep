@@ -78,7 +78,11 @@ qgrep_multicore :: proc(options: ^QGrepOptions, pattern: ^lib.ASTNode) {
 						//fmt.printfln("-- '%v'", info.line)
 						_, found := filter_by_pattern(&info, pattern, 0, .String)
 						if found != 0 {
-							fmt.printfln("%v:%v %v", info.file_path, info.line_number, info.line)
+							if options.webstorm_compatibility {
+								fmt.printfln("%v\nat %v:%v", info.line, info.file_path, info.line_number)
+							} else {
+								fmt.printfln("%v:%v %v", info.file_path, info.line_number, info.line)
+							}
 						}
 						j := lib.index_ignore_newline(slice, i)
 						slice = slice[j:]
@@ -131,10 +135,10 @@ filter_by_pattern :: proc(info: ^FilterInfo, node: ^lib.ASTNode, start: int, fil
 	#partial switch TokenType(node.type) {
 	case:
 		fmt.assertf(false, "Invalid token type: %v", TokenType(node.type))
-	case .Number:
+	case .ParsedInt:
 		fmt.assertf(filter_type == .Line, "Misplaced integer: %v", node.slice)
 		if info.line_number != 0 {
-			assert(false)
+			found = info.line_number == node.int ? 1 : 0
 		} else {
 			found = -1
 		}
@@ -143,7 +147,6 @@ filter_by_pattern :: proc(info: ^FilterInfo, node: ^lib.ASTNode, start: int, fil
 		switch filter_type {
 		case .File:
 			{
-				assert(false)
 				found_index := lib.index(info.file_path, start, node.str)
 				if found_index < len(info.file_path) {
 					end = found_index + len(node.str)
@@ -153,6 +156,8 @@ filter_by_pattern :: proc(info: ^FilterInfo, node: ^lib.ASTNode, start: int, fil
 					found = 0
 				}
 			}
+		case .Line:
+			fmt.assertf(false, "Misplaced string: %v", node.slice)
 		case .String:
 			{
 				if info.line_number == 0 {
@@ -168,21 +173,15 @@ filter_by_pattern :: proc(info: ^FilterInfo, node: ^lib.ASTNode, start: int, fil
 					found = 0
 				}
 			}
-		case .Line:
-			if info.line_number != 0 {
-				assert(false)
-			} else {
-				found = -1
-			}
 		}
 	// unary ops
-	case .Not:
-		end, found = filter_by_pattern(info, node.value, start, filter_type)
-		found = found >= 0 ? 1 - found : found
 	case .File:
 		end, found = filter_by_pattern(info, node.value, start, .File)
 	case .Line:
 		end, found = filter_by_pattern(info, node.value, start, .Line)
+	case .Not:
+		end, found = filter_by_pattern(info, node.value, start, filter_type)
+		found = found >= 0 ? 1 - found : found
 	// binary ops
 	case .And:
 		left_end, left_found := filter_by_pattern(info, node.left, start, filter_type)

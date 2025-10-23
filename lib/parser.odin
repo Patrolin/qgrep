@@ -23,6 +23,7 @@ ASTNode :: struct {
 	using token: Token,
 	using _:     struct #raw_union {
 		user_data: rawptr,
+		int:       int,
 		str:       string,
 		value:     ^ASTNode,
 		using _:   struct {
@@ -38,7 +39,7 @@ Token :: struct {
 }
 #assert(size_of(Token) == 24)
 
-ParserProc :: proc(parser: ^Parser, prev_token_type: TokenType) -> (token: Token, operator_precedence: int)
+ParserProc :: proc(parser: ^Parser, prev_node: ^ASTNode) -> (token: Token, operator_precedence: int)
 
 @(private = "file")
 _parser_eat_token :: #force_inline proc(parser: ^Parser, token: Token) {
@@ -57,9 +58,8 @@ _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: i
 	prev_node := prev_node
 	prev_node_unary_tail := prev_node
 	prev_node_unary_tail_is_value := false
-	token: Token = ---
 	for parser.keep_going {
-		token, operator_precedence := parser.parser_proc(parser, token.type)
+		token, operator_precedence := parser.parser_proc(parser, prev_node)
 		//fmt.printfln("_parse_downwards: %v, %v", token, operator_precedence)
 		if intrinsics.expect(len(token.slice) == 0 || !parser.keep_going, false) {
 			report_parser_error(parser, "Cannot have token of length 0")
@@ -79,7 +79,7 @@ _parse_downwards :: proc(parser: ^Parser, prev_node: ^ASTNode, min_precedence: i
 				parser.bracket_count += 1
 				node = _parse_upwards(parser, -1, allocator = allocator)
 				// right bracket
-				token, operator_precedence := parser.parser_proc(parser, token.type)
+				token, operator_precedence := parser.parser_proc(parser, prev_node)
 				if OpType(operator_precedence) != .RightBracket {
 					report_parser_error(parser, "Unclosed left bracket")
 					break
