@@ -5,7 +5,7 @@
 void main_multicore() {
   init_console();
   String msg = STRING("Hello, World!\n");
-  // String msg2 = SBPRINT(String, msg);
+  // String msg2 = SPRINT(String, msg);
   PRINT(String, msg);
   /* TODO: mfence() here? */
   ExitProcess(0);

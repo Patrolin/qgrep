@@ -68,7 +68,7 @@ typedef struct {
   byte* ptr;
   intptr size;
 } String;
-#define STRING(const_cstr) (String){const_cstr, sizeof(const_cstr) - 1}
+#define STRING(const_cstr) ((String){const_cstr, sizeof(const_cstr) - 1})
 /* TODO: string("hello world") -> get length at comptime */
 
 /* private to file */
