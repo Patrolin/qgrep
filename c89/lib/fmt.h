@@ -1,13 +1,13 @@
 
 /* TODO: StringBuilder */
 
-#define sbprint_size_String(value) value.size
-#define sbprint_size_uintptr(value) 20
+#define SBPRINT_SIZE_String(value) value.size
+#define SBPRINT_SIZE_uintptr(value) 20
 
 /* TODO: void* stack_realloc(intptr size) */
 #define SBPRINT(t1, v1) ({                    \
   intptr offset = 0;                          \
-  offset += CONCAT(sbprint_size_, t1)(v1);    \
+  offset += CONCAT(SBPRINT_SIZE_, t1)(v1);    \
   byte* ptr = (byte*)(uintptr)alloca(offset); \
   byte* ptr_start = ptr;                      \
   offset = 0;                                 \
@@ -23,7 +23,7 @@ intptr sbprint_String(String str, byte* buffer) {
   return i;
 }
 intptr sbprint_uintptr(uintptr value, byte* buffer) {
-  intptr size = sbprint_size_uintptr(value);
+  intptr size = SBPRINT_SIZE_uintptr(value);
   intptr i = size - 1;
   buffer[i--] = 0;
   while (i >= 0) {
