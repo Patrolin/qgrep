@@ -48,8 +48,13 @@ intptr sprint_uintptr(uintptr value, byte* buffer) {
 }
 
 void print_String(String str) {
-  DWORD bytes_written;
-  WriteConsoleA(stdout, str.ptr, str.size, &bytes_written, 0);
+#if OS_WINDOWS
+  DWORD chars_written;
+  WriteConsoleA(stdout, str.ptr, str.size, &chars_written, 0);
+  // TODO: assert(chars_written == str.size)
+#else
+  todo.assert;
+#endif
 }
 void print_uintptr(uintptr value) {
   print_String(STRING("print_uintptr()\n"));
