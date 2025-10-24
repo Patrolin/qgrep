@@ -28,15 +28,8 @@ foreign BOOL SetConsoleOutputCP(CodePage code_page);
 foreign BOOL WriteConsoleA(HANDLE console_handle, const byte* buffer, DWORD chars_to_write, DWORD* chars_written, rawptr reserved);
 foreign void ExitProcess(CUINT exit_code);
 
-HANDLE stdin, stdout, stderr;
-void init_console() {
-  AttachConsole(ATTACH_PARENT_PROCESS);
-  stdin = GetStdHandle(STD_INPUT_HANDLE);
-  stdout = GetStdHandle(STD_OUTPUT_HANDLE);
-  stderr = GetStdHandle(STD_ERROR_HANDLE);
-}
 #elif OS_LINUX
-void init_console() {};
+CASSERT(false);
 #else
 CASSERT(false);
 #endif
