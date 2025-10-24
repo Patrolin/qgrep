@@ -1,26 +1,28 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-// C standard is dumb
+/* NOTE: C standard is dumb */
 int _fltused;
 
 // distinct
-#define CASSERT(Test_For_True) _Static_assert((Test_For_True), #Test_For_True);
-#define DISTINCT(Type, Name) \
+#define CONCAT(a, b) a##b
+/* #define CONCAT_EXPAND(a, b) CONCAT(a, b) */
+#define CASSERT(test_for_true) _Static_assert((test_for_true), #test_for_true);
+#define DISTINCT(type, name) \
   typedef struct {           \
-    Type value;              \
-  } Name;
+    type value;              \
+  } name;
 
 // enum
 #if __clang__
-#define ENUM(Type, Name) \
-  typedef Type Name;     \
-  enum Name : Type
+#define ENUM(type, name) \
+  typedef type name;     \
+  enum name : type
 #else
 /* NOTE: this has incorrect sizeof(Type), but it's only for intellisense */
-#define ENUM(Type, Name) \
-  typedef Type Name;     \
-  enum Name
+#define ENUM(type, name) \
+  typedef type name;     \
+  enum name
 #endif
 
 // types
@@ -58,10 +60,15 @@ typedef uintptr_t uintptr;
 typedef void* rawptr;
 
 typedef struct {
-  byte* ptr;
+  void* ptr;
   intptr count;
-} slice;
-DISTINCT(slice, string);
+} Slice;
+/* NOTE: utf8 string */
+typedef struct {
+  byte* ptr;
+  intptr size;
+} String;
+#define STRING(const_cstr) (String){const_cstr, sizeof(const_cstr) - 1}
 /* TODO: string("hello world") -> get length at comptime */
 
 /* private to file */

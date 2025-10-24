@@ -3,8 +3,10 @@
 #include "lib/lib.h"
 
 void main_multicore() {
-  const char msg[] = "Hello, World!\n";
-  DWORD bytes_written;
-  WriteConsoleA(stdout, msg, sizeof(msg) - 1, &bytes_written, 0);
-  print(bytes_written);
+  init_console();
+  String msg = STRING("Hello, World!\n");
+  // String msg2 = SBPRINT(String, msg);
+  print(msg);
+  /* TODO: mfence() here? */
+  ExitProcess(0);
 }
