@@ -50,7 +50,4 @@ void print_unknown(rawptr ptr) {
   /* TODO: assert */
 };
 
-#define print(x) _Generic((x), \
-    String: print_String,      \
-    u32: print_u32,            \
-    default: print_unknown)(x)
+#define PRINT(t1, v1) CONCAT(print_, t1)(v1);

@@ -6,4 +6,5 @@
 *.bin
 *.out
 
+.vscode/settings.json
 unicode/gen/*.txt
