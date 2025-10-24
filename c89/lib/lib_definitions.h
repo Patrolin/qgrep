@@ -62,6 +62,7 @@ typedef struct {
   intptr count;
 } slice;
 DISTINCT(slice, string);
+/* TODO: string("hello world") -> get length at comptime */
 
 /* private to file */
 #define private static
