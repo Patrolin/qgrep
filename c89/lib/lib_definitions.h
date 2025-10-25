@@ -7,7 +7,7 @@ int _fltused;
 // distinct
 #define CONCAT(a, b) a##b
 /* #define CONCAT_EXPAND(a, b) CONCAT(a, b) */
-#define CASSERT(test_for_true) _Static_assert((test_for_true), #test_for_true);
+#define CASSERT(condition) _Static_assert((condition), #condition);
 #define DISTINCT(type, name) \
   typedef struct {           \
     type value;              \

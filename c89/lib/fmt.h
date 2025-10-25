@@ -1,3 +1,4 @@
+// #define ASSERT(condition) condition && (fprintf(stderr, "%:% %", __FILE__, __LINE__, #expr), abort());
 
 typedef struct {
   intptr start, used, capacity;
