@@ -88,7 +88,8 @@ typedef struct {
 /* NOTE: true on almost all architectures */
 #define ARCH_STACK_GROWS_NEGATIVE (true)
 #if ARCH_X64
-#define READ_STACK_POINTER(variable) __asm__ volatile("mov %%rsp, %0" : "=r"(variable));
+#define READ_STACK_POINTER(register_or_memory) __asm__ volatile("movq %%rsp, %0" : "=g"(register_or_memory));
+#define STACK_RESERVE(size) __asm__ volatile("subq %0, %%rsp" : : "g"(size) : "rsp");
 #else
 #define READ_STACK_POINTER(variable) ASSERT(false);
 #endif
