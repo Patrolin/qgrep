@@ -4,9 +4,13 @@
 
 void main_multicore() {
   init_console();
-  String msg = STRING("Hello, World!\n");
-  // String msg2 = SPRINT(String, msg);
+
+  PRINT(String, STRING("ayaya.1\n"));
+  StackAllocator stack = STACK_ALLOCATOR();
+  PRINT(String, STRING("ayaya.2\n"));
+  String msg = STACK_PRINT(stack, String, msg);
   PRINT(String, msg);
+
   /* TODO: mfence() here? */
   ExitProcess(0);
 }

@@ -3,10 +3,25 @@
 typedef struct {
   intptr start, used, capacity;
 } StackAllocator;
-#define STACK_ALLOCATOR() ((StackAllocator){})
+#define STACK_ALLOCATOR() ({     \
+  intptr start;                  \
+  READ_STACK_POINTER(start);     \
+  (StackAllocator){start, 0, 0}; \
+})
 /* NOTE: this can allocate backwards or forwards depending on architecture!
   TODO: if not enough capacity, make more, and return ptr */
-#define STACK_ALLOC(stack, size) TODO;
+#if ARCH_STACK_GROWS_NEGATIVE
+#define STACK_ALLOC(stack, size) ({  \
+  stack.used += size;                \
+  (byte*)(stack.start - stack.used); \
+})
+#else
+#define STACK_ALLOC(stack, size) ({      \
+  intptr ptr = stack.start + stack.used; \
+  stack.used += size;                    \
+  (byte*)ptr;                            \
+})
+#endif
 #define STACK_FREE_ALL(stack) \
   stack.start = 0;            \
   stack.used = 0;
@@ -14,20 +29,27 @@ typedef struct {
 #define SPRINT_SIZE_String(value) value.size
 #define SPRINT_SIZE_uintptr(value) 20
 
-#define SPRINT(stack, t1, v1) ({                                      \
-  intptr max_size = CONCAT(SPRINT_SIZE_, t1)(v1);                     \
-  byte* buffer = (byte*)(STACK_ALLOC(stack, max_size));               \
-  intptr size = CONCAT(sprint_, t1)(v1, ptr);                         \
-  stack.used += size;                                                 \
-  byte* ptr = (byte*)(&stack) + sizeof(StackAllocator) + stack.start; \
-  intptr size = stack.current - stack.start;                          \
-  start = stack.current;                                              \
-  String str = (String){ptr, size};                                   \
-});
-#define SPRINTLN(stack, t1, v1) ({     \
-  SPRINT(stack, t1, v1);               \
-  SPRINT(stack, String, STRING("\n")); \
+#define STACK_PRINT(stack, t1, v1) ({                \
+  intptr max_size = CONCAT(SPRINT_SIZE_, t1)(v1);    \
+  byte* ptr = (byte*)(STACK_ALLOC(stack, max_size)); \
+                                                     \
+  intptr size = CONCAT(sprint_, t1)(v1, ptr);        \
+  stack.used += size;                                \
+                                                     \
+  (String){ptr, size};                               \
 })
+#define STACK_PRINT2(stack, t1, v1, t2, v2) ({       \
+  intptr max_size = CONCAT(SPRINT_SIZE_, t1)(v1);    \
+  max_size += CONCAT(SPRINT_SIZE_, t2)(v2);          \
+  byte* ptr = (byte*)(STACK_ALLOC(stack, max_size)); \
+                                                     \
+  intptr size = CONCAT(sprint_, t1)(v1, ptr);        \
+  size += CONCAT(sprint_, t2)(v2, ptr + size);       \
+  stack.used += size;                                \
+                                                     \
+  (String){ptr, size};                               \
+})
+#define STACK_PRINTLN(stack, t1, v1) STACK_PRINT(stack, t1, v1, String, String("\n"));
 
 intptr sprint_String(String str, byte* buffer) {
   intptr i = 0;

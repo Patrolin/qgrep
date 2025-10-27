@@ -18,8 +18,8 @@ const DWORD ATTACH_PARENT_PROCESS = -1;
 ENUM(DWORD, CodePage){
     CP_UTF8 = 65001,
 };
-CASSERT(sizeof(CodePage) == 4);
-CASSERT(sizeof(CP_UTF8) == 4);
+ASSERT(sizeof(CodePage) == 4);
+ASSERT(sizeof(CP_UTF8) == 4);
 
 #pragma comment(lib, "kernel32.lib")
 foreign BOOL AttachConsole(DWORD process_id);
@@ -29,7 +29,7 @@ foreign BOOL WriteConsoleA(HANDLE console_handle, const byte* buffer, DWORD char
 foreign void ExitProcess(CUINT exit_code);
 
 #elif OS_LINUX
-CASSERT(false);
+ASSERT(false);
 #else
-CASSERT(false);
+ASSERT(false);
 #endif

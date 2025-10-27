@@ -7,7 +7,7 @@ int _fltused;
 // distinct
 #define CONCAT(a, b) a##b
 /* #define CONCAT_EXPAND(a, b) CONCAT(a, b) */
-#define CASSERT(condition) _Static_assert((condition), #condition);
+#define ASSERT(condition) _Static_assert((condition), #condition);
 #define DISTINCT(type, name) \
   typedef struct {           \
     type value;              \
@@ -39,9 +39,9 @@ typedef int32_t i32;
 typedef int64_t i64;
 
 typedef float f32;
-CASSERT(sizeof(f32) == 4);
+ASSERT(sizeof(f32) == 4);
 typedef double f64;
-CASSERT(sizeof(f64) == 8);
+ASSERT(sizeof(f64) == 8);
 
 // typedef signed char CICHAR;
 // typedef unsigned char CUCHAR;
@@ -84,3 +84,11 @@ typedef struct {
 #define ARCH_X64 __x86_64__ || _M_X64
 #define ARCH_X86 __i386__ || _M_IX86
 #define ARCH_ARM64 __aarch64__
+
+/* NOTE: true on almost all architectures */
+#define ARCH_STACK_GROWS_NEGATIVE (true)
+#if ARCH_X64
+#define READ_STACK_POINTER(variable) __asm__ volatile("mov %%rsp, %0" : "=r"(variable));
+#else
+#define READ_STACK_POINTER(variable) ASSERT(false);
+#endif
