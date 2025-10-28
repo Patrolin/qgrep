@@ -74,8 +74,7 @@ typedef struct {
   byte *ptr;
   intptr size;
 } String;
-#define STRING(const_cstr) ((String){const_cstr, sizeof(const_cstr) - 1})
-/* TODO: string("hello world") -> get length at comptime */
+#define string(const_cstr) ((String){const_cstr, sizeof(const_cstr) - 1})
 
 // OS_xxx
 #define OS_WINDOWS (_WIN32 || _WIN64)

@@ -5,10 +5,10 @@
 #include "lib/lib.h"
 
 void foo() {
-  StackAllocator stack = STACK_ALLOCATOR();
-  String msg = STRING("Hello, world!\n");
-  String msg2 = STACK_PRINT(stack, String, msg);
-  PRINT(String, msg2);
+  StackAllocator stack = stack_allocator();
+  String msg = string("Hello, world!\n");
+  String msg2 = stack_print(stack, String, msg);
+  print(String, msg2);
 }
 void main_multicore() {
   foo();

@@ -15,12 +15,12 @@
 typedef struct {
   intptr start, used, capacity;
 } StackAllocator;
-#define STACK_ALLOCATOR() ({     \
+#define stack_allocator() ({     \
   intptr start;                  \
   READ_STACK_POINTER(start);     \
   (StackAllocator){start, 0, 0}; \
 })
-#define STACK_FREE_ALL(stack) stack.used = 0;
+#define stack_free_all(stack) stack.used = 0;
 /* If not enough capacity, make more, and return ptr
   NOTE: this can allocate backwards or forwards depending on architecture!
   NOTE: the ABI requires us to align the stack pointer to 16B */

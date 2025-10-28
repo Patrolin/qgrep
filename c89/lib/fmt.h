@@ -4,20 +4,18 @@
 #include "process.h"
 // #define ASSERT(condition) condition && (fprintf(stderr, "%:% %", __FILE__, __LINE__, #expr), abort());
 
-#define SPRINT_SIZE_String(value) value.size
-#define SPRINT_SIZE_uintptr(value) 20
-
-#define STACK_PRINT(stack, t1, v1) ({                 \
-  intptr max_size = CONCAT(SPRINT_SIZE_, t1)(v1);     \
+// stack_print()
+#define stack_print(stack, t1, v1) ({                 \
+  intptr max_size = CONCAT(sprint_size_, t1)(v1);     \
   byte *ptr = (byte *)(STACK_ALLOC(stack, max_size)); \
                                                       \
   intptr size = CONCAT(sprint_, t1)(v1, ptr);         \
                                                       \
   (String){ptr, size};                                \
 })
-#define STACK_PRINT2(stack, t1, v1, t2, v2) ({        \
-  intptr max_size = CONCAT(SPRINT_SIZE_, t1)(v1);     \
-  max_size += CONCAT(SPRINT_SIZE_, t2)(v2);           \
+#define stack_print2(stack, t1, v1, t2, v2) ({        \
+  intptr max_size = CONCAT(sprint_size_, t1)(v1);     \
+  max_size += CONCAT(sprint_size_, t2)(v2);           \
   byte *ptr = (byte *)(STACK_ALLOC(stack, max_size)); \
                                                       \
   intptr size = CONCAT(sprint_, t1)(v1, ptr);         \
@@ -25,8 +23,12 @@
                                                       \
   (String){ptr, size};                                \
 })
-#define STACK_PRINTLN(stack, t1, v1) \
-  STACK_PRINT(stack, t1, v1, String, String("\n"));
+#define stack_println(stack, t1, v1) \
+  stack_print(stack, t1, v1, String, String("\n"));
+
+// sprint()
+#define sprint_size_String(value) value.size
+#define sprint_size_uintptr(value) 20
 
 intptr sprint_String(String str, byte *buffer) {
   intptr i = 0;
@@ -36,7 +38,7 @@ intptr sprint_String(String str, byte *buffer) {
   return i;
 }
 intptr sprint_uintptr(uintptr value, byte *buffer) {
-  intptr size = SPRINT_SIZE_uintptr(value) - 1;
+  intptr size = sprint_size_uintptr(value) - 1;
   intptr i = size;
   buffer[i--] = 0;
   do {
@@ -47,6 +49,7 @@ intptr sprint_uintptr(uintptr value, byte *buffer) {
   return size - i;
 }
 
+// print()
 void print_String(String str) {
 #if OS_WINDOWS
   DWORD chars_written;
@@ -57,7 +60,7 @@ void print_String(String str) {
 #endif
 }
 void print_uintptr(uintptr value) {
-  print_String(STRING("print_uintptr()\n"));
+  print_String(string("print_uintptr()\n"));
 };
 
-#define PRINT(t1, v1) CONCAT(print_, t1)(v1);
+#define print(t1, v1) CONCAT(print_, t1)(v1);
