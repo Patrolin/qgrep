@@ -8,27 +8,25 @@
 #define SPRINT_SIZE_String(value) value.size
 #define SPRINT_SIZE_uintptr(value) 20
 
-#define STACK_PRINT(stack, t1, v1)                                             \
-  ({                                                                           \
-    intptr max_size = CONCAT(SPRINT_SIZE_, t1)(v1);                            \
-    byte *ptr = (byte *)(STACK_ALLOC(stack, max_size));                        \
-                                                                               \
-    intptr size = CONCAT(sprint_, t1)(v1, ptr);                                \
-                                                                               \
-    (String){ptr, size};                                                       \
-  })
-#define STACK_PRINT2(stack, t1, v1, t2, v2)                                    \
-  ({                                                                           \
-    intptr max_size = CONCAT(SPRINT_SIZE_, t1)(v1);                            \
-    max_size += CONCAT(SPRINT_SIZE_, t2)(v2);                                  \
-    byte *ptr = (byte *)(STACK_ALLOC(stack, max_size));                        \
-                                                                               \
-    intptr size = CONCAT(sprint_, t1)(v1, ptr);                                \
-    size += CONCAT(sprint_, t2)(v2, ptr + size);                               \
-                                                                               \
-    (String){ptr, size};                                                       \
-  })
-#define STACK_PRINTLN(stack, t1, v1)                                           \
+#define STACK_PRINT(stack, t1, v1) ({                 \
+  intptr max_size = CONCAT(SPRINT_SIZE_, t1)(v1);     \
+  byte *ptr = (byte *)(STACK_ALLOC(stack, max_size)); \
+                                                      \
+  intptr size = CONCAT(sprint_, t1)(v1, ptr);         \
+                                                      \
+  (String){ptr, size};                                \
+})
+#define STACK_PRINT2(stack, t1, v1, t2, v2) ({        \
+  intptr max_size = CONCAT(SPRINT_SIZE_, t1)(v1);     \
+  max_size += CONCAT(SPRINT_SIZE_, t2)(v2);           \
+  byte *ptr = (byte *)(STACK_ALLOC(stack, max_size)); \
+                                                      \
+  intptr size = CONCAT(sprint_, t1)(v1, ptr);         \
+  size += CONCAT(sprint_, t2)(v2, ptr + size);        \
+                                                      \
+  (String){ptr, size};                                \
+})
+#define STACK_PRINTLN(stack, t1, v1) \
   STACK_PRINT(stack, t1, v1, String, String("\n"));
 
 intptr sprint_String(String str, byte *buffer) {

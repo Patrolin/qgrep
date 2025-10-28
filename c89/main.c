@@ -1,5 +1,5 @@
 // vcvarsall x64
-// clang c89/main.c -std=c89 -nostdlib -O0 -fuse-ld=radlink -o foo.exe; foo.exe
+// clang c89/main.c -std=c89 -nostdlib -fdebug-macro -O0 -fuse-ld=radlink -o foo.exe; foo.exe
 // raddbg foo.exe
 // clang c89/main.c -std=c89 -nostdlib -O2 -fuse-ld=radlink -o foo.exe; foo.exe
 #include "lib/lib.h"
@@ -10,5 +10,6 @@ void foo() {
   String msg2 = STACK_PRINT(stack, String, msg);
   PRINT(String, msg2);
 }
-// TODO: how do we pass style to the formatter??
-void main_multicore() { foo(); }
+void main_multicore() {
+  foo();
+}

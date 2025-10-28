@@ -1,6 +1,6 @@
 #pragma once
 #include <stdbool.h>
-#include <stdint.h> // IWYU pragma: keep
+#include <stdint.h>  // IWYU pragma: keep
 
 /* private to file */
 #define private static
@@ -14,20 +14,20 @@ global int _fltused;
 #define CONCAT(a, b) a##b
 /* #define CONCAT_EXPAND(a, b) CONCAT(a, b) */
 #define ASSERT(condition) _Static_assert((condition), #condition);
-#define DISTINCT(type, name)                                                   \
-  typedef struct {                                                             \
-    type value;                                                                \
+#define DISTINCT(type, name) \
+  typedef struct {           \
+    type value;              \
   } name;
 
 // enum
 #if __clang__
-#define ENUM(type, name)                                                       \
-  typedef type name;                                                           \
+#define ENUM(type, name) \
+  typedef type name;     \
   enum name : type
 #else
 /* NOTE: this has incorrect sizeof(Type), but it's only for intellisense */
-#define ENUM(type, name)                                                       \
-  typedef type name;                                                           \
+#define ENUM(type, name) \
+  typedef type name;     \
   enum name
 #endif
 
@@ -85,14 +85,3 @@ typedef struct {
 #define ARCH_X64 __x86_64__ || _M_X64
 #define ARCH_X86 __i386__ || _M_IX86
 #define ARCH_ARM64 __aarch64__
-
-/* NOTE: true on almost all architectures */
-#define ARCH_STACK_GROWS_NEGATIVE (true)
-#if ARCH_X64
-#define READ_STACK_POINTER(register_or_memory)                                 \
-  __asm__ volatile("movq %%rsp, %0" : "=g"(register_or_memory));
-#define STACK_RESERVE(size)                                                    \
-  __asm__ volatile("subq %0, %%rsp" : : "g"(size) : "rsp");
-#else
-#define READ_STACK_POINTER(variable) ASSERT(false);
-#endif
