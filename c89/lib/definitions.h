@@ -1,27 +1,33 @@
+#pragma once
 #include <stdbool.h>
-#include <stdint.h>
+#include <stdint.h> // IWYU pragma: keep
+
+/* private to file */
+#define private static
+#define global static
+#define foreign __declspec(dllimport)
 
 /* NOTE: C standard is dumb */
-int _fltused;
+global int _fltused;
 
 // distinct
 #define CONCAT(a, b) a##b
 /* #define CONCAT_EXPAND(a, b) CONCAT(a, b) */
 #define ASSERT(condition) _Static_assert((condition), #condition);
-#define DISTINCT(type, name) \
-  typedef struct {           \
-    type value;              \
+#define DISTINCT(type, name)                                                   \
+  typedef struct {                                                             \
+    type value;                                                                \
   } name;
 
 // enum
 #if __clang__
-#define ENUM(type, name) \
-  typedef type name;     \
+#define ENUM(type, name)                                                       \
+  typedef type name;                                                           \
   enum name : type
 #else
 /* NOTE: this has incorrect sizeof(Type), but it's only for intellisense */
-#define ENUM(type, name) \
-  typedef type name;     \
+#define ENUM(type, name)                                                       \
+  typedef type name;                                                           \
   enum name
 #endif
 
@@ -57,24 +63,19 @@ typedef unsigned int CUINT;
 
 typedef intptr_t intptr;
 typedef uintptr_t uintptr;
-typedef void* rawptr;
+typedef void *rawptr;
 
 typedef struct {
-  void* ptr;
+  void *ptr;
   intptr count;
 } Slice;
 /* NOTE: utf8 string */
 typedef struct {
-  byte* ptr;
+  byte *ptr;
   intptr size;
 } String;
 #define STRING(const_cstr) ((String){const_cstr, sizeof(const_cstr) - 1})
 /* TODO: string("hello world") -> get length at comptime */
-
-/* private to file */
-#define private static
-#define global static
-#define foreign __declspec(dllimport)
 
 // OS_xxx
 #define OS_WINDOWS (_WIN32 || _WIN64)
@@ -88,8 +89,10 @@ typedef struct {
 /* NOTE: true on almost all architectures */
 #define ARCH_STACK_GROWS_NEGATIVE (true)
 #if ARCH_X64
-#define READ_STACK_POINTER(register_or_memory) __asm__ volatile("movq %%rsp, %0" : "=g"(register_or_memory));
-#define STACK_RESERVE(size) __asm__ volatile("subq %0, %%rsp" : : "g"(size) : "rsp");
+#define READ_STACK_POINTER(register_or_memory)                                 \
+  __asm__ volatile("movq %%rsp, %0" : "=g"(register_or_memory));
+#define STACK_RESERVE(size)                                                    \
+  __asm__ volatile("subq %0, %%rsp" : : "g"(size) : "rsp");
 #else
 #define READ_STACK_POINTER(variable) ASSERT(false);
 #endif

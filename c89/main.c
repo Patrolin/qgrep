@@ -10,6 +10,5 @@ void foo() {
   String msg2 = STACK_PRINT(stack, String, msg);
   PRINT(String, msg2);
 }
-void main_multicore() {
-  foo();
-}
+// TODO: how do we pass style to the formatter??
+void main_multicore() { foo(); }

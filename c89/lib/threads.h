@@ -1,3 +1,8 @@
+#pragma once
+#include "definitions.h"
+#include "os.h"
+#include "process.h"
+
 // shared
 typedef void MainProc();
 void main_multicore();

@@ -1,3 +1,6 @@
+#pragma once
+#include "definitions.h"
+#include "os.h"
 
 #if OS_WINDOWS
 HANDLE stdin, stdout, stderr;
@@ -8,7 +11,7 @@ void init_console() {
   stderr = GetStdHandle(STD_ERROR_HANDLE);
 }
 #elif OS_LINUX
-void init_console() {};
+void init_console(){};
 #else
 CASSERT(false);
 #endif
