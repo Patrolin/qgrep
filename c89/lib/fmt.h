@@ -2,8 +2,7 @@
 #include "definitions.h"
 #include "os.h"
 #include "process.h"
-// #define ASSERT(condition) condition && (fprintf(stderr, "%:% %", __FILE__,
-// __LINE__, #expr), abort());
+// #define ASSERT(condition) condition && (fprintf(stderr, "%:% %", __FILE__, __LINE__, #expr), abort());
 
 #define SPRINT_SIZE_String(value) value.size
 #define SPRINT_SIZE_uintptr(value) 20
