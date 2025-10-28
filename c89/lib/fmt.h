@@ -1,48 +1,5 @@
 // #define ASSERT(condition) condition && (fprintf(stderr, "%:% %", __FILE__, __LINE__, #expr), abort());
 
-typedef struct {
-  intptr start, used, capacity;
-} StackAllocator;
-#define STACK_ALLOCATOR() ({ \
-  StackAllocator stack;      \
-  intptr start;              \
-  READ_STACK_POINTER(start); \
-  stack.start = start;       \
-  stack.used = 0;            \
-  stack.capacity = 0;        \
-  stack;                     \
-})
-/* If not enough capacity, make more, and return ptr
-  NOTE: this can allocate backwards or forwards depending on architecture!
-  NOTE: the ABI requires us to align the stack pointer to 16B */
-#if ARCH_STACK_GROWS_NEGATIVE
-#define STACK_ALLOC(stack, size) ({       \
-  stack.used += size;                     \
-  int diff = stack.used - stack.capacity; \
-  if (diff > 0) {                         \
-    diff = (diff + 15) & ~15;             \
-    stack.capacity += diff;               \
-    STACK_RESERVE(diff);                  \
-  }                                       \
-  (byte*)(stack.start - stack.used);      \
-})
-#else
-#define STACK_ALLOC(stack, size) ({       \
-  intptr ptr = stack.start + stack.used;  \
-  stack.used += size;                     \
-  int diff = stack.used - stack.capacity; \
-  if (diff > 0) {                         \
-    diff = (diff + 15) & ~15;             \
-    stack.capacity += diff;               \
-    STACK_RESERVE(diff);                  \
-  }                                       \
-  (byte*)ptr;                             \
-})
-#endif
-#define STACK_FREE_ALL(stack) \
-  stack.start = 0;            \
-  stack.used = 0;
-
 #define SPRINT_SIZE_String(value) value.size
 #define SPRINT_SIZE_uintptr(value) 20
 
@@ -51,7 +8,6 @@ typedef struct {
   byte* ptr = (byte*)(STACK_ALLOC(stack, max_size)); \
                                                      \
   intptr size = CONCAT(sprint_, t1)(v1, ptr);        \
-  stack.used += size;                                \
                                                      \
   (String){ptr, size};                               \
 })
@@ -62,7 +18,6 @@ typedef struct {
                                                      \
   intptr size = CONCAT(sprint_, t1)(v1, ptr);        \
   size += CONCAT(sprint_, t2)(v2, ptr + size);       \
-  stack.used += size;                                \
                                                      \
   (String){ptr, size};                               \
 })

@@ -1,4 +1,5 @@
 #include "lib_definitions.h"
+#include "mem_stack.h"
 #include "os.h"
 #include "process.h"
 #include "fmt.h"
