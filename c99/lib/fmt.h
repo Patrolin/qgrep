@@ -11,25 +11,24 @@
                                                       \
   intptr size = CONCAT(sprint_, t1)(v1, ptr);         \
                                                       \
-  (String){ptr, size};                                \
+  (String){ptr + max_size - size, size};              \
 })
-#define stack_print2(stack, t1, v1, t2, v2) ({        \
-  intptr max_size = CONCAT(sprint_size_, t1)(v1);     \
-  max_size += CONCAT(sprint_size_, t2)(v2);           \
-  byte *ptr = (byte *)(STACK_ALLOC(stack, max_size)); \
-                                                      \
-  intptr size = CONCAT(sprint_, t1)(v1, ptr);         \
-  size += CONCAT(sprint_, t2)(v2, ptr + size);        \
-                                                      \
-  (String){ptr, size};                                \
+#if ARCH_STACK_GROWS_NEGATIVE
+#define stack_println(stack, t1, v1) ({                 \
+  String s2 = stack_print(stack, String, string("\n")); \
+  String s1 = stack_print(stack, t1, v1);               \
+  (String){s1.ptr, s1.size + s2.size};                  \
 })
-#define stack_println(stack, t1, v1) stack_print2(stack, t1, v1, String, string("\n"))
+#else
+#define stack_println(stack, t1, v1) ({                 \
+  String s1 = stack_print(stack, t1, v1);               \
+  String s2 = stack_print(stack, String, string("\n")); \
+  (String){s1.ptr, s1.size + s2.size};                  \
+})
+#endif
 
 // sprint()
 #define sprint_size_String(value) (value.size)
-#define sprint_size_uintptr(value) (20)
-#define sprint_size_intptr(value) (sprint_size_uintptr(value) + 1)
-
 intptr sprint_String(String str, byte *buffer) {
   intptr i = 0;
   for (; i < str.size; i++) {
@@ -37,10 +36,11 @@ intptr sprint_String(String str, byte *buffer) {
   }
   return i;
 }
+
+#define sprint_size_uintptr(value) (20)
 intptr sprint_uintptr(uintptr value, byte *buffer) {
-  intptr size = sprint_size_uintptr(value) - 1;
+  intptr size = sprint_size_uintptr(value);
   intptr i = size;
-  buffer[i--] = 0;
   do {
     intptr digit = value % 10;
     value = value / 10;
@@ -48,6 +48,8 @@ intptr sprint_uintptr(uintptr value, byte *buffer) {
   } while (i >= 0 && value != 0);
   return size - i;
 }
+
+#define sprint_size_intptr(value) (sprint_size_uintptr(value) + 1)
 intptr sprint_intptr(intptr value, byte *buffer) {
   intptr size = 0;
   if (value < 0) {
@@ -73,3 +75,8 @@ void print_uintptr(uintptr value) {
 };
 
 #define print(t1, v1) CONCAT(print_, t1)(v1);
+#define println(t1, v1) ({                   \
+  StackAllocator stack = stack_allocator();  \
+  String msg = stack_println(stack, t1, v1); \
+  print_String(msg);                         \
+})

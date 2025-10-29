@@ -84,3 +84,5 @@ global CINT _fltused;
 #define ARCH_X64 __x86_64__ || _M_X64
 #define ARCH_X86 __i386__ || _M_IX86
 #define ARCH_ARM64 __aarch64__
+
+#define ARCH_STACK_GROWS_NEGATIVE (true)
