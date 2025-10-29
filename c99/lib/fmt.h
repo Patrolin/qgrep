@@ -11,22 +11,22 @@
                                                           \
   intptr size = CONCAT(sprint_, t1)(v1, ptr_end);         \
                                                           \
-  (String){ptr_end - size + 1, size};                     \
+  (String){ptr_end - size, size};                         \
 })
 #define stack_println(stack, t1, v1) ({                   \
   intptr max_size = CONCAT(sprint_size_, t1)(v1) + 1;     \
   byte *ptr_end = (byte *)(STACK_ALLOC(stack, max_size)); \
-  *(ptr_end--) = '\n';                                    \
+  *(--ptr_end) = '\n';                                    \
                                                           \
   intptr size = CONCAT(sprint_, t1)(v1, ptr_end);         \
                                                           \
-  (String){ptr_end - size + 1, size + 1};                 \
+  (String){ptr_end - size, size + 1};                     \
 })
 
 // sprint()
 #define sprint_size_String(value) (value.size)
 intptr sprint_String(String str, byte *buffer_end) {
-  byte *buffer = buffer_end - str.size + 1;
+  byte *buffer = buffer_end - str.size;
   for (intptr i = 0; i < str.size; i++) {
     buffer[i] = str.ptr[i];
   }
@@ -39,7 +39,7 @@ intptr sprint_uintptr(uintptr value, byte *buffer_end) {
   do {
     intptr digit = value % 10;
     value = value / 10;
-    buffer_end[i--] = '0' + digit;
+    buffer_end[--i] = '0' + digit;
   } while (value != 0);
   return -i;
 }
@@ -48,7 +48,7 @@ intptr sprint_uintptr(uintptr value, byte *buffer_end) {
 intptr sprint_intptr(intptr value, byte *buffer_end) {
   intptr size = sprint_uintptr((value << 1) >> 1, buffer_end);
   if (value < 0) {
-    *(buffer_end - size) = '-';
+    *(buffer_end - size - 1) = '-';
     size += 1;
   }
   return size;
