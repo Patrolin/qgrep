@@ -5,58 +5,52 @@
 // #define ASSERT(condition) condition && (fprintf(stderr, "%:% %", __FILE__, __LINE__, #expr), abort());
 
 // stack_print()
-#define stack_print(stack, t1, v1) ({                 \
-  intptr max_size = CONCAT(sprint_size_, t1)(v1);     \
-  byte *ptr = (byte *)(STACK_ALLOC(stack, max_size)); \
-                                                      \
-  intptr size = CONCAT(sprint_, t1)(v1, ptr);         \
-                                                      \
-  (String){ptr + max_size - size, size};              \
+#define stack_print(stack, t1, v1) ({                     \
+  intptr max_size = CONCAT(sprint_size_, t1)(v1);         \
+  byte *ptr_end = (byte *)(STACK_ALLOC(stack, max_size)); \
+                                                          \
+  intptr size = CONCAT(sprint_, t1)(v1, ptr_end);         \
+                                                          \
+  (String){ptr_end - size + 1, size};                     \
 })
-#if ARCH_STACK_GROWS_NEGATIVE
-#define stack_println(stack, t1, v1) ({                 \
-  String s2 = stack_print(stack, String, string("\n")); \
-  String s1 = stack_print(stack, t1, v1);               \
-  (String){s1.ptr, s1.size + s2.size};                  \
+#define stack_println(stack, t1, v1) ({                   \
+  intptr max_size = CONCAT(sprint_size_, t1)(v1) + 1;     \
+  byte *ptr_end = (byte *)(STACK_ALLOC(stack, max_size)); \
+  *(ptr_end--) = '\n';                                    \
+                                                          \
+  intptr size = CONCAT(sprint_, t1)(v1, ptr_end);         \
+                                                          \
+  (String){ptr_end - size + 1, size + 1};                 \
 })
-#else
-#define stack_println(stack, t1, v1) ({                 \
-  String s1 = stack_print(stack, t1, v1);               \
-  String s2 = stack_print(stack, String, string("\n")); \
-  (String){s1.ptr, s1.size + s2.size};                  \
-})
-#endif
 
 // sprint()
 #define sprint_size_String(value) (value.size)
-intptr sprint_String(String str, byte *buffer) {
-  intptr i = 0;
-  for (; i < str.size; i++) {
+intptr sprint_String(String str, byte *buffer_end) {
+  byte *buffer = buffer_end - str.size + 1;
+  for (intptr i = 0; i < str.size; i++) {
     buffer[i] = str.ptr[i];
   }
-  return i;
+  return str.size;
 }
 
 #define sprint_size_uintptr(value) (20)
-intptr sprint_uintptr(uintptr value, byte *buffer) {
-  intptr size = sprint_size_uintptr(value);
-  intptr i = size;
+intptr sprint_uintptr(uintptr value, byte *buffer_end) {
+  intptr i = 0;
   do {
     intptr digit = value % 10;
     value = value / 10;
-    buffer[i--] = '0' + digit;
-  } while (i >= 0 && value != 0);
-  return size - i;
+    buffer_end[i--] = '0' + digit;
+  } while (value != 0);
+  return -i;
 }
 
 #define sprint_size_intptr(value) (sprint_size_uintptr(value) + 1)
-intptr sprint_intptr(intptr value, byte *buffer) {
-  intptr size = 0;
+intptr sprint_intptr(intptr value, byte *buffer_end) {
+  intptr size = sprint_uintptr((value << 1) >> 1, buffer_end);
   if (value < 0) {
-    *buffer = '-';
+    *(buffer_end - size) = '-';
     size += 1;
   }
-  size += sprint_uintptr((value << 1) >> 1, buffer + size);
   return size;
 }
 
@@ -70,10 +64,6 @@ void print_String(String str) {
   todo.assert;
 #endif
 }
-void print_uintptr(uintptr value) {
-  print_String(string("print_uintptr()\n"));
-};
-
 #define print_copy(t1, v1) ({               \
   StackAllocator stack = stack_allocator(); \
   String msg = stack_print(stack, t1, v1);  \

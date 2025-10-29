@@ -6,7 +6,8 @@
 
 void foo() {
   println(String, string("Hello, world!"));
-  println(intptr, 77);
+  println(intptr, 123);
+  println(intptr, 123);
   println(intptr, 123);
 }
 void main_multicore() {

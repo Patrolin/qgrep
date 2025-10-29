@@ -99,4 +99,5 @@ global CINT _fltused;
 #define ARCH_X86 __i386__ || _M_IX86
 #define ARCH_ARM64 __aarch64__
 
-#define ARCH_STACK_GROWS_NEGATIVE (true)
+/* NOTE: stack grows downwards on almost all architectures */
+#define ARCH_STACK_DIRECTION (-1)

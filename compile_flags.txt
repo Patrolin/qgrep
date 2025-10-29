@@ -1,3 +1,5 @@
 -std=c89
 -nobuiltininc
 -nostdlib
+-Werror=vla
+-Wno-gcc-compat
