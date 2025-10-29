@@ -5,13 +5,15 @@
 #if OS_WINDOWS
 HANDLE stdin, stdout, stderr;
 void init_console() {
+#if OS_WINDOWS_APP
   AttachConsole(ATTACH_PARENT_PROCESS);
+#endif
   stdin = GetStdHandle(STD_INPUT_HANDLE);
   stdout = GetStdHandle(STD_OUTPUT_HANDLE);
   stderr = GetStdHandle(STD_ERROR_HANDLE);
 }
 #elif OS_LINUX
-void init_console(){};
+void init_console() {};
 #else
 CASSERT(false);
 #endif

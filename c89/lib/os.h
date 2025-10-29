@@ -3,8 +3,15 @@
 
 #if OS_WINDOWS
 #pragma comment(linker, "/ENTRY:_start")
+
+#define OS_WINDOWS_APP 0
+#define OS_WINDOWS_CONSOLE (!OS_WINDOWS_APP)
+
+#if OS_WINDOWS_APP
 #pragma comment(linker, "/SUBSYSTEM:WINDOWS")
-// #pragma comment(linker, "/SUBSYSTEM:CONSOLE")
+#else
+#pragma comment(linker, "/SUBSYSTEM:CONSOLE")
+#endif
 
 typedef bool BOOL;
 typedef u32 DWORD;

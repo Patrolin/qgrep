@@ -7,9 +7,6 @@
 #define global static
 #define foreign __declspec(dllimport)
 
-/* NOTE: C standard is dumb */
-global int _fltused;
-
 // distinct
 #define CONCAT(a, b) a##b
 /* #define CONCAT_EXPAND(a, b) CONCAT(a, b) */
@@ -75,6 +72,9 @@ typedef struct {
   intptr size;
 } String;
 #define string(const_cstr) ((String){const_cstr, sizeof(const_cstr) - 1})
+
+/* NOTE: C standard is dumb */
+global CINT _fltused;
 
 // OS_xxx
 #define OS_WINDOWS (_WIN32 || _WIN64)

@@ -23,12 +23,12 @@
                                                       \
   (String){ptr, size};                                \
 })
-#define stack_println(stack, t1, v1) \
-  stack_print(stack, t1, v1, String, String("\n"));
+#define stack_println(stack, t1, v1) stack_print2(stack, t1, v1, String, string("\n"))
 
 // sprint()
-#define sprint_size_String(value) value.size
-#define sprint_size_uintptr(value) 20
+#define sprint_size_String(value) (value.size)
+#define sprint_size_uintptr(value) (20)
+#define sprint_size_intptr(value) (sprint_size_uintptr(value) + 1)
 
 intptr sprint_String(String str, byte *buffer) {
   intptr i = 0;
@@ -47,6 +47,15 @@ intptr sprint_uintptr(uintptr value, byte *buffer) {
     buffer[i--] = '0' + digit;
   } while (i >= 0 && value != 0);
   return size - i;
+}
+intptr sprint_intptr(intptr value, byte *buffer) {
+  intptr size = 0;
+  if (value < 0) {
+    *buffer = '-';
+    size += 1;
+  }
+  size += sprint_uintptr((value << 1) >> 1, buffer + size);
+  return size;
 }
 
 // print()
