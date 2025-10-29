@@ -4,12 +4,15 @@
 // clang c89/main.c -std=c99 -nostdlib -O2 -fuse-ld=radlink -o foo.exe && foo.exe
 #include "lib/lib.h"
 
+void bar() {
+  println(intptr, 11);
+  println(intptr, 6516);
+}
 void foo() {
   println(String, string("Hello, world!"));
   println(intptr, 123);
+  bar();
   println(intptr, 17);
-  println(intptr, 11);
-  println(intptr, 6516);
 }
 void main_multicore() {
   foo();
