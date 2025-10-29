@@ -7,8 +7,9 @@
 void foo() {
   println(String, string("Hello, world!"));
   println(intptr, 123);
-  println(intptr, 123);
-  println(intptr, 123);
+  println(intptr, 17);
+  println(intptr, 11);
+  println(intptr, 6516);
 }
 void main_multicore() {
   foo();
