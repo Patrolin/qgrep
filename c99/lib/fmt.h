@@ -74,7 +74,12 @@ void print_uintptr(uintptr value) {
   print_String(string("print_uintptr()\n"));
 };
 
-#define print(t1, v1) CONCAT(print_, t1)(v1);
+#define print_copy(t1, v1) ({               \
+  StackAllocator stack = stack_allocator(); \
+  String msg = stack_print(stack, t1, v1);  \
+  print_String(msg);                        \
+})
+#define print(t1, v1) IF(IS_STRING(t1), print_String(v1), print_copy(t1, v1))
 #define println(t1, v1) ({                   \
   StackAllocator stack = stack_allocator();  \
   String msg = stack_println(stack, t1, v1); \

@@ -2,14 +2,28 @@
 #include <stdbool.h>
 #include <stdint.h>  // IWYU pragma: keep
 
+// preprocessor helpers
+// #define CONCAT0(a, b) a##b
+// #define CONCAT(a, b) CONCAT0(a, b)
+#define CONCAT(a, b) a##b
+#define STR(a) #a
+
+#define IF_1(t, f) t
+#define IF_0(t, f) f
+#define IF(cond, t, f) CONCAT(IF_, cond)(t, f)
+
+#define IS_STRING_String PROBE()
+#define IS_STRING(x) IS_PROBE(CONCAT(IS_STRING_, x))
+#define PROBE() 1, 1,
+#define IS_PROBE(...) SECOND(__VA_ARGS__, 0)
+#define SECOND(a, b, ...) b
+
 /* private to file */
 #define private static
 #define global static
 #define foreign __declspec(dllimport)
 
 // distinct
-#define CONCAT(a, b) a##b
-/* #define CONCAT_EXPAND(a, b) CONCAT(a, b) */
 #define ASSERT(condition) _Static_assert((condition), #condition);
 #define DISTINCT(type, name) \
   typedef struct {           \
