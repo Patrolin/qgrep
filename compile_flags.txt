@@ -2,8 +2,7 @@
 -std=c99
 -nobuiltininc
 -nostdlib
--Werror=vla
+-Werror
+-Wvla
 -Wconversion
 -Wsign-conversion
--Werror=conversion
--Werror=sign-conversion
