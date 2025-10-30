@@ -1,6 +1,6 @@
 #pragma once
 #include <stdbool.h>
-#include <stdint.h>  // IWYU pragma: keep
+#include <stdint.h> /* IWYU pragma: keep */
 
 // preprocessor helpers
 // #define CONCAT0(a, b) a##b
@@ -86,10 +86,13 @@ global CINT _fltused;
 #define OS_LINUX (__linux__ || __unix__)
 
 // ARCH_xxx
-#define ARCH_X64 __x86_64__ || _M_X64
-#define ARCH_X86 __i386__ || _M_IX86
+#define ARCH_X64 __x86_64__
+#define ARCH_X86 __i386__
 #define ARCH_ARM64 __aarch64__
+#define ARCH_ARM32 (__arm__ && !__aarch64__)
 
+#define ARCH_IS_64BIT (ARCH_X64 || ARCH_ARM64)
+#define ARCH_IS_32BIT (ARCH_X86 || ARCH_ARM32)
 /* NOTE: stack grows downwards on almost all architectures */
 #define ARCH_STACK_DIRECTION (-1)
 

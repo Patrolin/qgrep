@@ -1,7 +1,7 @@
 // vcvarsall x64
-// rm foo.rdi -ErrorAction SilentlyContinue; clang c99/main.c -std=c99 -nostdlib -O0 -g -fuse-ld=radlink -o foo.exe && foo.exe
+// rm foo.rdi -ErrorAction SilentlyContinue; clang c99/main.c -std=c99 -nostdlib -O0 -Werror -Wconversion -g -fuse-ld=radlink -o foo.exe && foo.exe
 // raddbg foo.exe
-// clang c89/main.c -std=c99 -nostdlib -O2 -fuse-ld=radlink -o foo.exe && foo.exe
+// clang c99/main.c -std=c99 -nostdlib -Werror -Wconversion -O2 -fuse-ld=radlink -o foo.exe && foo.exe
 #include "lib/lib.h"
 
 void bar() {

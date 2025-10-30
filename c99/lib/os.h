@@ -24,7 +24,7 @@ ENUM(DWORD, ConsoleHandle){
     STD_ERROR_HANDLE = -12,
 };
 /* TODO: this is currently a global, what do we call this enum? */
-const DWORD ATTACH_PARENT_PROCESS = -1;
+const DWORD ATTACH_PARENT_PROCESS = (DWORD)-1;
 
 ENUM(DWORD, CodePage){
     CP_UTF8 = 65001,

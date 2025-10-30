@@ -1,5 +1,9 @@
--std=c89
+-Wno-gcc-compat
+-std=c99
 -nobuiltininc
 -nostdlib
 -Werror=vla
--Wno-gcc-compat
+-Wconversion
+-Wsign-conversion
+-Werror=conversion
+-Werror=sign-conversion
