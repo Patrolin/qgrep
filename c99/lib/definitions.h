@@ -23,24 +23,15 @@
 #define global static
 #define foreign __declspec(dllimport)
 
-// distinct
+// keywords
 #define ASSERT(condition) _Static_assert((condition), #condition);
 #define DISTINCT(type, name) \
   typedef struct {           \
     type value;              \
   } name;
-
-// enum
-#if __clang__
 #define ENUM(type, name) \
   typedef type name;     \
   enum name : type
-#else
-/* NOTE: this has incorrect sizeof(Type), but it's only for intellisense */
-#define ENUM(type, name) \
-  typedef type name;     \
-  enum name
-#endif
 
 // types
 typedef char byte;
