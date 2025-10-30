@@ -24,9 +24,9 @@ typedef struct {
 })
 #define stack_free_all(stack) ({stack.used = 0})
 #define stack_destroy(stack) STACK_FREE(stack.capacity)
-/* If not enough capacity, make more, and return ptr
+/* If not enough capacity, make more, and return `ptr_end`
   NOTE: this can allocate backwards or forwards depending on architecture!
-  NOTE: the ABI requires us to align the stack pointer to 16B */
+  NOTE: the ABI requires us to align the stack pointer to 16B in some cases, so we just do it always */
 #if ARCH_STACK_DIRECTION == -1
 #define STACK_ALLOC(stack, size) ({            \
   intptr ptr_end = stack.start - stack.used;   \
