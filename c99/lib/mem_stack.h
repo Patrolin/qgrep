@@ -1,7 +1,6 @@
 #pragma once
 #include "definitions.h"
 
-/* NOTE: true on almost all architectures */
 #if ARCH_X64
 #define READ_STACK_POINTER(register_or_memory) \
   __asm__ volatile("movq %%rsp, %0" : "=g"(register_or_memory))
