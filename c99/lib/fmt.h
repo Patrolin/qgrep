@@ -68,10 +68,12 @@ void print_String(String str) {
   StackAllocator stack = stack_allocator(); \
   String msg = stack_print(stack, t1, v1);  \
   print_String(msg);                        \
+  stack_destroy(stack);                     \
 })
 #define print(t1, v1) IF(IS_STRING(t1), print_String(v1), print_copy(t1, v1))
 #define println(t1, v1) ({                   \
   StackAllocator stack = stack_allocator();  \
   String msg = stack_println(stack, t1, v1); \
   print_String(msg);                         \
+  stack_destroy(stack);                      \
 })
