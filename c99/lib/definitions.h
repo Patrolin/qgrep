@@ -101,3 +101,25 @@ global CINT _fltused;
 
 /* NOTE: stack grows downwards on almost all architectures */
 #define ARCH_STACK_DIRECTION (-1)
+
+// atomics: https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html
+#define volatile_store(address, value) __atomic_store_n(address, value, __ATOMIC_RELAXED)
+#define volatile_load(address, value) __atomic_load_n(address, __ATOMIC_RELAXED)
+#define compiler_fence() __atomic_signal_fence(__ATOMIC_SEQ_CST)
+#define mfence() __atomic_thread_fence(__ATOMIC_SEQ_CST)
+
+#define atomic_store(address, value) __atomic_store_n(address, value, __ATOMIC_SEQ_CST)
+#define atomic_load(address) __atomic_load_n(address, __ATOMIC_SEQ_CST)
+#define atomic_exchange(address, value) __atomic_exchange_n(address, value, __ATOMIC_SEQ_CST)
+#define atomic_compare_exchange(address, expected, value) __atomic_compare_exchange(address, expected, value, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
+#define atomic_compare_exchange_weak(address, expected, value) __atomic_compare_exchange(address, expected, value, true, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
+#define atomic_add(address, value) __atomic_fetch_add(address, value, __ATOMIC_SEQ_CST)
+#define atomic_sub(address, value) __atomic_fetch_sub(address, value, __ATOMIC_SEQ_CST)
+#define atomic_and(address, value) __atomic_fetch_and(address, value, __ATOMIC_SEQ_CST)
+#define atomic_or(address, value) __atomic_fetch_or(address, value, __ATOMIC_SEQ_CST)
+#define atomic_xor(address, value) __atomic_fetch_xor(address, value, __ATOMIC_SEQ_CST)
+#define atomic_nand(address, value) __atomic_fetch_nand(address, value, __ATOMIC_SEQ_CST)
+ASSERT(__atomic_always_lock_free(1, 0))
+ASSERT(__atomic_always_lock_free(2, 0))
+ASSERT(__atomic_always_lock_free(4, 0))
+ASSERT(__atomic_always_lock_free(8, 0))
