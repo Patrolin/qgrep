@@ -14,6 +14,7 @@
 
 #define PROBE() 1, 1
 #define SECOND(a, b, ...) b
+/* NOTE: SECOND() is also acting like EXPAND() here... */
 #define IS_PROBE(...) SECOND(__VA_ARGS__, 0)
 #define IS_STRING_String PROBE()
 #define IS_STRING(x) IS_PROBE(CONCAT(IS_STRING_, x))
@@ -27,12 +28,13 @@
 
 // FOO({int b = 1}, {int c = 2}, {int d = 2});
 
+// keywords
 /* private to file */
 #define private static
 #define global static
 #define foreign __declspec(dllimport)
+#define noreturn _Noreturn
 
-// keywords
 #define ASSERT(condition) _Static_assert((condition), #condition);
 #define DISTINCT(type, name) \
   typedef struct {           \

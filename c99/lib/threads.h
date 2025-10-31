@@ -15,7 +15,5 @@ void _start() {
   init_console();
   run_multicore(main_multicore, 1);
   /* TODO: mfence() here? */
-  ExitProcess(0);
-  while (true) {
-  };
+  exit_process(0);
 }

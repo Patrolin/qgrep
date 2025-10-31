@@ -1,5 +1,6 @@
 // vcvarsall x64
 // ./run-debug
+#include "lib/definitions.h"
 #include "lib/lib.h"
 
 void bar() {
@@ -14,6 +15,7 @@ void foo() {
   println(intptr, 123);
   bar();
   println(intptr, 47);
+  assert(false);
 }
 void main_multicore() {
   foo();
