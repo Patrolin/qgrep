@@ -87,22 +87,22 @@ intptr sprint_intptr(uintptr value, byte *buffer_end) {
 #endif
 
 // stack_print()
-#define stack_print(t1, v1) ({                    \
-  intptr max_size = CONCAT(sprint_size_, t1)(v1); \
-  byte buffer[max_size];                          \
-  byte *ptr_end = &buffer[max_size];              \
-                                                  \
-  intptr size = CONCAT(sprint_, t1)(v1, ptr_end); \
-  (String){ptr_end - size + 1, size};             \
+#define stack_print(t1, v1) ({                                      \
+  intptr _autogen_max_size = CONCAT(sprint_size_, t1)(v1);          \
+  byte _autogen_buffer[_autogen_max_size];                          \
+  byte *_autogen_ptr_end = &buffer[_autogen_max_size];              \
+                                                                    \
+  intptr _autogen_size = CONCAT(sprint_, t1)(v1, _autogen_ptr_end); \
+  (String){_autogen_ptr_end - _autogen_size + 1, _autogen_size};    \
 })
-#define stack_println(t1, v1) ({                      \
-  intptr max_size = CONCAT(sprint_size_, t1)(v1) + 1; \
-  byte buffer[max_size];                              \
-  byte *ptr_end = &buffer[max_size];                  \
-                                                      \
-  *(--ptr_end) = '\n';                                \
-  intptr size = CONCAT(sprint_, t1)(v1, ptr_end);     \
-  (String){ptr_end - size, size + 1};                 \
+#define stack_println(t1, v1) ({                                    \
+  intptr _autogen_max_size = CONCAT(sprint_size_, t1)(v1) + 1;      \
+  byte _autogen_buffer[_autogen_max_size];                          \
+  byte *_autogen_ptr_end = &_autogen_buffer[_autogen_max_size];     \
+                                                                    \
+  *(--_autogen_ptr_end) = '\n';                                     \
+  intptr _autogen_size = CONCAT(sprint_, t1)(v1, _autogen_ptr_end); \
+  (String){_autogen_ptr_end - _autogen_size, _autogen_size + 1};    \
 })
 
 // print()
@@ -115,12 +115,12 @@ void print_String(String str) {
   todo.assert;
 #endif
 }
-#define print_copy(t1, v1) ({       \
-  String msg = stack_print(t1, v1); \
-  print_String(msg);                \
+#define print_copy(t1, v1) ({                \
+  String _autogen_msg = stack_print(t1, v1); \
+  print_String(_autogen_msg);                \
 })
 #define print(t1, v1) IF(IS_STRING(t1), print_String(v1), print_copy(t1, v1))
-#define println(t1, v1) ({            \
-  String msg = stack_println(t1, v1); \
-  print_String(msg);                  \
+#define println(t1, v1) ({                     \
+  String _autogen_msg = stack_println(t1, v1); \
+  print_String(_autogen_msg);                  \
 })

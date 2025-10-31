@@ -3,14 +3,17 @@
 #include "lib/lib.h"
 
 void bar() {
-  println(intptr, 11);
-  println(intptr, 6516);
+  println(intptr, 21);
+  println(intptr, 3516);
 }
 void foo() {
-  print(String, string("Hello, world!"));
+  String msg = string("Hello, world!");
+  intptr b = msg.size;
+  println(intptr, b);
+  println(String, msg);
   println(intptr, 123);
   bar();
-  println(intptr, 17);
+  println(intptr, 47);
 }
 void main_multicore() {
   foo();

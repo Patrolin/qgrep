@@ -12,11 +12,20 @@
 #define IF_0(t, f) f
 #define IF(cond, t, f) CONCAT(IF_, cond)(t, f)
 
-#define PROBE() 1, 1,
+#define PROBE() 1, 1
 #define SECOND(a, b, ...) b
 #define IS_PROBE(...) SECOND(__VA_ARGS__, 0)
 #define IS_STRING_String PROBE()
 #define IS_STRING(x) IS_PROBE(CONCAT(IS_STRING_, x))
+
+#define FOO(a, ...) \
+  a;                \
+  __VA_OPT__(BAR(__VA_ARGS__))
+#define BAR(a, ...) \
+  a;                \
+  __VA_OPT__(FOO(__VA_ARGS__))
+
+// FOO({int b = 1}, {int c = 2}, {int d = 2});
 
 /* private to file */
 #define private static
