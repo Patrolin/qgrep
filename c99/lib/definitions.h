@@ -30,6 +30,7 @@
 
 // keywords
 /* private to file */
+#define readonly const
 #define private static
 #define global static
 #define foreign __declspec(dllimport)

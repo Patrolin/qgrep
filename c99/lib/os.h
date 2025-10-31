@@ -2,16 +2,16 @@
 #include "definitions.h"
 
 #if OS_WINDOWS
-#pragma comment(linker, "/ENTRY:_start")
+  #pragma comment(linker, "/ENTRY:_start")
 
-#define OS_WINDOWS_APP 0
-#define OS_WINDOWS_CONSOLE (!OS_WINDOWS_APP)
+  #define OS_WINDOWS_APP 0
+  #define OS_WINDOWS_CONSOLE (!OS_WINDOWS_APP)
 
-#if OS_WINDOWS_APP
-#pragma comment(linker, "/SUBSYSTEM:WINDOWS")
-#else
-#pragma comment(linker, "/SUBSYSTEM:CONSOLE")
-#endif
+  #if OS_WINDOWS_APP
+    #pragma comment(linker, "/SUBSYSTEM:WINDOWS")
+  #else
+    #pragma comment(linker, "/SUBSYSTEM:CONSOLE")
+  #endif
 
 typedef bool BOOL;
 typedef u32 DWORD;
@@ -24,8 +24,7 @@ ENUM(DWORD, ConsoleHandleEnum){
     STD_ERROR_HANDLE = -12,
 };
 DISTINCT(HANDLE, ConsoleHandle)
-/* TODO: this is currently a global, what do we call this enum? */
-const DWORD ATTACH_PARENT_PROCESS = (DWORD)-1;
+  #define ATTACH_PARENT_PROCESS = (DWORD) - 1;
 
 ENUM(DWORD, CodePage){
     CP_UTF8 = 65001,
@@ -33,11 +32,11 @@ ENUM(DWORD, CodePage){
 ASSERT(sizeof(CodePage) == 4);
 ASSERT(sizeof(CP_UTF8) == 4);
 
-#pragma comment(lib, "kernel32.lib")
+  #pragma comment(lib, "kernel32.lib")
 foreign BOOL AttachConsole(DWORD process_id);
 foreign ConsoleHandle GetStdHandle(DWORD std_handle);
 foreign BOOL SetConsoleOutputCP(CodePage code_page);
-foreign BOOL WriteConsoleA(ConsoleHandle console_handle, const byte *buffer,
+foreign BOOL WriteConsoleA(ConsoleHandle console_handle, readonly byte *buffer,
                            DWORD chars_to_write, DWORD *chars_written,
                            rawptr reserved);
 foreign void ExitProcess(CUINT exit_code);
