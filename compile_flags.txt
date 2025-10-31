@@ -1,8 +1,7 @@
 -Wno-gcc-compat
--std=c99
+-std=gnu99
 -nobuiltininc
 -nostdlib
 -Werror
--Wvla
 -Wconversion
 -Wsign-conversion

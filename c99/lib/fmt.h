@@ -87,22 +87,22 @@ intptr sprint_intptr(uintptr value, byte *buffer_end) {
 #endif
 
 // stack_print()
-#define stack_print(stack, t1, v1) ({                     \
-  intptr max_size = CONCAT(sprint_size_, t1)(v1);         \
-  byte *ptr_end = (byte *)(STACK_ALLOC(stack, max_size)); \
-                                                          \
-  intptr size = CONCAT(sprint_, t1)(v1, ptr_end);         \
-                                                          \
-  (String){ptr_end - size, size};                         \
+#define stack_print(t1, v1) ({                    \
+  intptr max_size = CONCAT(sprint_size_, t1)(v1); \
+  byte buffer[max_size];                          \
+  byte *ptr_end = &buffer[max_size];              \
+                                                  \
+  intptr size = CONCAT(sprint_, t1)(v1, ptr_end); \
+  (String){ptr_end - size + 1, size};             \
 })
-#define stack_println(stack, t1, v1) ({                   \
-  intptr max_size = CONCAT(sprint_size_, t1)(v1) + 1;     \
-  byte *ptr_end = (byte *)(STACK_ALLOC(stack, max_size)); \
-  *(--ptr_end) = '\n';                                    \
-                                                          \
-  intptr size = CONCAT(sprint_, t1)(v1, ptr_end);         \
-                                                          \
-  (String){ptr_end - size, size + 1};                     \
+#define stack_println(t1, v1) ({                      \
+  intptr max_size = CONCAT(sprint_size_, t1)(v1) + 1; \
+  byte buffer[max_size];                              \
+  byte *ptr_end = &buffer[max_size];                  \
+                                                      \
+  *(--ptr_end) = '\n';                                \
+  intptr size = CONCAT(sprint_, t1)(v1, ptr_end);     \
+  (String){ptr_end - size, size + 1};                 \
 })
 
 // print()
@@ -115,16 +115,12 @@ void print_String(String str) {
   todo.assert;
 #endif
 }
-#define print_copy(t1, v1) ({               \
-  StackAllocator stack = stack_allocator(); \
-  String msg = stack_print(stack, t1, v1);  \
-  print_String(msg);                        \
-  stack_destroy(stack);                     \
+#define print_copy(t1, v1) ({       \
+  String msg = stack_print(t1, v1); \
+  print_String(msg);                \
 })
 #define print(t1, v1) IF(IS_STRING(t1), print_String(v1), print_copy(t1, v1))
-#define println(t1, v1) ({                   \
-  StackAllocator stack = stack_allocator();  \
-  String msg = stack_println(stack, t1, v1); \
-  print_String(msg);                         \
-  stack_destroy(stack);                      \
+#define println(t1, v1) ({            \
+  String msg = stack_println(t1, v1); \
+  print_String(msg);                  \
 })

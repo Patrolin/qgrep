@@ -1,4 +1,4 @@
-Format: __asm__ volatile (code : output_variables : input_variables : clobbers)
+Format: asm volatile (code : output_variables : input_variables : clobbers)
 
 Code: instruction <input>, <output>
 

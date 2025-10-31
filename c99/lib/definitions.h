@@ -78,9 +78,6 @@ typedef struct {
 } String;
 #define string(const_cstr) ((String){const_cstr, sizeof(const_cstr) - 1})
 
-/* NOTE: C standard is dumb */
-global CINT _fltused;
-
 // OS_xxx
 #define OS_WINDOWS (_WIN32 || _WIN64)
 #define OS_LINUX (__linux__ || __unix__)
@@ -117,3 +114,5 @@ ASSERT(__atomic_always_lock_free(1, 0))
 ASSERT(__atomic_always_lock_free(2, 0))
 ASSERT(__atomic_always_lock_free(4, 0))
 ASSERT(__atomic_always_lock_free(8, 0))
+
+#define cpu_relax() asm volatile("pause")
