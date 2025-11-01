@@ -65,13 +65,31 @@ intptr sprint_i64(i64 value, byte* buffer_end) {
   return size;
 }
 intptr sprint_i32(i32 value, byte* buffer_end) {
-  return sprint_i64(value, buffer_end);
+  uintptr value_uintptr = (uintptr)((value << 1) >> 1);
+  intptr size = sprint_uintptr(value_uintptr, buffer_end);
+  if (value < 0) {
+    *(buffer_end - size - 1) = '-';
+    size += 1;
+  }
+  return size;
 }
 intptr sprint_i16(i16 value, byte* buffer_end) {
-  return sprint_i64(value, buffer_end);
+  uintptr value_uintptr = (uintptr)((value << 1) >> 1);
+  intptr size = sprint_uintptr(value_uintptr, buffer_end);
+  if (value < 0) {
+    *(buffer_end - size - 1) = '-';
+    size += 1;
+  }
+  return size;
 }
 intptr sprint_i8(i8 value, byte* buffer_end) {
-  return sprint_i64(value, buffer_end);
+  uintptr value_uintptr = (uintptr)((value << 1) >> 1);
+  intptr size = sprint_uintptr(value_uintptr, buffer_end);
+  if (value < 0) {
+    *(buffer_end - size - 1) = '-';
+    size += 1;
+  }
+  return size;
 }
 
 #if ARCH_IS_64BIT
