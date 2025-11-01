@@ -34,13 +34,11 @@
 #define private static
 #define global static
 #define foreign __declspec(dllimport)
-#define noreturn _Noreturn
+#define noreturn _Noreturn void
 
 #define ASSERT(condition) _Static_assert((condition), #condition);
 #define DISTINCT(type, name) \
-  typedef struct {           \
-    type value;              \
-  } name;
+  typedef type name;
 #define ENUM(type, name) \
   typedef type name;     \
   enum name : type
@@ -77,18 +75,21 @@ typedef unsigned int CUINT;
 
 typedef intptr_t intptr;
 typedef uintptr_t uintptr;
-typedef void *rawptr;
+typedef void* rawptr;
 
 typedef struct {
-  void *ptr;
+  void* ptr;
   intptr count;
 } Slice;
 /* NOTE: utf8 string */
 typedef struct {
-  byte *ptr;
+  byte* ptr;
   intptr size;
 } String;
-#define string(const_cstr) ((String){const_cstr, sizeof(const_cstr) - 1})
+#define string(const_cstr) ({                                    \
+  const byte _autogen_string[] = const_cstr;                     \
+  (String){(byte*)_autogen_string, sizeof(_autogen_string) - 1}; \
+})
 
 // OS_xxx
 #define OS_WINDOWS (_WIN32 || _WIN64)
