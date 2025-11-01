@@ -1,5 +1,5 @@
 // vcvarsall x64
-// ./run-debug
+// ./run
 // raddbg foo.exe
 // gdb foo-linux-x64
 #include "lib/definitions.h"
