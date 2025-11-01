@@ -38,18 +38,6 @@ intptr sprint_u8(u8 value, byte* buffer_end) {
   return sprint_u64(value, buffer_end);
 }
 
-#if ARCH_IS_64BIT
-  #define sprint_size_uintptr(value) sprint_size_u64(value)
-intptr sprint_uintptr(uintptr value, byte* buffer_end) {
-  return sprint_u64(value, buffer_end);
-}
-#elif ARCH_IS_32BIT
-  #define sprint_size_uintptr(value) sprint_size_u32(value)
-intptr sprint_uintptr(uintptr value, byte* buffer_end) {
-  return sprint_u32(value, buffer_end);
-}
-#endif
-
 /* NOTE: log10_ceil(-min(type)) + 1 == log10_ceil(pow(2, bits-1)) + 1 */
 #define sprint_size_i64(value) (20)
 #define sprint_size_i32(value) (11)
@@ -57,7 +45,7 @@ intptr sprint_uintptr(uintptr value, byte* buffer_end) {
 #define sprint_size_i8(value) (4)
 intptr sprint_i64(i64 value, byte* buffer_end) {
   uintptr value_u64 = (u64)((value << 1) >> 1);
-  intptr size = sprint_u64(value_uintptr, buffer_end);
+  intptr size = sprint_u64(value_u64, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
     size += 1;
@@ -66,7 +54,7 @@ intptr sprint_i64(i64 value, byte* buffer_end) {
 }
 intptr sprint_i32(i32 value, byte* buffer_end) {
   uintptr value_u64 = (u64)((value << 1) >> 1);
-  intptr size = sprint_u64(value_uintptr, buffer_end);
+  intptr size = sprint_u64(value_u64, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
     size += 1;
@@ -75,7 +63,7 @@ intptr sprint_i32(i32 value, byte* buffer_end) {
 }
 intptr sprint_i16(i16 value, byte* buffer_end) {
   uintptr value_u64 = (u64)((value << 1) >> 1);
-  intptr size = sprint_u64(value_uintptr, buffer_end);
+  intptr size = sprint_u64(value_u64, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
     size += 1;
@@ -84,7 +72,7 @@ intptr sprint_i16(i16 value, byte* buffer_end) {
 }
 intptr sprint_i8(i8 value, byte* buffer_end) {
   uintptr value_u64 = (u64)((value << 1) >> 1);
-  intptr size = sprint_u64(value_uintptr, buffer_end);
+  intptr size = sprint_u64(value_u64, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
     size += 1;
@@ -93,13 +81,21 @@ intptr sprint_i8(i8 value, byte* buffer_end) {
 }
 
 #if ARCH_IS_64BIT
+  #define sprint_size_uintptr(value) sprint_size_u64(value)
+intptr sprint_uintptr(uintptr value, byte* buffer_end) {
+  return sprint_u64(value, buffer_end);
+}
   #define sprint_size_intptr(value) sprint_size_i64(value)
 intptr sprint_intptr(intptr value, byte* buffer_end) {
   return sprint_i64(value, buffer_end);
 }
 #elif ARCH_IS_32BIT
+  #define sprint_size_uintptr(value) sprint_size_u32(value)
+intptr sprint_uintptr(uintptr value, byte* buffer_end) {
+  return sprint_u32(value, buffer_end);
+}
   #define sprint_size_intptr(value) sprint_size_i32(value)
-intptr sprint_intptr(uintptr value, byte* buffer_end) {
+intptr sprint_intptr(intptr value, byte* buffer_end) {
   return sprint_i32(value, buffer_end);
 }
 #endif
