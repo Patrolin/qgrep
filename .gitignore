@@ -6,6 +6,7 @@
 *.rdi
 *.bin
 *.out
+*-linux-*
 
 .vscode/settings.json
 unicode/gen/*.txt
