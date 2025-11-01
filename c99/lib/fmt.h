@@ -56,8 +56,8 @@ intptr sprint_uintptr(uintptr value, byte* buffer_end) {
 #define sprint_size_i16(value) (6)
 #define sprint_size_i8(value) (4)
 intptr sprint_i64(i64 value, byte* buffer_end) {
-  uintptr value_uintptr = (uintptr)((value << 1) >> 1);
-  intptr size = sprint_uintptr(value_uintptr, buffer_end);
+  uintptr value_u64 = (u64)((value << 1) >> 1);
+  intptr size = sprint_u64(value_uintptr, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
     size += 1;
@@ -65,8 +65,8 @@ intptr sprint_i64(i64 value, byte* buffer_end) {
   return size;
 }
 intptr sprint_i32(i32 value, byte* buffer_end) {
-  uintptr value_uintptr = (uintptr)((value << 1) >> 1);
-  intptr size = sprint_uintptr(value_uintptr, buffer_end);
+  uintptr value_u64 = (u64)((value << 1) >> 1);
+  intptr size = sprint_u64(value_uintptr, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
     size += 1;
@@ -74,8 +74,8 @@ intptr sprint_i32(i32 value, byte* buffer_end) {
   return size;
 }
 intptr sprint_i16(i16 value, byte* buffer_end) {
-  uintptr value_uintptr = (uintptr)((value << 1) >> 1);
-  intptr size = sprint_uintptr(value_uintptr, buffer_end);
+  uintptr value_u64 = (u64)((value << 1) >> 1);
+  intptr size = sprint_u64(value_uintptr, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
     size += 1;
@@ -83,8 +83,8 @@ intptr sprint_i16(i16 value, byte* buffer_end) {
   return size;
 }
 intptr sprint_i8(i8 value, byte* buffer_end) {
-  uintptr value_uintptr = (uintptr)((value << 1) >> 1);
-  intptr size = sprint_uintptr(value_uintptr, buffer_end);
+  uintptr value_u64 = (u64)((value << 1) >> 1);
+  intptr size = sprint_u64(value_uintptr, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
     size += 1;
