@@ -14,10 +14,10 @@ intptr sprint_String(String str, byte* buffer_end) {
   return str.size;
 }
 
-/* NOTE: log10_ceil(max(type)) */
+/* NOTE: log10_ceil(max(type)) == log10_ceil(pow(2, bits+1) - 1) */
 #define sprint_size_u64(value) (20)
 #define sprint_size_u32(value) (10)
-#define sprint_size_u16(value) (5)
+#define sprint_size_u16(value) (6)
 #define sprint_size_u8(value) (3)
 intptr sprint_u64(u64 value, byte* buffer_end) {
   intptr i = 0;
@@ -50,7 +50,7 @@ intptr sprint_uintptr(uintptr value, byte* buffer_end) {
 }
 #endif
 
-/* NOTE: log10_ceil(max(type)) + 1 */
+/* NOTE: log10_ceil(-min(type)) + 1 == log10_ceil(pow(2, bits-1) + 1 */
 #define sprint_size_i64(value) (19 + 1)
 #define sprint_size_i32(value) (10 + 1)
 #define sprint_size_i16(value) (5 + 1)
