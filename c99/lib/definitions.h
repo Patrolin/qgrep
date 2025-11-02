@@ -19,15 +19,6 @@
 #define IS_STRING_String PROBE()
 #define IS_STRING(x) IS_PROBE(CONCAT(IS_STRING_, x))
 
-#define FOO(a, ...) \
-  a;                \
-  __VA_OPT__(BAR(__VA_ARGS__))
-#define BAR(a, ...) \
-  a;                \
-  __VA_OPT__(FOO(__VA_ARGS__))
-
-// FOO({int b = 1}, {int c = 2}, {int d = 2});
-
 // keywords
 /* private to file */
 #define readonly const
