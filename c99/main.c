@@ -10,17 +10,6 @@ void bar() {
   println(intptr, 3516);
 }
 void foo() {
-#if 0
-  String msg = string("Hello, world!\n");
-  write(STDOUT, msg.ptr, msg.size);
-#else
-  const char* foo = (const char*)(0x555555557ef0);
-  String msg = string("Hello, world!\n");
-  write(STDOUT, msg.ptr, msg.size);
-  mfence();
-  println(String, msg);
-#endif
-  /*
   String msg = string("Hello, world!");
   intptr b = msg.size;
   println(intptr, b);
@@ -29,7 +18,6 @@ void foo() {
   bar();
   println(intptr, 47);
   assert(false);
-  */
 }
 void main_multicore() {
   foo();
