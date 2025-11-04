@@ -77,9 +77,11 @@ typedef struct {
   byte* ptr;
   intptr size;
 } String;
-#define string(const_cstr) ({                                    \
-  const byte _autogen_string[] = const_cstr;                     \
-  (String){(byte*)_autogen_string, sizeof(_autogen_string) - 1}; \
+#define string(const_cstr) ({                                                    \
+  /* NOTE: clang on linux is *way* too aggressive with freeing unused variables, \
+     including variables in the outer scope that it shouldn't be touching */     \
+  const byte _autogen_cstr[] = const_cstr;                                       \
+  (String){(byte*)_autogen_cstr, sizeof(_autogen_cstr) - 1};                     \
 })
 
 // OS_xxx
