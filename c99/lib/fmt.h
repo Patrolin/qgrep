@@ -153,59 +153,65 @@ intptr sprint_intptr(intptr value, byte* buffer_end) {
   }                                                                                   \
   _autogen_size;                                                                      \
 })
-
-// stack_print()
-#define stack_print1(ptr_end, t1, v1) ({                   \
-  intptr _autogen_size = CONCAT(sprint_, t1)(v1, ptr_end); \
-  (String){ptr_end - _autogen_size, _autogen_size};        \
-})
-#define stack_print2(ptr_end, t1, v1, t2, v2) ({                     \
-  intptr _autogen_size = CONCAT(sprint_, t2)(v2, ptr_end);           \
-  _autogen_size += CONCAT(sprint_, t1)(v1, ptr_end - _autogen_size); \
-  (String){ptr_end - _autogen_size, _autogen_size};                  \
-})
-#define stack_print3(ptr_end, t1, v1, t2, v2, t3, v3) ({             \
-  intptr _autogen_size = CONCAT(sprint_, t3)(v3, ptr_end);           \
-  _autogen_size += CONCAT(sprint_, t2)(v2, ptr_end - _autogen_size); \
-  _autogen_size += CONCAT(sprint_, t1)(v1, ptr_end - _autogen_size); \
-  (String){ptr_end - _autogen_size, _autogen_size};                  \
-})
-#define stack_print4(ptr_end, t1, v1, t2, v2, t3, v3, t4, v4) ({     \
-  intptr _autogen_size = CONCAT(sprint_, t4)(v4, ptr_end);           \
-  _autogen_size += CONCAT(sprint_, t3)(v3, ptr_end - _autogen_size); \
-  _autogen_size += CONCAT(sprint_, t2)(v2, ptr_end - _autogen_size); \
-  _autogen_size += CONCAT(sprint_, t1)(v1, ptr_end - _autogen_size); \
-  (String){ptr_end - _autogen_size, _autogen_size};                  \
-})
-#define stack_print5(ptr_end, t1, v1, t2, v2, t3, v3, t4, v4, t5, v5) ({ \
-  intptr _autogen_size = CONCAT(sprint_, t5)(v5, ptr_end);               \
-  _autogen_size += CONCAT(sprint_, t4)(v4, ptr_end - _autogen_size);     \
-  _autogen_size += CONCAT(sprint_, t3)(v3, ptr_end - _autogen_size);     \
-  _autogen_size += CONCAT(sprint_, t2)(v2, ptr_end - _autogen_size);     \
-  _autogen_size += CONCAT(sprint_, t1)(v1, ptr_end - _autogen_size);     \
-  (String){ptr_end - _autogen_size, _autogen_size};                      \
+#define sprintf3(ptr_end, format, t1, v1, t2, v2, t3, v3) ({                          \
+  String _autogen_format = format;                                                    \
+  intptr _autogen_size = 0;                                                           \
+  intptr _autogen_i = _autogen_format.size;                                           \
+  intptr _autogen_j = _autogen_i;                                                     \
+  while (_autogen_i > 0) {                                                            \
+    _autogen_i--;                                                                     \
+    if (_autogen_format.ptr[_autogen_i] == '%') {                                     \
+      String _autogen_after = str_slice(_autogen_format, _autogen_i + 1, _autogen_j); \
+      _autogen_size += sprint_String(_autogen_after, ptr_end);                        \
+      _autogen_j = _autogen_i;                                                        \
+      _autogen_size += CONCAT(sprint_, t3)(v3, ptr_end - _autogen_size);              \
+      break;                                                                          \
+    }                                                                                 \
+  }                                                                                   \
+  while (_autogen_i > 0) {                                                            \
+    _autogen_i--;                                                                     \
+    if (_autogen_format.ptr[_autogen_i] == '%') {                                     \
+      String _autogen_after = str_slice(_autogen_format, _autogen_i + 1, _autogen_j); \
+      _autogen_size += sprint_String(_autogen_after, ptr_end - _autogen_size);        \
+      _autogen_j = _autogen_i;                                                        \
+      _autogen_size += CONCAT(sprint_, t2)(v2, ptr_end - _autogen_size);              \
+      break;                                                                          \
+    }                                                                                 \
+  }                                                                                   \
+  while (_autogen_i > 0) {                                                            \
+    _autogen_i--;                                                                     \
+    if (_autogen_format.ptr[_autogen_i] == '%') {                                     \
+      String _autogen_after = str_slice(_autogen_format, _autogen_i + 1, _autogen_j); \
+      _autogen_size += sprint_String(_autogen_after, ptr_end - _autogen_size);        \
+      _autogen_j = _autogen_i;                                                        \
+      _autogen_size += CONCAT(sprint_, t1)(v1, ptr_end - _autogen_size);              \
+      break;                                                                          \
+    }                                                                                 \
+  }                                                                                   \
+  if (_autogen_j > 0) {                                                               \
+    String _autogen_before = str_slice(_autogen_format, 0, _autogen_j);               \
+    _autogen_size += sprint_String(_autogen_before, ptr_end - _autogen_size);         \
+  }                                                                                   \
+  _autogen_size;                                                                      \
 })
 
 // assert()
-#define assert(condition) ({                                                                                                     \
-  if (!(condition)) {                                                                                                            \
-    String s1 = string(__FILE__);                                                                                                \
-    String s2 = string(":");                                                                                                     \
-    intptr line_number = __LINE__;                                                                                               \
-    String s3 = string(" ");                                                                                                     \
-    String s4 = string(#condition "\n");                                                                                         \
-    intptr _autogen_max_size = CONCAT(sprint_size_, String)(s1);                                                                 \
-    _autogen_max_size += CONCAT(sprint_size_, String)(s2);                                                                       \
-    _autogen_max_size += CONCAT(sprint_size_, intptr)(line_number);                                                              \
-    _autogen_max_size += CONCAT(sprint_size_, String)(s3);                                                                       \
-    _autogen_max_size += CONCAT(sprint_size_, String)(s4);                                                                       \
-                                                                                                                                 \
-    byte _autogen_buffer[_autogen_max_size];                                                                                     \
-    byte* _autogen_ptr_end = &_autogen_buffer[_autogen_max_size];                                                                \
-    String _autogen_error = stack_print5(_autogen_ptr_end, String, s1, String, s2, intptr, line_number, String, s3, String, s4); \
-    fprint(STDERR, _autogen_error);                                                                                              \
-    abort();                                                                                                                     \
-  }                                                                                                                              \
+#define assert(condition) ({                                                                                      \
+  if (!(condition)) {                                                                                             \
+    String format = string("%:% %");                                                                              \
+    String file = string(__FILE__);                                                                               \
+    intptr line = __LINE__;                                                                                       \
+    String condition_str = string(#condition "\n");                                                               \
+    intptr _autogen_max_size = sprint_size_String(format) + sprint_size_String(file);                             \
+    _autogen_max_size += sprint_size_intptr(line) + sprint_size_String(condition_str);                            \
+                                                                                                                  \
+    byte _autogen_buffer[_autogen_max_size];                                                                      \
+    byte* _autogen_ptr_end = &_autogen_buffer[_autogen_max_size];                                                 \
+    intptr _autogen_size = sprintf3(_autogen_ptr_end, format, String, file, intptr, line, String, condition_str); \
+    String _autogen_error = {_autogen_ptr_end - _autogen_size, _autogen_size};                                    \
+    fprint(STDERR, _autogen_error);                                                                               \
+    abort();                                                                                                      \
+  }                                                                                                               \
 })
 // #define assertf(condition, t1, v1)
 
@@ -228,23 +234,23 @@ void fprint(FileHandle file, String str) {
 void print_String(String str) {
   fprint(STDOUT, str);
 }
-#define print_copy(t1, v1) ({                                   \
-  intptr _autogen_max_size = CONCAT(sprint_size_, t1)(v1);      \
-                                                                \
-  byte _autogen_buffer[_autogen_max_size];                      \
-  byte* _autogen_ptr_end = &_autogen_buffer[_autogen_max_size]; \
-  String _autogen_msg = stack_print1(_autogen_ptr_end, t1, v1); \
-  print_String(_autogen_msg);                                   \
+#define print_copy(t1, v1) ({                                       \
+  intptr _autogen_max_size = CONCAT(sprint_size_, t1)(v1);          \
+  byte _autogen_buffer[_autogen_max_size];                          \
+  byte* _autogen_ptr_end = &_autogen_buffer[_autogen_max_size];     \
+                                                                    \
+  intptr _autogen_size = CONCAT(sprint_, t1)(v1, _autogen_ptr_end); \
+  String _autogen_msg = {_autogen_ptr_end - size, size};            \
+  print_String(_autogen_msg);                                       \
 })
 #define print(t1, v1) IF(IS_STRING(t1), print_String(v1), print_copy(t1, v1))
-#define println(t1, v1) ({                                                       \
-  String newline = string("\n");                                                 \
-                                                                                 \
-  intptr _autogen_max_size = CONCAT(sprint_size_, t1)(v1);                       \
-  _autogen_max_size += CONCAT(sprint_size_, String)(newline);                    \
-                                                                                 \
-  byte _autogen_buffer[_autogen_max_size];                                       \
-  byte* _autogen_ptr_end = &_autogen_buffer[_autogen_max_size];                  \
-  String _autogen_msg = stack_print2(_autogen_ptr_end, t1, v1, String, newline); \
-  print_String(_autogen_msg);                                                    \
+#define println(t1, v1) ({                                                          \
+  intptr _autogen_max_size = CONCAT(sprint_size_, t1)(v1) + 1;                      \
+  byte _autogen_buffer[_autogen_max_size];                                          \
+  byte* _autogen_ptr_end = &_autogen_buffer[_autogen_max_size];                     \
+                                                                                    \
+  *(_autogen_ptr_end--) = '\n';                                                     \
+  intptr _autogen_size = CONCAT(sprint_, t1)(v1, _autogen_ptr_end - _autogen_size); \
+  String _autogen_msg = {_autogen_ptr_end - _autogen_size, _autogen_size};          \
+  print_String(_autogen_msg);                                                       \
 })
