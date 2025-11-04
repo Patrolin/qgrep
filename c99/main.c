@@ -24,7 +24,7 @@ void foo() {
   intptr x = 13;
   intptr y = 23;
 
-  intptr _autogen_max_size = sprint_size_String(format) + CONCAT(sprint_size_, intptr)(x);
+  intptr _autogen_max_size = sprint_size_String(format) + CONCAT(sprint_size_, intptr)(x) + CONCAT(sprint_size_, intptr)(y);
   byte _autogen_buffer[_autogen_max_size];
   byte* _autogen_ptr_end = &_autogen_buffer[_autogen_max_size];
   // intptr size = sprintf1(_autogen_ptr_end, format, intptr, x);
