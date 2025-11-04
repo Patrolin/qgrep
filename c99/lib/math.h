@@ -2,6 +2,10 @@
 #include "definitions.h"
 #include "fmt.h"  // IWYU pragma: keep
 
+#define abs(t1, v1) ({                              \
+  t1 autogen_v1 = v1;                               \
+  (autogen_v1 >= (t1)0) ? autogen_v1 : -autogen_v1; \
+})
 #define downcast(t1, v1, t2) ({ \
   t2 value_t2 = (t2)v1;         \
   assert((t1)(value_t2) == v1); \

@@ -44,8 +44,8 @@ intptr sprint_u8(u8 value, byte* buffer_end) {
 #define sprint_size_i16(value) (6)
 #define sprint_size_i8(value) (4)
 intptr sprint_i64(i64 value, byte* buffer_end) {
-  uintptr value_u64 = (u64)((value << 1) >> 1);
-  intptr size = sprint_u64(value_u64, buffer_end);
+  u64 value_abs = (u64)abs(i64, value);
+  intptr size = sprint_u64(value_abs, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
     size += 1;
@@ -53,8 +53,8 @@ intptr sprint_i64(i64 value, byte* buffer_end) {
   return size;
 }
 intptr sprint_i32(i32 value, byte* buffer_end) {
-  uintptr value_u64 = (u64)((value << 1) >> 1);
-  intptr size = sprint_u64(value_u64, buffer_end);
+  u64 value_abs = (u64)abs(i32, value);
+  intptr size = sprint_u64(value_abs, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
     size += 1;
@@ -62,8 +62,8 @@ intptr sprint_i32(i32 value, byte* buffer_end) {
   return size;
 }
 intptr sprint_i16(i16 value, byte* buffer_end) {
-  uintptr value_u64 = (u64)((value << 1) >> 1);
-  intptr size = sprint_u64(value_u64, buffer_end);
+  u64 value_abs = (u64)abs(i16, value);
+  intptr size = sprint_u64(value_abs, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
     size += 1;
@@ -71,8 +71,8 @@ intptr sprint_i16(i16 value, byte* buffer_end) {
   return size;
 }
 intptr sprint_i8(i8 value, byte* buffer_end) {
-  uintptr value_u64 = (u64)((value << 1) >> 1);
-  intptr size = sprint_u64(value_u64, buffer_end);
+  u64 value_abs = (u64)abs(i8, value);
+  intptr size = sprint_u64(value_abs, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
     size += 1;
@@ -99,6 +99,60 @@ intptr sprint_intptr(intptr value, byte* buffer_end) {
   return sprint_i32(value, buffer_end);
 }
 #endif
+
+// sprintf()
+#define sprintf1(ptr_end, format, t1, v1) ({                                          \
+  String _autogen_format = format;                                                    \
+  intptr _autogen_size = 0;                                                           \
+  intptr _autogen_i = _autogen_format.size;                                           \
+  intptr _autogen_j = _autogen_i;                                                     \
+  while (_autogen_i > 0) {                                                            \
+    _autogen_i--;                                                                     \
+    if (_autogen_format.ptr[_autogen_i] == '%') {                                     \
+      String _autogen_after = str_slice(_autogen_format, _autogen_i + 1, _autogen_j); \
+      _autogen_size += sprint_String(_autogen_after, ptr_end);                        \
+      _autogen_j = _autogen_i;                                                        \
+      _autogen_size += CONCAT(sprint_, t1)(v1, ptr_end - _autogen_size);              \
+      break;                                                                          \
+    }                                                                                 \
+  }                                                                                   \
+  if (_autogen_j > 0) {                                                               \
+    String _autogen_before = str_slice(_autogen_format, 0, _autogen_j);               \
+    _autogen_size += sprint_String(_autogen_before, ptr_end - _autogen_size);         \
+  }                                                                                   \
+  _autogen_size;                                                                      \
+})
+#define sprintf2(ptr_end, format, t1, v1, t2, v2) ({                                  \
+  String _autogen_format = format;                                                    \
+  intptr _autogen_size = 0;                                                           \
+  intptr _autogen_i = _autogen_format.size;                                           \
+  intptr _autogen_j = _autogen_i;                                                     \
+  while (_autogen_i > 0) {                                                            \
+    _autogen_i--;                                                                     \
+    if (_autogen_format.ptr[_autogen_i] == '%') {                                     \
+      String _autogen_after = str_slice(_autogen_format, _autogen_i + 1, _autogen_j); \
+      _autogen_size += sprint_String(_autogen_after, ptr_end);                        \
+      _autogen_j = _autogen_i;                                                        \
+      _autogen_size += CONCAT(sprint_, t2)(v2, ptr_end - _autogen_size);              \
+      break;                                                                          \
+    }                                                                                 \
+  }                                                                                   \
+  while (_autogen_i > 0) {                                                            \
+    _autogen_i--;                                                                     \
+    if (_autogen_format.ptr[_autogen_i] == '%') {                                     \
+      String _autogen_after = str_slice(_autogen_format, _autogen_i + 1, _autogen_j); \
+      _autogen_size += sprint_String(_autogen_after, ptr_end - _autogen_size);        \
+      _autogen_j = _autogen_i;                                                        \
+      _autogen_size += CONCAT(sprint_, t1)(v1, ptr_end - _autogen_size);              \
+      break;                                                                          \
+    }                                                                                 \
+  }                                                                                   \
+  if (_autogen_j > 0) {                                                               \
+    String _autogen_before = str_slice(_autogen_format, 0, _autogen_j);               \
+    _autogen_size += sprint_String(_autogen_before, ptr_end - _autogen_size);         \
+  }                                                                                   \
+  _autogen_size;                                                                      \
+})
 
 // stack_print()
 #define stack_print1(ptr_end, t1, v1) ({                   \

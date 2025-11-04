@@ -83,6 +83,7 @@ typedef struct {
   const byte _autogen_cstr[] = const_cstr;                                       \
   (String){(byte*)_autogen_cstr, sizeof(_autogen_cstr) - 1};                     \
 })
+#define str_slice(str, i, j) {&str.ptr[i], j - i}
 
 // OS_xxx
 #define OS_WINDOWS (_WIN32 || _WIN64)
