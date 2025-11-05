@@ -5,6 +5,12 @@
 #include "process.h" /* IWYU pragma: keep */
 
 // sprint()
+#define sprint_size1(t1, v1) (CONCAT(sprint_size_, t1)(v1))
+#define sprint_size2(t1, v1, t2, v2) (CONCAT(sprint_size_, t1)(v1) + CONCAT(sprint_size_, t2)(v2))
+#define sprint_size3(t1, v1, t2, v2, t3, v3) (CONCAT(sprint_size_, t1)(v1) + CONCAT(sprint_size_, t2)(v2) + CONCAT(sprint_size_, t3)(v3))
+#define sprint_size4(t1, v1, t2, v2, t3, v3, t4, v4) (CONCAT(sprint_size_, t1)(v1) + CONCAT(sprint_size_, t2)(v2) + CONCAT(sprint_size_, t3)(v3) + CONCAT(sprint_size_, t4)(v4))
+#define sprint(t1, v1, ptr_end) CONCAT(sprint_, t1)(v1, ptr_end)
+
 #define sprint_size_String(value) (value.size)
 intptr sprint_String(String str, byte* buffer_end) {
   byte* buffer = buffer_end - str.size;
@@ -111,15 +117,15 @@ intptr sprint_intptr(intptr value, byte* buffer_end) {
     (VAR(i, c)--);                                                             \
     if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
       String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
-      VAR(size, c) += sprint_String(VAR(after, c), ptr_end);                   \
+      VAR(size, c) += sprint(String, VAR(after, c), ptr_end);                  \
       VAR(j, c) = VAR(i, c);                                                   \
-      VAR(size, c) += CONCAT(sprint_, t1)(v1, ptr_end - VAR(size, c));         \
+      VAR(size, c) += sprint(t1, v1, ptr_end - VAR(size, c));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
   if (VAR(j, c) > 0) {                                                         \
     String VAR(before, c) = str_slice(VAR(fmt, c), 0, VAR(j, c));              \
-    VAR(size, c) += sprint_String(VAR(before, c), ptr_end - VAR(size, c));     \
+    VAR(size, c) += sprint(String, VAR(before, c), ptr_end - VAR(size, c));    \
   }                                                                            \
   VAR(size, c);                                                                \
 })
@@ -133,9 +139,9 @@ intptr sprint_intptr(intptr value, byte* buffer_end) {
     (VAR(i, c)--);                                                             \
     if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
       String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
-      VAR(size, c) += sprint_String(VAR(after, c), ptr_end);                   \
+      VAR(size, c) += sprint(String, VAR(after, c), ptr_end);                  \
       VAR(j, c) = VAR(i, c);                                                   \
-      VAR(size, c) += CONCAT(sprint_, t2)(v2, ptr_end - VAR(size, c));         \
+      VAR(size, c) += sprint(t2, v2, ptr_end - VAR(size, c));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
@@ -143,15 +149,15 @@ intptr sprint_intptr(intptr value, byte* buffer_end) {
     (VAR(i, c)--);                                                             \
     if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
       String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
-      VAR(size, c) += sprint_String(VAR(after, c), ptr_end - VAR(size, c));    \
+      VAR(size, c) += sprint(String, VAR(after, c), ptr_end - VAR(size, c));   \
       VAR(j, c) = VAR(i, c);                                                   \
-      VAR(size, c) += CONCAT(sprint_, t1)(v1, ptr_end - VAR(size, c));         \
+      VAR(size, c) += sprint(t1, v1, ptr_end - VAR(size, c));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
   if (VAR(j, c) > 0) {                                                         \
     String VAR(before, c) = str_slice(VAR(fmt, c), 0, VAR(j, c));              \
-    VAR(size, c) += sprint_String(VAR(before, c), ptr_end - VAR(size, c));     \
+    VAR(size, c) += sprint(String, VAR(before, c), ptr_end - VAR(size, c));    \
   }                                                                            \
   VAR(size, c);                                                                \
 })
@@ -165,9 +171,9 @@ intptr sprint_intptr(intptr value, byte* buffer_end) {
     (VAR(i, c)--);                                                             \
     if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
       String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
-      VAR(size, c) += sprint_String(VAR(after, c), ptr_end);                   \
+      VAR(size, c) += sprint(String, VAR(after, c), ptr_end);                  \
       VAR(j, c) = VAR(i, c);                                                   \
-      VAR(size, c) += CONCAT(sprint_, t3)(v3, ptr_end - VAR(size, c));         \
+      VAR(size, c) += sprint(t3, v3, ptr_end - VAR(size, c));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
@@ -175,9 +181,9 @@ intptr sprint_intptr(intptr value, byte* buffer_end) {
     (VAR(i, c)--);                                                             \
     if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
       String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
-      VAR(size, c) += sprint_String(VAR(after, c), ptr_end - VAR(size, c));    \
+      VAR(size, c) += sprint(String, VAR(after, c), ptr_end - VAR(size, c));   \
       VAR(j, c) = VAR(i, c);                                                   \
-      VAR(size, c) += CONCAT(sprint_, t2)(v2, ptr_end - VAR(size, c));         \
+      VAR(size, c) += sprint(t2, v2, ptr_end - VAR(size, c));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
@@ -185,31 +191,24 @@ intptr sprint_intptr(intptr value, byte* buffer_end) {
     (VAR(i, c)--);                                                             \
     if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
       String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
-      VAR(size, c) += sprint_String(VAR(after, c), ptr_end - VAR(size, c));    \
+      VAR(size, c) += sprint(String, VAR(after, c), ptr_end - VAR(size, c));   \
       VAR(j, c) = VAR(i, c);                                                   \
-      VAR(size, c) += CONCAT(sprint_, t1)(v1, ptr_end - VAR(size, c));         \
+      VAR(size, c) += sprint(t1, v1, ptr_end - VAR(size, c));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
   if (VAR(j, c) > 0) {                                                         \
     String VAR(before, c) = str_slice(VAR(fmt, c), 0, VAR(j, c));              \
-    VAR(size, c) += sprint_String(VAR(before, c), ptr_end - VAR(size, c));     \
+    VAR(size, c) += sprint(String, VAR(before, c), ptr_end - VAR(size, c));    \
   }                                                                            \
   VAR(size, c);                                                                \
 })
 
-// assert()
-#define assert(condition) assert_impl(__COUNTER__, condition, __FILE__ ":" STR(__LINE__) " " #condition "\n")
-#define assert1(condition, msg_cstr) assert_impl(__COUNTER__, condition, __FILE__ ":" STR(__LINE__) " " msg_cstr "\n")
-#define assert_impl(c, condition, msg_cstr) ({ \
-  if (!(condition)) {                          \
-    fprint(STDERR, string(msg_cstr));          \
-    abort();                                   \
-  }                                            \
-})
-// #define assertf(condition, t1, v1)
-
 // fprint()
+#define assert(condition) \
+  if (!(condition)) {     \
+    abort();              \
+  }
 void fprint(FileHandle file, String str) {
 #if OS_WINDOWS
   DWORD bytes_written;
@@ -223,6 +222,17 @@ void fprint(FileHandle file, String str) {
   assert(false);
 #endif
 }
+#undef assert
+
+// assert()
+#define assert(condition) assert_impl(__COUNTER__, condition, __FILE__ ":" STR(__LINE__) " " #condition "\n")
+#define assert1(condition, msg_cstr) assert_impl(__COUNTER__, condition, __FILE__ ":" STR(__LINE__) " " msg_cstr "\n")
+#define assert_impl(c, condition, msg_cstr) ({ \
+  if (!(condition)) {                          \
+    fprint(STDERR, string(msg_cstr));          \
+    abort();                                   \
+  }                                            \
+})
 
 // print()
 void print_String(String str) {
@@ -230,7 +240,7 @@ void print_String(String str) {
 }
 #define print_copy(t1, v1) print_copy_impl(__COUNTER__, t1, v1)
 #define print_copy_impl(c, t1, v1) ({                                  \
-  intptr VAR(max_size, c) = CONCAT(sprint_size_, t1)(v1);              \
+  intptr VAR(max_size, c) = sprint_size1(t1, v1);                      \
   byte VAR(buffer, c)[VAR(max_size, c)];                               \
   byte* VAR(ptr_end, c) = &VAR(buffer, c)[VAR(max_size, c)];           \
                                                                        \
@@ -241,7 +251,7 @@ void print_String(String str) {
 #define print(t1, v1) IF(IS_STRING(t1), print_String(v1), print_copy(t1, v1))
 #define println(t1, v1) println_impl(__COUNTER__, t1, v1)
 #define println_impl(c, t1, v1) ({                                        \
-  intptr VAR(max_size, c) = CONCAT(sprint_size_, t1)(v1) + 1;             \
+  intptr VAR(max_size, c) = sprint_size1(t1, v1) + 1;                     \
   byte VAR(buffer, c)[VAR(max_size, c)];                                  \
   byte* VAR(ptr_end, c) = &VAR(buffer, c)[VAR(max_size, c)];              \
                                                                           \
