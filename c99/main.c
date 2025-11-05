@@ -6,30 +6,11 @@
 #include "lib/fmt.h"
 #include "lib/lib.h"
 
-void bar() {
-  println(intptr, 21);
-  println(intptr, 3516);
-}
 void foo() {
-#if 0
-  const char *line = __FILE__ ":" STR(__LINE__) " " STR(false) "\n";
-  write(STDOUT, (char *)line, 5);
-#elif 0
-  String format = string("x: %, y: %, z: %\n");
-  write(STDOUT, format.ptr, format.size);
-
-  intptr max_size = format.size;
-  byte buffer[max_size];
-  byte* ptr_end = &buffer[max_size];
-#elif 0
-  String msg = string("Hello, world!");
-  intptr b = msg.size;
-  println(intptr, b);
-  println(String, msg);
-  println(intptr, 123);
-  bar();
-  println(intptr, 47);
-  assert(false);
+#if 1
+  printfln1(string("x: %"), intptr, 13);
+  printfln2(string("x: %, y: %"), intptr, 13, intptr, 22);
+  printfln3(string("x: %, y: %, z: %"), intptr, 13, intptr, 22, intptr, 37);
 #else
   String format = string("xá: %, y: %, z: %\n");
   intptr x = 13;

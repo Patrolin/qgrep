@@ -9,7 +9,11 @@
 #define sprint_size2(t1, v1, t2, v2) (CONCAT(sprint_size_, t1)(v1) + CONCAT(sprint_size_, t2)(v2))
 #define sprint_size3(t1, v1, t2, v2, t3, v3) (CONCAT(sprint_size_, t1)(v1) + CONCAT(sprint_size_, t2)(v2) + CONCAT(sprint_size_, t3)(v3))
 #define sprint_size4(t1, v1, t2, v2, t3, v3, t4, v4) (CONCAT(sprint_size_, t1)(v1) + CONCAT(sprint_size_, t2)(v2) + CONCAT(sprint_size_, t3)(v3) + CONCAT(sprint_size_, t4)(v4))
+#define STACK_BUFFER(buffer, max_size, ptr_end) \
+  byte buffer[max_size];                        \
+  byte* ptr_end = &buffer[max_size]
 #define sprint(t1, v1, ptr_end) CONCAT(sprint_, t1)(v1, ptr_end)
+#define sprint_to_string(ptr_end, size) ((String){ptr_end - size, size})
 
 #define sprint_size_String(value) (value.size)
 intptr sprint_String(String str, byte* buffer_end) {
@@ -239,24 +243,83 @@ void print_String(String str) {
   fprint(STDOUT, str);
 }
 #define print_copy(t1, v1) print_copy_impl(__COUNTER__, t1, v1)
-#define print_copy_impl(c, t1, v1) ({                                  \
-  intptr VAR(max_size, c) = sprint_size1(t1, v1);                      \
-  byte VAR(buffer, c)[VAR(max_size, c)];                               \
-  byte* VAR(ptr_end, c) = &VAR(buffer, c)[VAR(max_size, c)];           \
-                                                                       \
-  intptr VAR(size, c) = CONCAT(sprint_, t1)(v1, VAR(ptr_end, c));      \
-  String VAR(msg, c) = {VAR(ptr_end, c) - VAR(size, c), VAR(size, c)}; \
-  print_String(VAR(msg, c));                                           \
+#define print_copy_impl(c, t1, v1) ({                                   \
+  intptr VAR(max_size, c) = sprint_size1(t1, v1);                       \
+  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));      \
+                                                                        \
+  intptr VAR(size, c) = CONCAT(sprint_, t1)(v1, VAR(ptr_end, c));       \
+  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c)); \
+  print_String(VAR(msg, c));                                            \
 })
 #define print(t1, v1) IF(IS_STRING(t1), print_String(v1), print_copy(t1, v1))
 #define println(t1, v1) println_impl(__COUNTER__, t1, v1)
 #define println_impl(c, t1, v1) ({                                        \
   intptr VAR(max_size, c) = sprint_size1(t1, v1) + 1;                     \
-  byte VAR(buffer, c)[VAR(max_size, c)];                                  \
-  byte* VAR(ptr_end, c) = &VAR(buffer, c)[VAR(max_size, c)];              \
+  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));        \
                                                                           \
   *(VAR(ptr_end, c) - 1) = '\n';                                          \
   intptr VAR(size, c) = CONCAT(sprint_, t1)(v1, VAR(ptr_end, c) - 1) + 1; \
-  String VAR(msg, c) = {VAR(ptr_end, c) - VAR(size, c), VAR(size, c)};    \
+  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c));   \
   print_String(VAR(msg, c));                                              \
+})
+
+// printf()
+#define printf1(format, t1, v1) printf1_impl(__COUNTER__, format, t1, v1)
+#define printf1_impl(c, format, t1, v1) ({                              \
+  intptr VAR(max_size, c) = sprint_size2(String, format, t1, v1);       \
+  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));      \
+                                                                        \
+  intptr VAR(size, c) = sprintf1(VAR(ptr_end, c), format, t1, v1);      \
+  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c)); \
+  print_String(VAR(msg, c));                                            \
+})
+#define printf2(format, t1, v1, t2, v2) printf2_impl(__COUNTER__, format, t1, v1, t2, v2)
+#define printf2_impl(c, format, t1, v1, t2, v2) ({                         \
+  intptr VAR(max_size, c) = sprint_size3(String, format, t1, v1, t2, v2);  \
+  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));         \
+                                                                           \
+  intptr VAR(size, c) = sprintf2(VAR(ptr_end, c), format, t1, v1, t2, v2); \
+  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c));    \
+  print_String(VAR(msg, c));                                               \
+})
+#define printf3(format, t1, v1, t2, v2, t3, v3) printf3_impl(__COUNTER__, format, t1, v1, t2, v2, t3, v3)
+#define printf3_impl(c, format, t1, v1, t2, v2, t3, v3) ({                         \
+  intptr VAR(max_size, c) = sprint_size4(String, format, t1, v1, t2, v2, t3, v3);  \
+  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));                 \
+                                                                                   \
+  intptr VAR(size, c) = sprintf3(VAR(ptr_end, c), format, t1, v1, t2, v2, t3, v3); \
+  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c));            \
+  print_String(VAR(msg, c));                                                       \
+})
+
+// printfln()
+#define printfln1(format, t1, v1) printfln1_impl(__COUNTER__, format, t1, v1)
+#define printfln1_impl(c, format, t1, v1) ({                               \
+  intptr VAR(max_size, c) = sprint_size2(String, format, t1, v1) + 1;      \
+  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));         \
+                                                                           \
+  *(VAR(ptr_end, c) - 1) = '\n';                                           \
+  intptr VAR(size, c) = sprintf1(VAR(ptr_end, c) - 1, format, t1, v1) + 1; \
+  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c));    \
+  print_String(VAR(msg, c));                                               \
+})
+#define printfln2(format, t1, v1, t2, v2) printfln2_impl(__COUNTER__, format, t1, v1, t2, v2)
+#define printfln2_impl(c, format, t1, v1, t2, v2) ({                               \
+  intptr VAR(max_size, c) = sprint_size3(String, format, t1, v1, t2, v2) + 1;      \
+  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));                 \
+                                                                                   \
+  *(VAR(ptr_end, c) - 1) = '\n';                                                   \
+  intptr VAR(size, c) = sprintf2(VAR(ptr_end, c) - 1, format, t1, v1, t2, v2) + 1; \
+  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c));            \
+  print_String(VAR(msg, c));                                                       \
+})
+#define printfln3(format, t1, v1, t2, v2, t3, v3) printfln3_impl(__COUNTER__, format, t1, v1, t2, v2, t3, v3)
+#define printfln3_impl(c, format, t1, v1, t2, v2, t3, v3) ({                               \
+  intptr VAR(max_size, c) = sprint_size4(String, format, t1, v1, t2, v2, t3, v3) + 1;      \
+  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));                         \
+                                                                                           \
+  *(VAR(ptr_end, c) - 1) = '\n';                                                           \
+  intptr VAR(size, c) = sprintf3(VAR(ptr_end, c) - 1, format, t1, v1, t2, v2, t3, v3) + 1; \
+  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c));                    \
+  print_String(VAR(msg, c));                                                               \
 })
