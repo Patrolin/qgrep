@@ -12,12 +12,10 @@ void bar() {
 }
 void foo() {
 #if 0
-  const byte cstr[] = "x: %, y: %, z: %\n";
-  String format = (String){(byte*)&cstr[0], sizeof(cstr) - 1};
+  String format = string("x: %, y: %, z: %\n");
   write(STDOUT, format.ptr, format.size);
 #elif 1
-  const byte cstr[] = "x: %, y: %, z: %\n";
-  String format = (String){(byte*)&cstr[0], sizeof(cstr) - 1};
+  String format = string("x: %, y: %, z: %\n");
   write(STDOUT, format.ptr, format.size);
 
   intptr max_size = format.size;

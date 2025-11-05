@@ -84,10 +84,14 @@ typedef struct {
 } String;
 /* NOTE: clang on linux is *way* too aggressive with freeing unused variables,
     including variables in the outer scope that it shouldn't be touching */
-#define string(const_cstr) ({                                    \
-  const byte _autogen_cstr[] = const_cstr;                       \
-  (String){(byte*)&_autogen_cstr[0], sizeof(_autogen_cstr) - 1}; \
-})
+#if 0
+  #define string(const_cstr) ({                                    \
+    const byte _autogen_cstr[] = const_cstr;                       \
+    (String){(byte*)&_autogen_cstr[0], sizeof(_autogen_cstr) - 1}; \
+  })
+#else
+  #define string(const_cstr) ((String){(byte*)&const_cstr[0], sizeof(const_cstr) - 1})
+#endif
 String str_slice(String str, intptr i, intptr j) {
   String sliced = (String){&str.ptr[i], j - i};
   if (i > j) {
