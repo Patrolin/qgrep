@@ -36,14 +36,14 @@ void foo() {
   intptr y = 23;
   intptr z = 37;
 
-  intptr _autogen_max_size = sprint_size_String(format) + CONCAT(sprint_size_, intptr)(x) + CONCAT(sprint_size_, intptr)(y) + CONCAT(sprint_size_, intptr)(z);
-  byte _autogen_buffer[_autogen_max_size];
-  byte* _autogen_ptr_end = &_autogen_buffer[_autogen_max_size];
-  // intptr size = sprintf1(_autogen_ptr_end, format, intptr, z);
-  // intptr size = sprintf2(_autogen_ptr_end, format, intptr, y, intptr, z);
-  intptr size = sprintf3(_autogen_ptr_end, format, intptr, x, intptr, y, intptr, z);
+  intptr max_size = sprint_size_String(format) + CONCAT(sprint_size_, intptr)(x) + CONCAT(sprint_size_, intptr)(y) + CONCAT(sprint_size_, intptr)(z);
+  byte buffer[max_size];
+  byte* ptr_end = &buffer[max_size];
+  // intptr size = sprintf1(ptr_end, format, intptr, z);
+  // intptr size = sprintf2(ptr_end, format, intptr, y, intptr, z);
+  intptr size = sprintf3(ptr_end, format, intptr, x, intptr, y, intptr, z);
 
-  String msg = {_autogen_ptr_end - size, size};
+  String msg = {ptr_end - size, size};
   print_String(msg);
   assert(false);
 #endif

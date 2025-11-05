@@ -7,6 +7,7 @@
 // #define CONCAT(a, b) CONCAT0(a, b)
 #define CONCAT(a, b) a##b
 #define STR(a) #a
+#define VAR(name, counter) CONCAT(__##name, counter)
 
 #define IF_1(t, f) t
 #define IF_0(t, f) f
@@ -86,11 +87,11 @@ typedef struct {
 /* NOTE: clang on linux is *way* too aggressive with freeing unused variables,
     including variables in the outer scope that it shouldn't be touching */
 #if 1
+  #define string(const_cstr) string_impl(__COUNTER__, const_cstr)
   #define string_impl(counter, const_cstr) ({                                    \
     const byte CONCAT(_cstr, counter)[] = const_cstr;                            \
     (String){(byte*)CONCAT(_cstr, counter), sizeof(CONCAT(_cstr, counter)) - 1}; \
   })
-  #define string(const_cstr) string_impl(__COUNTER__, const_cstr)
 #else
   #define string(const_cstr) ((String){(byte*)const_cstr, sizeof(const_cstr) - 1})
 #endif

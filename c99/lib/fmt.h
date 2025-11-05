@@ -101,117 +101,122 @@ intptr sprint_intptr(intptr value, byte* buffer_end) {
 #endif
 
 // sprintf()
-#define sprintf1(ptr_end, format, t1, v1) ({                                          \
-  String _autogen_format = format;                                                    \
-  intptr _autogen_size = 0;                                                           \
-  intptr _autogen_i = _autogen_format.size;                                           \
-  intptr _autogen_j = _autogen_i;                                                     \
-  while (_autogen_i > 0) {                                                            \
-    _autogen_i--;                                                                     \
-    if (_autogen_format.ptr[_autogen_i] == '%') {                                     \
-      String _autogen_after = str_slice(_autogen_format, _autogen_i + 1, _autogen_j); \
-      _autogen_size += sprint_String(_autogen_after, ptr_end);                        \
-      _autogen_j = _autogen_i;                                                        \
-      _autogen_size += CONCAT(sprint_, t1)(v1, ptr_end - _autogen_size);              \
-      break;                                                                          \
-    }                                                                                 \
-  }                                                                                   \
-  if (_autogen_j > 0) {                                                               \
-    String _autogen_before = str_slice(_autogen_format, 0, _autogen_j);               \
-    _autogen_size += sprint_String(_autogen_before, ptr_end - _autogen_size);         \
-  }                                                                                   \
-  _autogen_size;                                                                      \
+#define sprintf1(ptr_end, format, t1, v1) sprintf1_impl(__COUNTER__, ptr_end, format, t1, v1)
+#define sprintf1_impl(c, ptr_end, format, t1, v1) ({                           \
+  String VAR(fmt, c) = format;                                                 \
+  intptr VAR(size, c) = 0;                                                     \
+  intptr VAR(i, c) = VAR(fmt, c).size;                                         \
+  intptr VAR(j, c) = VAR(i, c);                                                \
+  while (VAR(i, c) > 0) {                                                      \
+    (VAR(i, c)--);                                                             \
+    if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
+      String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
+      VAR(size, c) += sprint_String(VAR(after, c), ptr_end);                   \
+      VAR(j, c) = VAR(i, c);                                                   \
+      VAR(size, c) += CONCAT(sprint_, t1)(v1, ptr_end - VAR(size, c));         \
+      break;                                                                   \
+    }                                                                          \
+  }                                                                            \
+  if (VAR(j, c) > 0) {                                                         \
+    String VAR(before, c) = str_slice(VAR(fmt, c), 0, VAR(j, c));              \
+    VAR(size, c) += sprint_String(VAR(before, c), ptr_end - VAR(size, c));     \
+  }                                                                            \
+  VAR(size, c);                                                                \
 })
-#define sprintf2(ptr_end, format, t1, v1, t2, v2) ({                                  \
-  String _autogen_format = format;                                                    \
-  intptr _autogen_size = 0;                                                           \
-  intptr _autogen_i = _autogen_format.size;                                           \
-  intptr _autogen_j = _autogen_i;                                                     \
-  while (_autogen_i > 0) {                                                            \
-    _autogen_i--;                                                                     \
-    if (_autogen_format.ptr[_autogen_i] == '%') {                                     \
-      String _autogen_after = str_slice(_autogen_format, _autogen_i + 1, _autogen_j); \
-      _autogen_size += sprint_String(_autogen_after, ptr_end);                        \
-      _autogen_j = _autogen_i;                                                        \
-      _autogen_size += CONCAT(sprint_, t2)(v2, ptr_end - _autogen_size);              \
-      break;                                                                          \
-    }                                                                                 \
-  }                                                                                   \
-  while (_autogen_i > 0) {                                                            \
-    _autogen_i--;                                                                     \
-    if (_autogen_format.ptr[_autogen_i] == '%') {                                     \
-      String _autogen_after = str_slice(_autogen_format, _autogen_i + 1, _autogen_j); \
-      _autogen_size += sprint_String(_autogen_after, ptr_end - _autogen_size);        \
-      _autogen_j = _autogen_i;                                                        \
-      _autogen_size += CONCAT(sprint_, t1)(v1, ptr_end - _autogen_size);              \
-      break;                                                                          \
-    }                                                                                 \
-  }                                                                                   \
-  if (_autogen_j > 0) {                                                               \
-    String _autogen_before = str_slice(_autogen_format, 0, _autogen_j);               \
-    _autogen_size += sprint_String(_autogen_before, ptr_end - _autogen_size);         \
-  }                                                                                   \
-  _autogen_size;                                                                      \
+#define sprintf2(ptr_end, format, t1, v1, t2, v2) sprintf2_impl(__COUNTER__, ptr_end, format, t1, v1, t2, v2)
+#define sprintf2_impl(c, ptr_end, format, t1, v1, t2, v2) ({                   \
+  String VAR(fmt, c) = format;                                                 \
+  intptr VAR(size, c) = 0;                                                     \
+  intptr VAR(i, c) = VAR(fmt, c).size;                                         \
+  intptr VAR(j, c) = VAR(i, c);                                                \
+  while (VAR(i, c) > 0) {                                                      \
+    (VAR(i, c)--);                                                             \
+    if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
+      String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
+      VAR(size, c) += sprint_String(VAR(after, c), ptr_end);                   \
+      VAR(j, c) = VAR(i, c);                                                   \
+      VAR(size, c) += CONCAT(sprint_, t2)(v2, ptr_end - VAR(size, c));         \
+      break;                                                                   \
+    }                                                                          \
+  }                                                                            \
+  while (VAR(i, c) > 0) {                                                      \
+    (VAR(i, c)--);                                                             \
+    if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
+      String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
+      VAR(size, c) += sprint_String(VAR(after, c), ptr_end - VAR(size, c));    \
+      VAR(j, c) = VAR(i, c);                                                   \
+      VAR(size, c) += CONCAT(sprint_, t1)(v1, ptr_end - VAR(size, c));         \
+      break;                                                                   \
+    }                                                                          \
+  }                                                                            \
+  if (VAR(j, c) > 0) {                                                         \
+    String VAR(before, c) = str_slice(VAR(fmt, c), 0, VAR(j, c));              \
+    VAR(size, c) += sprint_String(VAR(before, c), ptr_end - VAR(size, c));     \
+  }                                                                            \
+  VAR(size, c);                                                                \
 })
-#define sprintf3(ptr_end, format, t1, v1, t2, v2, t3, v3) ({                          \
-  String _autogen_format = format;                                                    \
-  intptr _autogen_size = 0;                                                           \
-  intptr _autogen_i = _autogen_format.size;                                           \
-  intptr _autogen_j = _autogen_i;                                                     \
-  while (_autogen_i > 0) {                                                            \
-    _autogen_i--;                                                                     \
-    if (_autogen_format.ptr[_autogen_i] == '%') {                                     \
-      String _autogen_after = str_slice(_autogen_format, _autogen_i + 1, _autogen_j); \
-      _autogen_size += sprint_String(_autogen_after, ptr_end);                        \
-      _autogen_j = _autogen_i;                                                        \
-      _autogen_size += CONCAT(sprint_, t3)(v3, ptr_end - _autogen_size);              \
-      break;                                                                          \
-    }                                                                                 \
-  }                                                                                   \
-  while (_autogen_i > 0) {                                                            \
-    _autogen_i--;                                                                     \
-    if (_autogen_format.ptr[_autogen_i] == '%') {                                     \
-      String _autogen_after = str_slice(_autogen_format, _autogen_i + 1, _autogen_j); \
-      _autogen_size += sprint_String(_autogen_after, ptr_end - _autogen_size);        \
-      _autogen_j = _autogen_i;                                                        \
-      _autogen_size += CONCAT(sprint_, t2)(v2, ptr_end - _autogen_size);              \
-      break;                                                                          \
-    }                                                                                 \
-  }                                                                                   \
-  while (_autogen_i > 0) {                                                            \
-    _autogen_i--;                                                                     \
-    if (_autogen_format.ptr[_autogen_i] == '%') {                                     \
-      String _autogen_after = str_slice(_autogen_format, _autogen_i + 1, _autogen_j); \
-      _autogen_size += sprint_String(_autogen_after, ptr_end - _autogen_size);        \
-      _autogen_j = _autogen_i;                                                        \
-      _autogen_size += CONCAT(sprint_, t1)(v1, ptr_end - _autogen_size);              \
-      break;                                                                          \
-    }                                                                                 \
-  }                                                                                   \
-  if (_autogen_j > 0) {                                                               \
-    String _autogen_before = str_slice(_autogen_format, 0, _autogen_j);               \
-    _autogen_size += sprint_String(_autogen_before, ptr_end - _autogen_size);         \
-  }                                                                                   \
-  _autogen_size;                                                                      \
+#define sprintf3(ptr_end, format, t1, v1, t2, v2, t3, v3) sprintf3_impl(__COUNTER__, ptr_end, format, t1, v1, t2, v2, t3, v3)
+#define sprintf3_impl(c, ptr_end, format, t1, v1, t2, v2, t3, v3) ({           \
+  String VAR(fmt, c) = format;                                                 \
+  intptr VAR(size, c) = 0;                                                     \
+  intptr VAR(i, c) = VAR(fmt, c).size;                                         \
+  intptr VAR(j, c) = VAR(i, c);                                                \
+  while (VAR(i, c) > 0) {                                                      \
+    (VAR(i, c)--);                                                             \
+    if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
+      String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
+      VAR(size, c) += sprint_String(VAR(after, c), ptr_end);                   \
+      VAR(j, c) = VAR(i, c);                                                   \
+      VAR(size, c) += CONCAT(sprint_, t3)(v3, ptr_end - VAR(size, c));         \
+      break;                                                                   \
+    }                                                                          \
+  }                                                                            \
+  while (VAR(i, c) > 0) {                                                      \
+    (VAR(i, c)--);                                                             \
+    if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
+      String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
+      VAR(size, c) += sprint_String(VAR(after, c), ptr_end - VAR(size, c));    \
+      VAR(j, c) = VAR(i, c);                                                   \
+      VAR(size, c) += CONCAT(sprint_, t2)(v2, ptr_end - VAR(size, c));         \
+      break;                                                                   \
+    }                                                                          \
+  }                                                                            \
+  while (VAR(i, c) > 0) {                                                      \
+    (VAR(i, c)--);                                                             \
+    if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
+      String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
+      VAR(size, c) += sprint_String(VAR(after, c), ptr_end - VAR(size, c));    \
+      VAR(j, c) = VAR(i, c);                                                   \
+      VAR(size, c) += CONCAT(sprint_, t1)(v1, ptr_end - VAR(size, c));         \
+      break;                                                                   \
+    }                                                                          \
+  }                                                                            \
+  if (VAR(j, c) > 0) {                                                         \
+    String VAR(before, c) = str_slice(VAR(fmt, c), 0, VAR(j, c));              \
+    VAR(size, c) += sprint_String(VAR(before, c), ptr_end - VAR(size, c));     \
+  }                                                                            \
+  VAR(size, c);                                                                \
 })
 
 // assert()
-#define assert(condition) ({                                                                                      \
-  if (!(condition)) {                                                                                             \
-    String format = string("%:% %");                                                                              \
-    String file = string(__FILE__);                                                                               \
-    intptr line = __LINE__;                                                                                       \
-    String condition_str = string(#condition "\n");                                                               \
-    intptr _autogen_max_size = sprint_size_String(format) + sprint_size_String(file);                             \
-    _autogen_max_size += sprint_size_intptr(line) + sprint_size_String(condition_str);                            \
-                                                                                                                  \
-    byte _autogen_buffer[_autogen_max_size];                                                                      \
-    byte* _autogen_ptr_end = &_autogen_buffer[_autogen_max_size];                                                 \
-    intptr _autogen_size = sprintf3(_autogen_ptr_end, format, String, file, intptr, line, String, condition_str); \
-    String _autogen_error = {_autogen_ptr_end - _autogen_size, _autogen_size};                                    \
-    fprint(STDERR, _autogen_error);                                                                               \
-    abort();                                                                                                      \
-  }                                                                                                               \
+#define assert(condition) assert_impl(__COUNTER__, condition, #condition "\n")
+#define assert_impl(c, condition, msg) ({                                                             \
+  if (!(condition)) {                                                                                 \
+    String VAR(format, c) = string("%:% %");                                                          \
+    String VAR(file, c) = string(__FILE__);                                                           \
+    intptr VAR(line, c) = __LINE__;                                                                   \
+    String VAR(condition_str, c) = string(msg);                                                       \
+    intptr VAR(max_size, c) = sprint_size_String(VAR(format, c)) + sprint_size_String(VAR(file, c));  \
+    VAR(max_size, c) += sprint_size_intptr(VAR(line, c)) + sprint_size_String(VAR(condition_str, c)); \
+                                                                                                      \
+    byte VAR(buffer, c)[VAR(max_size, c)];                                                            \
+    byte* VAR(ptr_end, c) = &VAR(buffer, c)[VAR(max_size, c)];                                        \
+    intptr VAR(size, c) = sprintf3(VAR(ptr_end, c), VAR(format, c), String, VAR(file, c),             \
+                                   intptr, VAR(line, c), String, VAR(condition_str, c));              \
+    String VAR(error, c) = {VAR(ptr_end, c) - VAR(size, c), VAR(size, c)};                            \
+    fprint(STDERR, VAR(error, c));                                                                    \
+    abort();                                                                                          \
+  }                                                                                                   \
 })
 // #define assertf(condition, t1, v1)
 
@@ -234,23 +239,25 @@ void fprint(FileHandle file, String str) {
 void print_String(String str) {
   fprint(STDOUT, str);
 }
-#define print_copy(t1, v1) ({                                       \
-  intptr _autogen_max_size = CONCAT(sprint_size_, t1)(v1);          \
-  byte _autogen_buffer[_autogen_max_size];                          \
-  byte* _autogen_ptr_end = &_autogen_buffer[_autogen_max_size];     \
-                                                                    \
-  intptr _autogen_size = CONCAT(sprint_, t1)(v1, _autogen_ptr_end); \
-  String _autogen_msg = {_autogen_ptr_end - size, size};            \
-  print_String(_autogen_msg);                                       \
+#define print_copy(t1, v1) print_copy_impl(__COUNTER__, t1, v1)
+#define print_copy_impl(c, t1, v1) ({                                  \
+  intptr VAR(max_size, c) = CONCAT(sprint_size_, t1)(v1);              \
+  byte VAR(buffer, c)[VAR(max_size, c)];                               \
+  byte* VAR(ptr_end, c) = &VAR(buffer, c)[VAR(max_size, c)];           \
+                                                                       \
+  intptr VAR(size, c) = CONCAT(sprint_, t1)(v1, VAR(ptr_end, c));      \
+  String VAR(msg, c) = {VAR(ptr_end, c) - VAR(size, c), VAR(size, c)}; \
+  print_String(VAR(msg, c));                                           \
 })
 #define print(t1, v1) IF(IS_STRING(t1), print_String(v1), print_copy(t1, v1))
-#define println(t1, v1) ({                                                          \
-  intptr _autogen_max_size = CONCAT(sprint_size_, t1)(v1) + 1;                      \
-  byte _autogen_buffer[_autogen_max_size];                                          \
-  byte* _autogen_ptr_end = &_autogen_buffer[_autogen_max_size];                     \
-                                                                                    \
-  *(_autogen_ptr_end--) = '\n';                                                     \
-  intptr _autogen_size = CONCAT(sprint_, t1)(v1, _autogen_ptr_end - _autogen_size); \
-  String _autogen_msg = {_autogen_ptr_end - _autogen_size, _autogen_size};          \
-  print_String(_autogen_msg);                                                       \
+#define println(t1, v1) println_impl(__COUNTER__, t1, v1)
+#define println_impl(c, t1, v1) ({                                        \
+  intptr VAR(max_size, c) = CONCAT(sprint_size_, t1)(v1) + 1;             \
+  byte VAR(buffer, c)[VAR(max_size, c)];                                  \
+  byte* VAR(ptr_end, c) = &VAR(buffer, c)[VAR(max_size, c)];              \
+                                                                          \
+  *(VAR(ptr_end, c) - 1) = '\n';                                          \
+  intptr VAR(size, c) = CONCAT(sprint_, t1)(v1, VAR(ptr_end, c) - 1) + 1; \
+  String VAR(msg, c) = {VAR(ptr_end, c) - VAR(size, c), VAR(size, c)};    \
+  print_String(VAR(msg, c));                                              \
 })
