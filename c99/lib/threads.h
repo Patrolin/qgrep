@@ -5,25 +5,26 @@
 // shared
 typedef void MainProc();
 void main_multicore();
+void run_multicore(MainProc proc, intptr thread_count) {
+  /* TODO: get thread count if thread_count==0 */
+  /* TODO: run multicore */
+  proc();
+}
+
+void _startup() {
+  init_console();
+  run_multicore(main_multicore, 1);
+  /* TODO: mfence() here? */
+  exit_process(0);
+}
 
 #if HAS_CRT
 CINT main() {
-  init_console();
-  main_multicore();
-  exit_process(0);
+  _startup();
 }
 #else
-void run_multicore(MainProc proc, intptr thread_count) {
-  /* TODO: get thread count */
-  proc();
-}
 void _start() {
   ALIGN_STACK_POINTER();
-  init_console();
-  main_multicore();
-  /* TODO: run multicore */
-  // run_multicore(main_multicore, 1);
-  /* TODO: mfence() here? */
-  exit_process(0);
+  _startup();
 }
 #endif
