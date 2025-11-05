@@ -14,7 +14,7 @@ void foo() {
 #if 0
   String format = string("x: %, y: %, z: %\n");
   write(STDOUT, format.ptr, format.size);
-#elif 1
+#elif 0
   String format = string("x: %, y: %, z: %\n");
   write(STDOUT, format.ptr, format.size);
 
@@ -30,7 +30,6 @@ void foo() {
   bar();
   println(intptr, 47);
   assert(false);
-  #el
 #else
   String format = string("x: %, y: %, z: %\n");
   intptr x = 13;

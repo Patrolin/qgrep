@@ -115,6 +115,11 @@ String str_slice(String str, intptr i, intptr j) {
 /* NOTE: stack grows downwards on almost all architectures */
 #define ARCH_STACK_DIRECTION (-1)
 
+/* NOTE: linux doesn't align rsp for us at startup... */
+#if ARCH_X64
+  #define ALIGN_STACK_POINTER() asm volatile("andq $-16, %%rsp" ::: "rsp");
+#endif
+
 // atomics: https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html
 #define volatile_store(address, value) __atomic_store_n(address, value, __ATOMIC_RELAXED)
 #define volatile_load(address, value) __atomic_load_n(address, __ATOMIC_RELAXED)

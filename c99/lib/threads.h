@@ -18,7 +18,7 @@ void run_multicore(MainProc proc, intptr thread_count) {
   proc();
 }
 void _start() {
-  asm volatile("andq $-16, %%rsp" ::: "rsp");
+  ALIGN_STACK_POINTER();
   init_console();
   main_multicore();
   /* TODO: run multicore */
