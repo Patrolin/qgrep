@@ -110,7 +110,7 @@ String str_slice(String str, intptr i, intptr j) {
 #define ARCH_X64 __x86_64__
 #define ARCH_X86 __i386__
 #define ARCH_ARM64 __aarch64__
-#define ARCH_ARM32 (__arm__ && !__aarch64__)
+#define ARCH_ARM32 (__arm__ && !ARCH_ARM64)
 
 #define ARCH_IS_64BIT (ARCH_X64 || ARCH_ARM64)
 #define ARCH_IS_32BIT (ARCH_X86 || ARCH_ARM32)
