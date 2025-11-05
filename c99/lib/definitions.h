@@ -7,6 +7,8 @@
 // #define CONCAT(a, b) CONCAT0(a, b)
 #define CONCAT(a, b) a##b
 #define STR(a) #a
+/* NOTE: clang is stupid, and overwrites outer scope variables with the same name,
+  so we need macro variables to all have different names... */
 #define VAR(name, counter) CONCAT(__##name, counter)
 
 #define IF_1(t, f) t
@@ -21,8 +23,8 @@
 #define IS_STRING(x) IS_PROBE(CONCAT(IS_STRING_, x))
 
 // keywords
-/* private to file */
 #define readonly const
+/* private to file */
 #define private static
 #define global static
 #define foreign __declspec(dllimport)

@@ -16,12 +16,12 @@
 
 typedef bool BOOL;
 typedef u32 DWORD;
-typedef uintptr Handle;
+DISTINCT(uintptr, Handle);
 DISTINCT(Handle, FileHandle);
 #elif OS_LINUX
   #include "os_linux.h"
 /* NOTE: everything is a file on linux */
-typedef uintptr FileHandle;
+DISTINCT(CINT, FileHandle);
 DISTINCT(FileHandle, Handle);
 #else
 ASSERT(false);

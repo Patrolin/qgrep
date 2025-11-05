@@ -1,6 +1,5 @@
 -Wno-gcc-compat
 -std=gnu99
--nobuiltininc
 -nostdlib
 -Werror
 -Wconversion
