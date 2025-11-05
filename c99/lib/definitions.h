@@ -26,6 +26,7 @@
 #define global static
 #define foreign __declspec(dllimport)
 #define noreturn _Noreturn void
+// #define deprecated(msg) __attribute__((deprecated(msg)))
 
 #define ASSERT(condition) _Static_assert((condition), #condition);
 #define DISTINCT(type, name) \
@@ -47,6 +48,10 @@ typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
 
+// typedef __bf16 bf16;
+// ASSERT(sizeof(bf16) == 2);
+// typedef _Float16 f16;
+// ASSERT(sizeof(f16) == 2);
 typedef float f32;
 ASSERT(sizeof(f32) == 4);
 typedef double f64;
@@ -77,11 +82,11 @@ typedef struct {
   byte* ptr;
   intptr size;
 } String;
-#define string(const_cstr) ({                                                    \
-  /* NOTE: clang on linux is *way* too aggressive with freeing unused variables, \
-     including variables in the outer scope that it shouldn't be touching */     \
-  const byte _autogen_cstr[] = const_cstr;                                       \
-  (String){(byte*)_autogen_cstr, sizeof(_autogen_cstr) - 1};                     \
+/* NOTE: clang on linux is *way* too aggressive with freeing unused variables,
+    including variables in the outer scope that it shouldn't be touching */
+#define string(const_cstr) ({                                    \
+  const byte _autogen_cstr[] = const_cstr;                       \
+  (String){(byte*)&_autogen_cstr[0], sizeof(_autogen_cstr) - 1}; \
 })
 String str_slice(String str, intptr i, intptr j) {
   String sliced = (String){&str.ptr[i], j - i};

@@ -2,6 +2,7 @@
 // ./run
 // raddbg foo.exe
 // gdb foo-linux-x64
+#include "lib/definitions.h"
 #include "lib/fmt.h"
 #include "lib/lib.h"
 
@@ -11,6 +12,18 @@ void bar() {
 }
 void foo() {
 #if 0
+  const byte cstr[] = "x: %, y: %, z: %\n";
+  String format = (String){(byte*)&cstr[0], sizeof(cstr) - 1};
+  write(STDOUT, format.ptr, format.size);
+#elif 1
+  const byte cstr[] = "x: %, y: %, z: %\n";
+  String format = (String){(byte*)&cstr[0], sizeof(cstr) - 1};
+  write(STDOUT, format.ptr, format.size);
+
+  intptr max_size = format.size;
+  byte buffer[max_size];
+  byte* ptr_end = &buffer[max_size];
+#elif 0
   String msg = string("Hello, world!");
   intptr b = msg.size;
   println(intptr, b);
@@ -19,6 +32,7 @@ void foo() {
   bar();
   println(intptr, 47);
   assert(false);
+  #el
 #else
   String format = string("x: %, y: %, z: %\n");
   intptr x = 13;
