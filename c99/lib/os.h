@@ -4,8 +4,12 @@
 // common
 #if OS_WINDOWS
   #pragma comment(linker, "/ENTRY:_start")
-  /* NOTE: /SUBSYSTEM:WINDOWS has trouble writing to console */
-  #pragma comment(linker, "/SUBSYSTEM:CONSOLE")
+  /* NOTE: /SUBSYSTEM:WINDOWS has trouble connecting to console */
+  #if RELEASE
+    #pragma comment(linker, "/SUBSYSTEM:WINDOWS")
+  #else
+    #pragma comment(linker, "/SUBSYSTEM:CONSOLE")
+  #endif
 
 typedef bool BOOL;
 typedef u32 DWORD;
