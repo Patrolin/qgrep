@@ -4,15 +4,8 @@
 // common
 #if OS_WINDOWS
   #pragma comment(linker, "/ENTRY:_start")
-
-  #define OS_WINDOWS_APP 0
-  #define OS_WINDOWS_CONSOLE (!OS_WINDOWS_APP)
-
-  #if OS_WINDOWS_APP
-    #pragma comment(linker, "/SUBSYSTEM:WINDOWS")
-  #else
-    #pragma comment(linker, "/SUBSYSTEM:CONSOLE")
-  #endif
+  /* NOTE: /SUBSYSTEM:WINDOWS has trouble writing to console */
+  #pragma comment(linker, "/SUBSYSTEM:CONSOLE")
 
 typedef bool BOOL;
 typedef u32 DWORD;
@@ -29,12 +22,12 @@ ASSERT(false);
 
 // process
 #if OS_WINDOWS
+  #define ATTACH_PARENT_PROCESS (DWORD)(-1)
 ENUM(FileHandle, ConsoleHandleEnum){
     STDIN = -10,
     STDOUT = -11,
     STDERR = -12,
 };
-  #define ATTACH_PARENT_PROCESS = (DWORD) - 1;
 
 ENUM(DWORD, CodePage){
     CP_UTF8 = 65001,
@@ -43,7 +36,6 @@ ASSERT(sizeof(CodePage) == 4);
 ASSERT(sizeof(CP_UTF8) == 4);
 
   #pragma comment(lib, "kernel32.lib")
-foreign BOOL AttachConsole(DWORD process_id);
 foreign BOOL SetConsoleOutputCP(CodePage code_page);
 foreign BOOL WriteFile(FileHandle file, const byte* buffer, DWORD buffer_size, DWORD* bytes_written, rawptr overlapped);
 foreign void ExitProcess(CUINT exit_code);

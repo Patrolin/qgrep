@@ -199,24 +199,13 @@ intptr sprint_intptr(intptr value, byte* buffer_end) {
 })
 
 // assert()
-#define assert(condition) assert_impl(__COUNTER__, condition, #condition "\n")
-#define assert_impl(c, condition, msg) ({                                                             \
-  if (!(condition)) {                                                                                 \
-    String VAR(format, c) = string("%:% %");                                                          \
-    String VAR(file, c) = string(__FILE__);                                                           \
-    intptr VAR(line, c) = __LINE__;                                                                   \
-    String VAR(condition_str, c) = string(msg);                                                       \
-    intptr VAR(max_size, c) = sprint_size_String(VAR(format, c)) + sprint_size_String(VAR(file, c));  \
-    VAR(max_size, c) += sprint_size_intptr(VAR(line, c)) + sprint_size_String(VAR(condition_str, c)); \
-                                                                                                      \
-    byte VAR(buffer, c)[VAR(max_size, c)];                                                            \
-    byte* VAR(ptr_end, c) = &VAR(buffer, c)[VAR(max_size, c)];                                        \
-    intptr VAR(size, c) = sprintf3(VAR(ptr_end, c), VAR(format, c), String, VAR(file, c),             \
-                                   intptr, VAR(line, c), String, VAR(condition_str, c));              \
-    String VAR(error, c) = {VAR(ptr_end, c) - VAR(size, c), VAR(size, c)};                            \
-    fprint(STDERR, VAR(error, c));                                                                    \
-    abort();                                                                                          \
-  }                                                                                                   \
+#define assert(condition) assert_impl(__COUNTER__, condition, __FILE__ ":" STR(__LINE__) " " #condition "\n")
+#define assert1(condition, msg_cstr) assert_impl(__COUNTER__, condition, __FILE__ ":" STR(__LINE__) " " msg_cstr "\n")
+#define assert_impl(c, condition, msg_cstr) ({ \
+  if (!(condition)) {                          \
+    fprint(STDERR, string(msg_cstr));          \
+    abort();                                   \
+  }                                            \
 })
 // #define assertf(condition, t1, v1)
 

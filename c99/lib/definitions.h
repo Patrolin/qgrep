@@ -3,10 +3,10 @@
 #include <stdint.h> /* IWYU pragma: keep */
 
 // preprocessor helpers
-// #define CONCAT0(a, b) a##b
-// #define CONCAT(a, b) CONCAT0(a, b)
-#define CONCAT(a, b) a##b
-#define STR(a) #a
+#define CONCAT0(a, b) a##b
+#define CONCAT(a, b) CONCAT0(a, b)
+#define STR0(a) #a
+#define STR(a) STR0(a)
 /* NOTE: clang is stupid, and overwrites outer scope variables with the same name,
   so we need macro variables to all have different names... */
 #define VAR(name, counter) CONCAT(__##name, counter)
@@ -86,17 +86,8 @@ typedef struct {
   byte* ptr;
   intptr size;
 } String;
-/* NOTE: clang on linux is *way* too aggressive with freeing unused variables,
-    including variables in the outer scope that it shouldn't be touching */
-#if 1
-  #define string(const_cstr) string_impl(__COUNTER__, const_cstr)
-  #define string_impl(counter, const_cstr) ({                                    \
-    const byte CONCAT(_cstr, counter)[] = const_cstr;                            \
-    (String){(byte*)CONCAT(_cstr, counter), sizeof(CONCAT(_cstr, counter)) - 1}; \
-  })
-#else
-  #define string(const_cstr) ((String){(byte*)const_cstr, sizeof(const_cstr) - 1})
-#endif
+/* NOTE: we take the pointer of the cstring directly to avoid a memcpy() */
+#define string(const_cstr) ((String){const_cstr, sizeof(const_cstr) - 1})
 String str_slice(String str, intptr i, intptr j) {
   String sliced = (String){&str.ptr[i], j - i};
   if (i > j) {

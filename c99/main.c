@@ -12,8 +12,8 @@ void bar() {
 }
 void foo() {
 #if 0
-  String format = string("x: %, y: %, z: %\n");
-  write(STDOUT, format.ptr, format.size);
+  const char *line = __FILE__ ":" STR(__LINE__) " " STR(false) "\n";
+  write(STDOUT, (char *)line, 5);
 #elif 0
   String format = string("x: %, y: %, z: %\n");
   write(STDOUT, format.ptr, format.size);
@@ -31,7 +31,7 @@ void foo() {
   println(intptr, 47);
   assert(false);
 #else
-  String format = string("x: %, y: %, z: %\n");
+  String format = string("xá: %, y: %, z: %\n");
   intptr x = 13;
   intptr y = 23;
   intptr z = 37;

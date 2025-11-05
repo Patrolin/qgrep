@@ -2,17 +2,11 @@
 #include "definitions.h"
 #include "os.h"
 
-#if OS_WINDOWS
 void init_console() {
-  #if OS_WINDOWS_APP
-  AttachConsole(ATTACH_PARENT_PROCESS);
-  #endif
-}
-#elif OS_LINUX
-void init_console() {};
-#else
-CASSERT(false);
+#if OS_WINDOWS
+  SetConsoleOutputCP(CP_UTF8);
 #endif
+}
 
 noreturn exit_process(CINT exit_code) {
 #if OS_WINDOWS
