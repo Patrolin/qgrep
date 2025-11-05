@@ -25,6 +25,7 @@
 #define private static
 #define global static
 #define foreign __declspec(dllimport)
+#define naked __attribute__((naked))
 #define noreturn _Noreturn void
 // #define deprecated(msg) __attribute__((deprecated(msg)))
 
@@ -84,13 +85,14 @@ typedef struct {
 } String;
 /* NOTE: clang on linux is *way* too aggressive with freeing unused variables,
     including variables in the outer scope that it shouldn't be touching */
-#if 0
-  #define string(const_cstr) ({                                    \
-    const byte _autogen_cstr[] = const_cstr;                       \
-    (String){(byte*)&_autogen_cstr[0], sizeof(_autogen_cstr) - 1}; \
+#if 1
+  #define string_impl(counter, const_cstr) ({                                    \
+    const byte CONCAT(_cstr, counter)[] = const_cstr;                            \
+    (String){(byte*)CONCAT(_cstr, counter), sizeof(CONCAT(_cstr, counter)) - 1}; \
   })
+  #define string(const_cstr) string_impl(__COUNTER__, const_cstr)
 #else
-  #define string(const_cstr) ((String){(byte*)&const_cstr[0], sizeof(const_cstr) - 1})
+  #define string(const_cstr) ((String){(byte*)const_cstr, sizeof(const_cstr) - 1})
 #endif
 String str_slice(String str, intptr i, intptr j) {
   String sliced = (String){&str.ptr[i], j - i};
@@ -115,9 +117,11 @@ String str_slice(String str, intptr i, intptr j) {
 /* NOTE: stack grows downwards on almost all architectures */
 #define ARCH_STACK_DIRECTION (-1)
 
-/* NOTE: linux doesn't align rsp for us at startup... */
+/* NOTE: windows starts aligned to 8B, while linux starts (correctly) aligned to 16B
+  thus we have to realign ourselves either way... */
 #if ARCH_X64
   #define ALIGN_STACK_POINTER() asm volatile("andq $-16, %%rsp" ::: "rsp");
+  #define CALL(name) asm volatile("call " #name)
 #endif
 
 // atomics: https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html

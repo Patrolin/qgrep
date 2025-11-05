@@ -23,8 +23,10 @@ CINT main() {
   _startup();
 }
 #else
-void _start() {
+/* NOTE: naked attribute for correctness, but we don't really need it,
+  since we have to align manually either way... */
+naked noreturn _start() {
   ALIGN_STACK_POINTER();
-  _startup();
+  CALL(_startup);
 }
 #endif
