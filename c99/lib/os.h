@@ -4,7 +4,7 @@
 // common
 #if OS_WINDOWS
   #pragma comment(linker, "/ENTRY:_start")
-  #if NO_CONSOLE
+  #if RUN_WITHOUT_CONSOLE
     /* NOTE: /SUBSYSTEM:WINDOWS cannot connect to a console without a race condition, or spawning a new window */
     #pragma comment(linker, "/SUBSYSTEM:WINDOWS")
   #else
@@ -26,18 +26,14 @@ ASSERT(false);
 
 // process
 #if OS_WINDOWS
-  #define ATTACH_PARENT_PROCESS (DWORD)(-1)
 ENUM(FileHandle, ConsoleHandleEnum){
     STDIN = -10,
     STDOUT = -11,
     STDERR = -12,
 };
-
 ENUM(DWORD, CodePage){
     CP_UTF8 = 65001,
 };
-ASSERT(sizeof(CodePage) == 4);
-ASSERT(sizeof(CP_UTF8) == 4);
 
   #pragma comment(lib, "kernel32.lib")
 foreign BOOL SetConsoleOutputCP(CodePage code_page);
@@ -50,6 +46,20 @@ ENUM(FileHandle, ConsoleHandleEnum){
     STDOUT = 1,
     STDERR = 2,
 };
+intptr write(FileHandle file, byte* buffer, intptr buffer_size) {
+  return syscall3(SYS_write, (uintptr)file, (uintptr)buffer, (uintptr)buffer_size);
+}
+noreturn _exit(CINT return_code) {
+  syscall1(SYS_exit, (uintptr)return_code);
+}
+#else
+ASSERT(false);
+#endif
+
+// file
+#if OS_WINDOWS
+/* TODO: file api */
+#elif OS_LINUX
 ENUM(CUINT, FileFlags){
     O_WRONLY = 1 << 0,
     O_RDWR = 1 << 1,
@@ -64,12 +74,4 @@ ENUM(CUINT, FileFlags){
 intptr open(const byte* path, FileFlags flags, CUINT mode) {
   return syscall3(SYS_open, (uintptr)path, flags, mode);
 }
-intptr write(FileHandle file, byte* buffer, intptr buffer_size) {
-  return syscall3(SYS_write, (uintptr)file, (uintptr)buffer, (uintptr)buffer_size);
-}
-noreturn _exit(CINT return_code) {
-  syscall1(SYS_exit, (uintptr)return_code);
-}
-#else
-ASSERT(false);
 #endif
