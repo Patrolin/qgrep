@@ -84,9 +84,9 @@
   #define ARCH_HAS_NATIVE_F16 0
 #endif
 
-/* NOTE: windows starts aligned to 8B, while linux starts (correctly) aligned to 16B
-  thus we have to realign ourselves either way... */
 #if ARCH_X64
+  /* NOTE: windows starts aligned to 8B, while linux starts (correctly) aligned to 16B
+  thus we have to realign ourselves either way... */
   #define ALIGN_STACK_POINTER() asm volatile("andq $-16, %%rsp" ::: "rsp");
   #define CALL(name) asm volatile("call " #name)
 #endif
@@ -120,12 +120,12 @@ typedef double f64;
 ASSERT(sizeof(f64) == 8);
 typedef float f32;
 ASSERT(sizeof(f32) == 4);
+/* NOTE: If there isn't native support, f16 is implemented by converting back and forth between f32... */
 #if ARCH_HAS_NATIVE_BF16
 typedef __bf16 bf16;
 ASSERT(sizeof(bf16) == 2);
 #endif
 #if ARCH_HAS_NATIVE_F16
-/* NOTE: On x64, f16 is implemented by converting back and forth between f32... */
 typedef _Float16 f16;
 ASSERT(sizeof(f16) == 2);
 #endif

@@ -102,14 +102,14 @@ SplitFloat_f32 split_float_f32(f32 x) {
 }
 #if ARCH_HAS_NATIVE_BF16
 typedef struct {
-  f16 integer, fraction;
-} SplitFloat_f16;
-SplitFloat_f16 split_float_f16(f16 x) {
+  bf16 integer, fraction;
+} SplitFloat_bf16;
+SplitFloat_bf16 split_float_bf16(bf16 x) {
   u16 exponent_bits = 8;
   u16 mask = (u16)(1 << exponent_bits) - 1;
   u16 shift = sizeof(bf16) - exponent_bits - 1;
   u16 bias = mask >> 1;
-  SPLIT_FLOAT_IMPL(SplitFloat_f16, f16, u16, x, mask, shift, bias)
+  SPLIT_FLOAT_IMPL(SplitFloat_bf16, bf16, u16, x, mask, shift, bias)
 }
 #endif
 #if ARCH_HAS_NATIVE_F16
