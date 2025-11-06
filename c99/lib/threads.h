@@ -3,11 +3,9 @@
 #include "process.h"
 
 // shared
+/* TODO: alloc thread infos */
 typedef struct {
-  intptr thread_id;
-#if OS_WINDOWS
-  Handle thread_handle;
-#endif
+  intptr index;
 } Thread;
 ASSERT(sizeof(Thread) <= ARCH_MIN_CACHE_LINE_SIZE);
 typedef void MainProc();
