@@ -32,7 +32,7 @@
 #define noreturn _Noreturn void
 // #define deprecated(msg) __attribute__((deprecated(msg)))
 
-#define ASSERT(condition) _Static_assert((condition), #condition);
+#define ASSERT(condition) _Static_assert((condition), #condition)
 #define DISTINCT(type, name) \
   typedef type name;
 #define ENUM(type, name) \
@@ -52,10 +52,10 @@ typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
 
-// typedef __bf16 bf16;
-// ASSERT(sizeof(bf16) == 2);
-// typedef _Float16 f16;
-// ASSERT(sizeof(f16) == 2);
+typedef __bf16 bf16;
+ASSERT(sizeof(bf16) == 2);
+typedef _Float16 f16;
+ASSERT(sizeof(f16) == 2);
 typedef float f32;
 ASSERT(sizeof(f32) == 4);
 typedef double f64;
@@ -135,9 +135,9 @@ String str_slice(String str, intptr i, intptr j) {
 #define atomic_or(address, value) __atomic_fetch_or(address, value, __ATOMIC_SEQ_CST)
 #define atomic_xor(address, value) __atomic_fetch_xor(address, value, __ATOMIC_SEQ_CST)
 #define atomic_nand(address, value) __atomic_fetch_nand(address, value, __ATOMIC_SEQ_CST)
-ASSERT(__atomic_always_lock_free(1, 0))
-ASSERT(__atomic_always_lock_free(2, 0))
-ASSERT(__atomic_always_lock_free(4, 0))
-ASSERT(__atomic_always_lock_free(8, 0))
+ASSERT(__atomic_always_lock_free(1, 0));
+ASSERT(__atomic_always_lock_free(2, 0));
+ASSERT(__atomic_always_lock_free(4, 0));
+ASSERT(__atomic_always_lock_free(8, 0));
 
 #define cpu_relax() asm volatile("pause")
