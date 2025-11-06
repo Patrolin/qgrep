@@ -40,15 +40,34 @@
   enum name : type
 
 // OS_xxx
-#define OS_WINDOWS (_WIN32 || _WIN64)
-#define OS_LINUX (__linux__ || __unix__)
+#define OS_WINDOWS 0
+#define OS_LINUX 0
+#if _WIN32 || _WIN64
+  #undef OS_WINDOWS
+  #define OS_WINDOWS 1
+#elif __linux__
+  #undef OS_LINUX
+  #define OS_LINUX 1
+#endif
 
 // ARCH_xxx
-#define ARCH_X64 __x86_64__
-#define ARCH_X86 __i386__
-#define ARCH_ARM64 __aarch64__
-#define ARCH_ARM32 (__arm__ && !ARCH_ARM64)
-
+#define ARCH_X64 0
+#define ARCH_X86 0
+#define ARCH_ARM64 0
+#define ARCH_ARM32 0
+#if __x86_64__
+  #undef ARCH_X64
+  #define ARCH_X64 1
+#elif __i386__
+  #undef ARCH_X86
+  #define ARCH_X86 1
+#elif __aarch64__
+  #undef ARCH_ARM64
+  #define ARCH_ARM64 1
+#elif __arm__
+  #undef ARCH_ARM32
+  #define ARCH_ARM32 1
+#endif
 #define ARCH_IS_64BIT (ARCH_X64 || ARCH_ARM64)
 #define ARCH_IS_32BIT (ARCH_X86 || ARCH_ARM32)
 /* NOTE: stack grows downwards on almost all architectures */
