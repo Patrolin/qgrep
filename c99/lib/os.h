@@ -69,7 +69,6 @@ intptr write(FileHandle file, byte* buffer, intptr buffer_size) {
 }
 noreturn _exit(CINT return_code) {
   syscall1(SYS_exit, (uintptr)return_code);
-  for (;;);
 }
 #else
 ASSERT(false);
