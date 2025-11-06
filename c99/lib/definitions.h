@@ -144,7 +144,7 @@ typedef struct {
 } Slice;
 /* NOTE: utf8 string */
 typedef struct {
-  byte* ptr;
+  const byte* ptr;
   intptr size;
 } String;
 /* NOTE: we take the pointer of the cstring directly to avoid a memcpy() */
