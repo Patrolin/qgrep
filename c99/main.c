@@ -8,7 +8,8 @@
 
 void foo() {
 #if 1
-  printfln1(string("x: %"), intptr, 13);
+  printfln1(string("ARCH_HAS_NATIVE_BF16: %"), intptr, ARCH_HAS_NATIVE_BF16);
+  printfln1(string("ARCH_HAS_NATIVE_F16: %"), intptr, ARCH_HAS_NATIVE_F16);
   printfln2(string("x: %, y: %"), intptr, 13, intptr, 22);
   printfln3(string("x: %, y: %, z: %"), intptr, 13, intptr, 22, intptr, 37);
 #else

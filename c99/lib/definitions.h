@@ -39,6 +39,39 @@
   typedef type name;     \
   enum name : type
 
+// OS_xxx
+#define OS_WINDOWS (_WIN32 || _WIN64)
+#define OS_LINUX (__linux__ || __unix__)
+
+// ARCH_xxx
+#define ARCH_X64 __x86_64__
+#define ARCH_X86 __i386__
+#define ARCH_ARM64 __aarch64__
+#define ARCH_ARM32 (__arm__ && !ARCH_ARM64)
+
+#define ARCH_IS_64BIT (ARCH_X64 || ARCH_ARM64)
+#define ARCH_IS_32BIT (ARCH_X86 || ARCH_ARM32)
+/* NOTE: stack grows downwards on almost all architectures */
+#define ARCH_STACK_DIRECTION (-1)
+#define ARCH_MIN_CACHE_LINE_SIZE 64
+#if __AVX512BF16__ || __ARM_FEATURE_BF16 || __has_extension(bfloat16_type)
+  #define ARCH_HAS_NATIVE_BF16 1
+#else
+  #define ARCH_HAS_NATIVE_BF16 0
+#endif
+#if __HAVE_FLOAT16__ || __HAVE_FP16__ || __has_extension(c_float16)
+  #define ARCH_HAS_NATIVE_F16 1
+#else
+  #define ARCH_HAS_NATIVE_F16 0
+#endif
+
+/* NOTE: windows starts aligned to 8B, while linux starts (correctly) aligned to 16B
+  thus we have to realign ourselves either way... */
+#if ARCH_X64
+  #define ALIGN_STACK_POINTER() asm volatile("andq $-16, %%rsp" ::: "rsp");
+  #define CALL(name) asm volatile("call " #name)
+#endif
+
 // types
 typedef char byte;
 
@@ -52,15 +85,6 @@ typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
 
-typedef __bf16 bf16;
-ASSERT(sizeof(bf16) == 2);
-typedef _Float16 f16;
-ASSERT(sizeof(f16) == 2);
-typedef float f32;
-ASSERT(sizeof(f32) == 4);
-typedef double f64;
-ASSERT(sizeof(f64) == 8);
-
 // typedef signed char CICHAR;
 // typedef unsigned char CUCHAR;
 // typedef short CSHORT;
@@ -72,6 +96,24 @@ typedef unsigned int CUINT;
 // typedef unsigned long CULONG;
 // typedef long long CLONGLONG;
 // typedef unsigned long long CULONGLONG;
+
+typedef double f64;
+ASSERT(sizeof(f64) == 8);
+typedef float f32;
+ASSERT(sizeof(f32) == 4);
+#if ARCH_HAS_NATIVE_BF16
+typedef __bf16 bf16;
+ASSERT(sizeof(bf16) == 2);
+#endif
+#if ARCH_HAS_NATIVE_F16
+/* NOTE: On x64, f16 is implemented by converting back and forth between f32... */
+typedef _Float16 f16;
+ASSERT(sizeof(f16) == 2);
+#endif
+/* NOTE: Windows is dumb */
+#if OS_WINDOWS
+CINT _fltused;
+#endif
 
 typedef intptr_t intptr;
 typedef uintptr_t uintptr;
@@ -95,28 +137,6 @@ String str_slice(String str, intptr i, intptr j) {
   }
   return sliced;
 }
-
-// OS_xxx
-#define OS_WINDOWS (_WIN32 || _WIN64)
-#define OS_LINUX (__linux__ || __unix__)
-
-// ARCH_xxx
-#define ARCH_X64 __x86_64__
-#define ARCH_X86 __i386__
-#define ARCH_ARM64 __aarch64__
-#define ARCH_ARM32 (__arm__ && !ARCH_ARM64)
-
-#define ARCH_IS_64BIT (ARCH_X64 || ARCH_ARM64)
-#define ARCH_IS_32BIT (ARCH_X86 || ARCH_ARM32)
-/* NOTE: stack grows downwards on almost all architectures */
-#define ARCH_STACK_DIRECTION (-1)
-
-/* NOTE: windows starts aligned to 8B, while linux starts (correctly) aligned to 16B
-  thus we have to realign ourselves either way... */
-#if ARCH_X64
-  #define ALIGN_STACK_POINTER() asm volatile("andq $-16, %%rsp" ::: "rsp");
-  #define CALL(name) asm volatile("call " #name)
-#endif
 
 // atomics: https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html
 #define volatile_store(address, value) __atomic_store_n(address, value, __ATOMIC_RELAXED)

@@ -1,4 +1,5 @@
 -Wno-gcc-compat
+-march=native
 -std=gnu99
 -nostdlib
 -Werror

@@ -32,7 +32,7 @@ ENUM(intptr, Size){
 // casts
 #define downcast(t1, v, t2) downcast_impl(__COUNTER__, t1, v, t2)
 #define downcast_impl(c, t1, v, t2) ({    \
-  t1 VAR(v1, c) = v1;                     \
+  t1 VAR(v1, c) = v;                      \
   t2 VAR(v2, c) = (t2)VAR(v1, c);         \
   assert((t1)(VAR(v2, c)) == VAR(v1, c)); \
   VAR(v2, c);                             \
@@ -96,17 +96,31 @@ typedef struct {
 SplitFloat_f32 split_float_f32(f32 x) {
   u32 exponent_bits = 8;
   u32 mask = (1 << exponent_bits) - 1;
-  u32 shift = sizeof(f64) - exponent_bits - 1;
+  u32 shift = sizeof(f32) - exponent_bits - 1;
   u32 bias = mask >> 1;
   SPLIT_FLOAT_IMPL(SplitFloat_f32, f32, u32, x, mask, shift, bias)
 }
+#if ARCH_HAS_NATIVE_BF16
+typedef struct {
+  f16 integer, fraction;
+} SplitFloat_f16;
+SplitFloat_f16 split_float_f16(f16 x) {
+  u16 exponent_bits = 8;
+  u16 mask = (u16)(1 << exponent_bits) - 1;
+  u16 shift = sizeof(bf16) - exponent_bits - 1;
+  u16 bias = mask >> 1;
+  SPLIT_FLOAT_IMPL(SplitFloat_f16, f16, u16, x, mask, shift, bias)
+}
+#endif
+#if ARCH_HAS_NATIVE_F16
 typedef struct {
   f16 integer, fraction;
 } SplitFloat_f16;
 SplitFloat_f16 split_float_f16(f16 x) {
   u16 exponent_bits = 5;
   u16 mask = (u16)(1 << exponent_bits) - 1;
-  u16 shift = sizeof(f64) - exponent_bits - 1;
+  u16 shift = sizeof(f16) - exponent_bits - 1;
   u16 bias = mask >> 1;
   SPLIT_FLOAT_IMPL(SplitFloat_f16, f16, u16, x, mask, shift, bias)
 }
+#endif

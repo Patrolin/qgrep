@@ -110,6 +110,8 @@ intptr sprint_intptr(intptr value, byte* buffer_end) {
 }
 #endif
 
+/* TODO: sprint_f64(), ... */
+
 // sprintf()
 #define sprintf1(ptr_end, format, t1, v1) sprintf1_impl(__COUNTER__, ptr_end, format, t1, v1)
 #define sprintf1_impl(c, ptr_end, format, t1, v1) ({                           \

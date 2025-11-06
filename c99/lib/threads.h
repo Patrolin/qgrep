@@ -3,14 +3,21 @@
 #include "process.h"
 
 // shared
+typedef struct {
+  intptr thread_id;
+#if OS_WINDOWS
+  Handle thread_handle;
+#endif
+} Thread;
+ASSERT(sizeof(Thread) <= ARCH_MIN_CACHE_LINE_SIZE);
 typedef void MainProc();
 void main_multicore();
+
 void run_multicore(MainProc proc, intptr thread_count) {
   /* TODO: get thread count if thread_count==0 */
   /* TODO: run multicore */
   proc();
 }
-
 noreturn _startup() {
   init_console();
   run_multicore(main_multicore, 1);
