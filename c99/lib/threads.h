@@ -17,6 +17,7 @@ noreturn _startup() {
   exit_process(0);
 }
 
+// entry
 #if HAS_CRT
 CINT main() {
   _startup();
@@ -24,7 +25,7 @@ CINT main() {
 #else
   #if 1
 /* NOTE: naked attribute for correctness, but we don't really need it,
-  since we have to align manually either way... */
+  since we have to align the stack pointer manually either way... */
 naked noreturn _start() {
   ALIGN_STACK_POINTER();
   CALL(_startup);
