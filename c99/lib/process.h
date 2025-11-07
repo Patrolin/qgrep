@@ -30,9 +30,9 @@ noreturn abort() {
 noreturn _startup() {
   init_console();
 #if RUN_SINGLE_THREADED
-  main_multicore();
+  run_multicore(1);
 #else
-  run_multicore(main_multicore, 0);
+  run_multicore(0);
 #endif
   exit_process(0);
 }

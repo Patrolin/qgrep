@@ -5,8 +5,9 @@
 #include "lib/definitions.h"
 #include "lib/fmt.h"
 #include "lib/lib.h"
+#include "lib/threads.h"
 
-void foo() {
+void foo(Thread t) {
 #if 1
   printfln1(string("ARCH_HAS_NATIVE_BF16: %"), intptr, ARCH_HAS_NATIVE_BF16);
   printfln1(string("ARCH_HAS_NATIVE_F16: %"), intptr, ARCH_HAS_NATIVE_F16);
@@ -30,6 +31,6 @@ void foo() {
   assert(false);
 #endif
 }
-void main_multicore() {
-  foo();
+void main_multicore(Thread t) {
+  foo(t);
 }

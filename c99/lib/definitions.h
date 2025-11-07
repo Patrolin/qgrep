@@ -39,6 +39,9 @@
   typedef type name;     \
   enum name : type
 
+// builtins
+#define alignof(x) __alignof__(x)
+
 // OS_xxx
 #define OS_WINDOWS 0
 #define OS_LINUX 0
@@ -72,7 +75,11 @@
 #define ARCH_IS_32BIT (ARCH_X86 || ARCH_ARM32)
 /* NOTE: stack grows downwards on almost all architectures */
 #define ARCH_STACK_DIRECTION (-1)
+
 #define ARCH_MIN_CACHE_LINE_SIZE 64
+/* NOTE: macs can have bigger cache line sizes */
+#define ARCH_MAX_CACHE_LINE_SIZE 128
+
 #if __AVX512BF16__ || __ARM_FEATURE_BF16 || __has_extension(bfloat16_type)
   #define ARCH_HAS_NATIVE_BF16 1
 #else
