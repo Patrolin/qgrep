@@ -139,6 +139,8 @@ ASSERT(sizeof(f16) == 2);
 /* NOTE: Windows is dumb */
 #if OS_WINDOWS
 CINT _fltused;
+#else
+// ASSERT(false);
 #endif
 
 typedef intptr_t intptr;

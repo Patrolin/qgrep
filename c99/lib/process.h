@@ -7,6 +7,8 @@
 void init_console() {
 #if OS_WINDOWS
   SetConsoleOutputCP(CP_UTF8);
+#else
+  // ASSERT(false);
 #endif
 }
 
