@@ -1,6 +1,6 @@
 #pragma once
 #include "definitions.h"
-#include "math.h"
+#include "math.h" /* IWYU pragma: keep */
 #include "os.h"
 #include "process.h" /* IWYU pragma: keep */
 
@@ -211,10 +211,6 @@ intptr sprint_intptr(intptr value, byte* buffer_end) {
 })
 
 // fprint()
-#define assert(condition) \
-  if (!(condition)) {     \
-    abort();              \
-  }
 void fprint(FileHandle file, String str) {
 #if OS_WINDOWS
   DWORD bytes_written;
@@ -228,9 +224,9 @@ void fprint(FileHandle file, String str) {
   assert(false);
 #endif
 }
-#undef assert
 
 // assert()
+#undef assert
 #define assert(condition) assert_impl(__COUNTER__, condition, __FILE__ ":" STR(__LINE__) " " #condition "\n")
 #define assert1(condition, msg_cstr) assert_impl(__COUNTER__, condition, __FILE__ ":" STR(__LINE__) " " msg_cstr "\n")
 #define assert_impl(c, condition, msg_cstr) ({ \

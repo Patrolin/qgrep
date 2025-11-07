@@ -32,6 +32,10 @@
 #define noreturn _Noreturn void
 // #define deprecated(msg) __attribute__((deprecated(msg)))
 
+#define assert(condition) \
+  if (!(condition)) {     \
+    abort();              \
+  }
 #define ASSERT(condition) _Static_assert((condition), #condition)
 #define DISTINCT(type, name) \
   typedef type name;
@@ -52,6 +56,9 @@
   #undef OS_LINUX
   #define OS_LINUX 1
 #endif
+
+/* NOTE: linux forces it's own stack size... */
+#define OS_MIN_STACK_SIZE 0x100000
 
 // ARCH_xxx
 #define ARCH_X64 0

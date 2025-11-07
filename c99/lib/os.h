@@ -17,6 +17,7 @@ DISTINCT(uintptr, Handle);
 DISTINCT(Handle, FileHandle);
 #elif OS_LINUX
   #include "os_linux.h"
+
 /* NOTE: everything is a file on linux */
 DISTINCT(CINT, FileHandle);
 DISTINCT(FileHandle, Handle);
@@ -46,11 +47,12 @@ ENUM(FileHandle, ConsoleHandleEnum){
     STDOUT = 1,
     STDERR = 2,
 };
-intptr write(FileHandle file, byte* buffer, intptr buffer_size) {
+intptr write(FileHandle file, const byte* buffer, intptr buffer_size) {
   return syscall3(SYS_write, (uintptr)file, (uintptr)buffer, (uintptr)buffer_size);
 }
 noreturn _exit(CINT return_code) {
   syscall1(SYS_exit, (uintptr)return_code);
+  for (;;);
 }
 #else
 ASSERT(false);
