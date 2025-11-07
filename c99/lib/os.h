@@ -58,6 +58,50 @@ noreturn _exit(CINT return_code) {
 ASSERT(false);
 #endif
 
+// mem
+#if OS_WINDOWS
+ENUM(DWORD, ExceptionCode){
+    EXCEPTION_ACCESS_VIOLATION = 0xC0000005,
+};
+  #define EXCEPTION_MAXIMUM_PARAMETERS 15
+typedef struct {
+  ExceptionCode ExceptionCode;
+  DWORD ExceptionFlags;
+  struct EXCEPTION_RECORD* ExceptionRecord;
+  rawptr ExceptionAddress;
+  DWORD NumberParameters;
+  uintptr ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+} EXCEPTION_RECORD;
+
+typedef struct {
+  /* ... */
+} CONTEXT;
+typedef struct {
+  EXCEPTION_RECORD* ExceptionRecord;
+  CONTEXT* ContextRecord;
+} _EXCEPTION_POINTERS;
+ENUM(DWORD, ExceptionResult){
+    EXCEPTION_EXECUTE_HANDLER = 1,
+    EXCEPTION_CONTINUE_SEARCH = 0,
+    EXCEPTION_CONTINUE_EXECUTION = -1,
+};
+typedef ExceptionResult TOP_LEVEL_EXCEPTION_FILTER(_EXCEPTION_POINTERS* exception);
+
+ENUM(DWORD, AllocTypeFlags){
+    MEM_COMMIT = 1 << 12,
+    MEM_RESERVE = 1 << 13,
+    MEM_DECOMMIT = 1 << 14,
+    MEM_RELEASE = 1 << 15,
+};
+ENUM(DWORD, AllocProtectFlags){
+    PAGE_READWRITE = 1 << 2,
+};
+
+foreign TOP_LEVEL_EXCEPTION_FILTER* SetUnhandledExceptionFilter(TOP_LEVEL_EXCEPTION_FILTER filter_callback);
+foreign intptr VirtualAlloc(intptr address, Size size, AllocTypeFlags type_flags, AllocProtectFlags protect_flags);
+foreign BOOL VirtualFree(intptr address, Size size, AllocTypeFlags type_flags);
+#endif
+
 // file
 #if OS_WINDOWS
 /* TODO: file api */

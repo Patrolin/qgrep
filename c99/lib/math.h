@@ -2,14 +2,6 @@
 #include "definitions.h"
 #include "fmt.h"  // IWYU pragma: keep
 
-// constants
-ENUM(intptr, Size){
-    Byte = 1,
-    KibiByte = 1024 * Byte,
-    MebiByte = 1024 * KibiByte,
-    GibiByte = 1024 * MebiByte,
-};
-
 // negatives
 #define abs(t, v) abs_impl(__COUNTER__, t, v)
 #define abs_impl(c, t, v) ({                                \

@@ -46,6 +46,17 @@
 // builtins
 #define alignof(x) __alignof__(x)
 
+// Size
+typedef intptr_t intptr;
+typedef uintptr_t uintptr;
+typedef void* rawptr;
+ENUM(intptr, Size){
+    Byte = 1,
+    KibiByte = 1024 * Byte,
+    MebiByte = 1024 * KibiByte,
+    GibiByte = 1024 * MebiByte,
+};
+
 // OS_xxx
 #define OS_WINDOWS 0
 #define OS_LINUX 0
@@ -58,7 +69,20 @@
 #endif
 
 /* NOTE: linux forces it's own stack size... */
-#define OS_MIN_STACK_SIZE 0x100000
+#define OS_MIN_STACK_SIZE (1 * MebiByte)
+
+/* NOTE: SSD block sizes are 512B or 4KiB */
+#define OS_SSD_BLOCK_SIZE_EXPONENT (9)
+#define OS_SSD_BLOCK_SIZE (1 << OS_SSD_BLOCK_SIZE_EXPONENT)
+ASSERT(OS_SSD_BLOCK_SIZE == 512);
+
+#define OS_PAGE_SIZE_EXPONENT (12)
+#define OS_PAGE_SIZE (1 << OS_PAGE_SIZE_EXPONENT)
+ASSERT(OS_PAGE_SIZE == 4 * KibiByte);
+
+#define OS_HUGE_PAGE_SIZE_EXPONENT (21)
+#define OS_HUGE_PAGE_SIZE (1 << OS_HUGE_PAGE_SIZE_EXPONENT)
+ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
 
 // ARCH_xxx
 #define ARCH_X64 0
@@ -149,10 +173,6 @@ CINT _fltused;
 #else
 // ASSERT(false);
 #endif
-
-typedef intptr_t intptr;
-typedef uintptr_t uintptr;
-typedef void* rawptr;
 
 typedef struct {
   void* ptr;

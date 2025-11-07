@@ -2,6 +2,7 @@
 #include "definitions.h"
 #include "os.h"
 #include "threads.h"
+#include "mem.h"
 
 // init
 void init_console() {
@@ -31,6 +32,7 @@ noreturn abort() {
 // entry
 noreturn _startup() {
   init_console();
+  init_page_fault_handler();
 #if RUN_SINGLE_THREADED
   run_multicore(1);
 #else
