@@ -46,4 +46,4 @@ void page_free(intptr ptr) {
 #endif
 }
 
-#include "mem_arena.h"
+#include "mem_arena.h" /* IWYU pragma: keep */
