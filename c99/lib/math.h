@@ -1,6 +1,5 @@
 #pragma once
 #include "definitions.h"
-#include "fmt.h"  // IWYU pragma: keep
 
 // negatives
 #define abs(t, v) abs_impl(__COUNTER__, t, v)

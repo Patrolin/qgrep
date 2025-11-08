@@ -27,11 +27,13 @@
 /* private to file */
 #define private static
 #define global static
+#define forward_declare
 #define foreign __declspec(dllimport)
 #define naked __attribute__((naked))
 #define noreturn _Noreturn void
 // #define deprecated(msg) __attribute__((deprecated(msg)))
 
+forward_declare noreturn abort();
 #define assert(condition) \
   if (!(condition)) {     \
     abort();              \
@@ -80,6 +82,7 @@ ASSERT(OS_SSD_BLOCK_SIZE == 512);
 #define OS_PAGE_SIZE (1 << OS_PAGE_SIZE_EXPONENT)
 ASSERT(OS_PAGE_SIZE == 4 * KibiByte);
 
+/* NOTE: huge pages on windows requires admin permissions... */
 #define OS_HUGE_PAGE_SIZE_EXPONENT (21)
 #define OS_HUGE_PAGE_SIZE (1 << OS_HUGE_PAGE_SIZE_EXPONENT)
 ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);

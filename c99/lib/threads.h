@@ -9,8 +9,7 @@ typedef struct {
 ASSERT(sizeof(ThreadInfo) <= ARCH_MIN_CACHE_LINE_SIZE);
 ASSERT(ARCH_MIN_CACHE_LINE_SIZE % alignof(ThreadInfo) == 0);
 
-typedef void MainProc(Thread t);
-MainProc main_multicore;
+forward_declare void main_multicore(Thread t);
 void run_multicore(intptr thread_count) {
   /* TODO: get thread count if thread_count==0 */
   /* TODO: run multicore */

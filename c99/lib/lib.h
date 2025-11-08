@@ -1,10 +1,11 @@
 #pragma once
 
 // IWYU pragma: begin_exports
-#include "definitions.h"
+#include "definitions.h" /* NOTE: now we have assert() that just exits */
 #include "math.h"
 #include "os.h"
 #include "process.h"
+#include "fmt.h" /* NOTE: now we have assert() that prints and exits */
 #include "threads.h"
-#include "fmt.h"
+#include "mem.h"
 // IWYU pragma: end_exports

@@ -1,8 +1,9 @@
 #pragma once
 #include "definitions.h"
 #include "os.h"
-#include "threads.h"
-#include "mem.h"
+
+forward_declare void run_multicore(intptr thread_count);
+forward_declare void init_page_fault_handler();
 
 // init
 void init_console() {
