@@ -177,10 +177,15 @@ CINT _fltused;
 // ASSERT(false);
 #endif
 
-typedef struct {
+// slice
+/*typedef struct {
   void* ptr;
   intptr count;
-} Slice;
+} Slice;*/
+typedef struct {
+  byte* ptr;
+  intptr size;
+} Bytes;
 /* NOTE: utf8 string */
 typedef struct {
   const byte* ptr;

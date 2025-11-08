@@ -27,3 +27,23 @@ void init_page_fault_handler() {
   // ASSERT(false);
 #endif
 }
+
+intptr page_reserve(Size size) {
+  intptr ptr;
+#if OS_WINDOWS
+  ptr = VirtualAlloc(0, size, MEM_RESERVE, PAGE_READWRITE);
+  assert(ptr != 0);
+#else
+  assert(false);
+#endif
+  return ptr;
+}
+void page_free(intptr ptr) {
+#if OS_WINDOWS
+  assert(VirtualFree(ptr, 0, MEM_RELEASE));
+#else
+  assert(false);
+#endif
+}
+
+#include "mem_arena.h"
