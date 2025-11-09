@@ -17,6 +17,11 @@ typedef u32 DWORD;
 typedef u16 WORD;
 DISTINCT(uintptr, Handle);
 DISTINCT(Handle, FileHandle);
+  #if ARCH_IS_64_BIT
+    #define WINAPI
+  #elif ARCH_IS_32_BIT
+    #define WINAPI TODO
+  #endif
 #elif OS_LINUX
   #include "os_linux.h"
 
@@ -124,7 +129,25 @@ typedef struct {
   WORD wProcessorLevel;
   WORD wProcessorRevision;
 } SYSTEM_INFO;
+typedef struct SECURITY_ATTRIBUTES {
+  DWORD nLength;
+  rawptr lpSecurityDescriptor;
+  BOOL bInheritHandle;
+} SECURITY_ATTRIBUTES;
+typedef DWORD PTHREAD_START_ROUTINE(rawptr param);
+ENUM(DWORD, CreateThreadFlags){
+    STACK_SIZE_PARAM_IS_A_RESERVATION = 0x00010000,
+};
+DISTINCT(Handle, ThreadHandle);
+
 foreign void GetSystemInfo(SYSTEM_INFO* lpSystemInfo);
+foreign ThreadHandle CreateThread(
+    SECURITY_ATTRIBUTES* security,
+    Size stack_size,
+    PTHREAD_START_ROUTINE start_proc,
+    rawptr param,
+    DWORD flags,
+    DWORD* thread_id);
 #else
 // ASSERT(false);
 #endif

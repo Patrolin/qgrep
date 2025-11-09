@@ -5,7 +5,5 @@
 #include "lib/all.h"
 
 void main_multicore(Thread t) {
-  SYSTEM_INFO info;
-  GetSystemInfo(&info);
-  printfln1(string("info.dwNumberOfProcessors: %"), u32, info.dwNumberOfProcessors);
+  printfln1(string("thread %"), uintptr, t);
 }

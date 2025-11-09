@@ -103,10 +103,17 @@ Size sprint_intptr(intptr value, byte* buffer_end) {
   return (Size)(-i);
 }
 
-#define sprint_size_uintptr(value) sprint_size_intptr(value)
+#if ARCH_IS_64_BIT
+  #define sprint_size_uintptr(value) sprint_size_u64(value)
 Size sprint_uintptr(uintptr value, byte* buffer_end) {
-  return sprint_intptr((intptr)value, buffer_end);
+  return sprint_u64((u64)value, buffer_end);
 }
+#elif ARCH_IS_32_BIT
+  #define sprint_size_uintptr(value) sprint_size_u32(value)
+Size sprint_uintptr(uintptr value, byte* buffer_end) {
+  return sprint_u32((u32)value, buffer_end);
+}
+#endif
 
 /* TODO: sprint_f64(), ... */
 

@@ -30,6 +30,7 @@
 #define forward_declare
 #define foreign __declspec(dllimport)
 #define naked __attribute__((naked))
+#define align(n) __attribute__((aligned(n)))
 #define noreturn _Noreturn void
 // #define deprecated(msg) __attribute__((deprecated(msg)))
 
@@ -39,6 +40,7 @@ forward_declare noreturn abort();
     abort();              \
   }
 #define ASSERT(condition) _Static_assert((condition), #condition)
+#define ASSERT_MUlTIPLE_OF(a, b) ASSERT(a % b == 0)
 #define DISTINCT(type, name) \
   typedef type name
 #define ENUM(type, name) \
@@ -106,8 +108,8 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
   #undef ARCH_ARM32
   #define ARCH_ARM32 1
 #endif
-#define ARCH_IS_64BIT (ARCH_X64 || ARCH_ARM64)
-#define ARCH_IS_32BIT (ARCH_X86 || ARCH_ARM32)
+#define ARCH_IS_64_BIT (ARCH_X64 || ARCH_ARM64)
+#define ARCH_IS_32_BIT (ARCH_X86 || ARCH_ARM32)
 /* NOTE: stack grows downwards on almost all architectures */
 #define ARCH_STACK_DIRECTION (-1)
 
