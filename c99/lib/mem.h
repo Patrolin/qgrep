@@ -46,6 +46,13 @@ void page_free(intptr ptr) {
 #endif
 }
 
+// copy
+void zero(byte* ptr, Size size) {
+  for (intptr i = 0; i < size; i++) {
+    ptr[size] = 0;
+  }
+}
+
 // locks
 DISTINCT(bool, Lock);
 bool get_lock_or_false(Lock* lock) {
@@ -65,4 +72,6 @@ void release_lock(Lock* lock) {
   atomic_store(lock, false);
 }
 
-#include "mem_arena.h" /* IWYU pragma: keep */
+// IWYU pragma: begin_exports
+#include "mem_arena.h"
+// IWYU pragma: end_exports

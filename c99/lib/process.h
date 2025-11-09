@@ -1,6 +1,7 @@
 #pragma once
 #include "definitions.h"
 #include "os.h"
+#include "mem.h"
 
 // init
 void init_console() {
@@ -10,20 +11,28 @@ void init_console() {
   // ASSERT(false);
 #endif
 }
+
 forward_declare void init_page_fault_handler();
-forward_declare void start();
+ArenaAllocator* shared_arena;
+void init_shared_arena() {
+  Bytes buffer = page_reserve(VIRTUAL_MEMORY_TO_RESERVE);
+  shared_arena = arena_allocator(buffer);
+}
+
+forward_declare void start_threads();
 forward_declare noreturn exit_process(CINT exit_code);
 
 // entry
-noreturn _start2() {
+noreturn _start_process() {
   init_console();
   init_page_fault_handler();
-  start();
+  init_shared_arena();
+  start_threads();
   exit_process(0);
 }
 #if HAS_CRT
 CINT main() {
-  _start2();
+  _start_process();
 }
 #else
   #if 1
@@ -31,12 +40,12 @@ CINT main() {
   since we have to align the stack pointer manually either way... */
 naked noreturn _start() {
   ALIGN_STACK_POINTER();
-  CALL(_start2);
+  CALL(_start_process);
 }
   #else
 noreturn _start() {
   ALIGN_STACK_POINTER();
-  _start2();
+  _start_process();
 }
   #endif
 #endif

@@ -28,7 +28,8 @@
   assert((t1)(VAR(v2, c)) == VAR(v1, c)); \
   VAR(v2, c);                             \
 })
-#define saturate(t1, v1, t2) ((t2)(min(value, (t1)CONCAT(t2, _MAX))))
+#define saturate(t1, v1, t2) saturate_impl(__COUNTER__, t1, v1, t2)
+#define saturate_impl(c, t1, v1, t2) ((t2)(min(t1, v1, (t1)CONCAT(MAX_, t2))))
 
 // bits: https://gcc.gnu.org/onlinedocs/gcc/Bit-Operation-Builtins.html
 #define ptr_add(ptr, offset) ((byte*)ptr + offset)

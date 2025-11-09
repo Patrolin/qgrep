@@ -11,8 +11,10 @@
     #pragma comment(linker, "/SUBSYSTEM:CONSOLE")
   #endif
 
-typedef bool BOOL;
+typedef CINT BOOL;
+typedef u64 QWORD;
 typedef u32 DWORD;
+typedef u16 WORD;
 DISTINCT(uintptr, Handle);
 DISTINCT(Handle, FileHandle);
 #elif OS_LINUX
@@ -100,6 +102,31 @@ ENUM(DWORD, AllocProtectFlags){
 foreign TOP_LEVEL_EXCEPTION_FILTER* SetUnhandledExceptionFilter(TOP_LEVEL_EXCEPTION_FILTER filter_callback);
 foreign intptr VirtualAlloc(intptr address, Size size, AllocTypeFlags type_flags, AllocProtectFlags protect_flags);
 foreign BOOL VirtualFree(intptr address, Size size, AllocTypeFlags type_flags);
+#endif
+
+// threads
+#if OS_WINDOWS
+typedef struct {
+  union {
+    DWORD dwOemId;
+    struct {
+      WORD wProcessorArchitecture;
+      WORD wReserved;
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
+  DWORD dwPageSize;
+  rawptr lpMinimumApplicationAddress;
+  rawptr lpMaximumApplicationAddress;
+  DWORD* dwActiveProcessorMask;
+  DWORD dwNumberOfProcessors;
+  DWORD dwProcessorType;
+  DWORD dwAllocationGranularity;
+  WORD wProcessorLevel;
+  WORD wProcessorRevision;
+} SYSTEM_INFO;
+foreign void GetSystemInfo(SYSTEM_INFO* lpSystemInfo);
+#else
+// ASSERT(false);
 #endif
 
 // file

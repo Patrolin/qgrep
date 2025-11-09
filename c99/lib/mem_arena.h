@@ -20,6 +20,7 @@ intptr arena_alloc_impl(ArenaAllocator* arena, Size size) {
   intptr ptr = (intptr)arena->next;
   arena->next += size;
   release_lock(&arena->lock);
+  zero((byte*)ptr, size);
   return ptr;
 }
 #define arena_alloc(arena, t) ((t*)arena_alloc_impl(arena, sizeof(t)))

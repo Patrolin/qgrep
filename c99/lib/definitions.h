@@ -52,7 +52,7 @@ forward_declare noreturn abort();
 typedef intptr_t intptr;
 typedef uintptr_t uintptr;
 typedef void* rawptr;
-ENUM(intptr, Size){
+ENUM(uintptr, Size){
     Byte = 1,
     KibiByte = 1024 * Byte,
     MebiByte = 1024 * KibiByte,
@@ -135,16 +135,29 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
 
 // types
 typedef char byte;
+ASSERT(sizeof(byte) == 1);
 
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
 typedef uint64_t u64;
+typedef uint32_t u32;
+typedef uint16_t u16;
+typedef uint8_t u8;
+#define MAX_u64 0xffffffffffffffff
+#define MAX_u32 0xffffffff
+#define MAX_u16 0xffff
+#define MAX_u8 0xff
 
 typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
+#define MIN_i64 MAX_u64
+#define MAX_i64 0x7fffffffffffffff
+#define MIN_i32 MAX_u32
+#define MAX_i32 0x7fffffff
+#define MIN_i16 MAX_u16
+#define MAX_i16 0x7fff
+#define MIN_i8 MAX_u8
+#define MAX_i8 0x7f
 
 // typedef signed char CICHAR;
 // typedef unsigned char CUCHAR;
@@ -181,21 +194,21 @@ CINT _fltused;
 // slice
 /*typedef struct {
   void* ptr;
-  intptr count;
+  uintptr count;
 } Slice;*/
 typedef struct {
   byte* ptr;
-  intptr size;
+  Size size;
 } Bytes;
 /* NOTE: utf8 string */
 typedef struct {
   const byte* ptr;
-  intptr size;
+  Size size;
 } String;
 /* NOTE: we take the pointer of the cstring directly to avoid a memcpy() */
 #define string(const_cstr) ((String){const_cstr, sizeof(const_cstr) - 1})
 String str_slice(String str, intptr i, intptr j) {
-  String sliced = (String){&str.ptr[i], j - i};
+  String sliced = (String){&str.ptr[i], (Size)(j - i)};
   if (i > j) {
     sliced.size = 0;
   }
