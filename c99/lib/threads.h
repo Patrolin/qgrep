@@ -2,7 +2,7 @@
 #include "definitions.h"
 
 // shared
-DISTINCT(intptr, Thread)
+DISTINCT(intptr, Thread);
 typedef struct {
   /* TODO: alloc thread infos */
 } ThreadInfo;

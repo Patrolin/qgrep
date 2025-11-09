@@ -40,7 +40,7 @@ forward_declare noreturn abort();
   }
 #define ASSERT(condition) _Static_assert((condition), #condition)
 #define DISTINCT(type, name) \
-  typedef type name;
+  typedef type name
 #define ENUM(type, name) \
   typedef type name;     \
   enum name : type
@@ -210,8 +210,8 @@ String str_slice(String str, intptr i, intptr j) {
 #define atomic_store(address, value) __atomic_store_n(address, value, __ATOMIC_SEQ_CST)
 #define atomic_load(address) __atomic_load_n(address, __ATOMIC_SEQ_CST)
 #define atomic_exchange(address, value) __atomic_exchange_n(address, value, __ATOMIC_SEQ_CST)
-#define atomic_compare_exchange(address, expected, value) __atomic_compare_exchange(address, expected, value, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
-#define atomic_compare_exchange_weak(address, expected, value) __atomic_compare_exchange(address, expected, value, true, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
+#define atomic_compare_exchange(address, expected, value) __atomic_compare_exchange_n(address, expected, value, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
+#define atomic_compare_exchange_weak(address, expected, value) __atomic_compare_exchange_n(address, expected, value, true, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
 #define atomic_add(address, value) __atomic_fetch_add(address, value, __ATOMIC_SEQ_CST)
 #define atomic_sub(address, value) __atomic_fetch_sub(address, value, __ATOMIC_SEQ_CST)
 #define atomic_and(address, value) __atomic_fetch_and(address, value, __ATOMIC_SEQ_CST)

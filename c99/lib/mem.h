@@ -2,8 +2,7 @@
 #include "definitions.h"
 #include "os.h"
 
-#define VIRTUAL_MEMORY_TO_RESERVE OS_MIN_STACK_SIZE
-
+// page alloc
 #if OS_WINDOWS
 ExceptionResult _page_fault_handler(_EXCEPTION_POINTERS* exception_info) {
   EXCEPTION_RECORD* exception = exception_info->ExceptionRecord;
@@ -28,15 +27,16 @@ void init_page_fault_handler() {
 #endif
 }
 
-intptr page_reserve(Size size) {
-  intptr ptr;
+Bytes page_reserve(Size size) {
+  Bytes buffer;
+  buffer.size = size;
 #if OS_WINDOWS
-  ptr = VirtualAlloc(0, size, MEM_RESERVE, PAGE_READWRITE);
-  assert(ptr != 0);
+  buffer.ptr = (byte*)VirtualAlloc(0, size, MEM_RESERVE, PAGE_READWRITE);
 #else
   assert(false);
 #endif
-  return ptr;
+  assert(buffer.ptr != 0);
+  return buffer;
 }
 void page_free(intptr ptr) {
 #if OS_WINDOWS
@@ -44,6 +44,22 @@ void page_free(intptr ptr) {
 #else
   assert(false);
 #endif
+}
+
+// locks
+DISTINCT(bool, Lock);
+bool get_lock_or_false(Lock* lock) {
+  Lock expected = false;
+  return atomic_compare_exchange_weak(lock, &expected, true);
+}
+void get_lock(Lock* lock) {
+  Lock expected = false;
+  while (!expected) {
+    expected = atomic_compare_exchange_weak(lock, &expected, true);
+  }
+}
+void release_lock(Lock* lock) {
+  atomic_store(lock, false);
 }
 
 #include "mem_arena.h" /* IWYU pragma: keep */

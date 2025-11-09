@@ -1,9 +1,13 @@
 #pragma once
 #include "definitions.h"
+#include "mem_arena.h"
 #include "os.h"
+
+#define VIRTUAL_MEMORY_TO_RESERVE OS_MIN_STACK_SIZE
 
 forward_declare void run_multicore(intptr thread_count);
 forward_declare void init_page_fault_handler();
+forward_declare Bytes page_reserve(Size size);
 
 // init
 void init_console() {
@@ -31,9 +35,12 @@ noreturn abort() {
 }
 
 // entry
+ArenaAllocator* shared_arena;
 noreturn _startup() {
   init_console();
   init_page_fault_handler();
+  Bytes buffer = page_reserve(VIRTUAL_MEMORY_TO_RESERVE);
+  shared_arena = arena_allocator(buffer);
 #if RUN_SINGLE_THREADED
   run_multicore(1);
 #else
