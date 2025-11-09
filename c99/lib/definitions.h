@@ -72,6 +72,7 @@ ENUM(intptr, Size){
 
 /* NOTE: linux forces it's own stack size... */
 #define OS_MIN_STACK_SIZE (1 * MebiByte)
+#define VIRTUAL_MEMORY_TO_RESERVE OS_MIN_STACK_SIZE
 
 /* NOTE: SSD block sizes are 512B or 4KiB */
 #define OS_SSD_BLOCK_SIZE_EXPONENT (9)

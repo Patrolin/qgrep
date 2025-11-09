@@ -5,9 +5,23 @@
 #include "lib/definitions.h"
 #include "lib/fmt.h"
 #include "lib/lib.h"
+#include "lib/process.h"
 #include "lib/threads.h"
 
-void foo(Thread t) {
+ArenaAllocator* shared_arena;
+forward_declare void main_multicore(Thread t);
+
+void start() {
+  Bytes buffer = page_reserve(VIRTUAL_MEMORY_TO_RESERVE);
+  shared_arena = arena_allocator(buffer);
+#if RUN_SINGLE_THREADED
+  run_multicore(main_multicore, 1);
+#else
+  run_multicore(main_multicore, 0);
+#endif
+}
+
+void main_multicore(Thread t) {
 #if 1
   printfln1(string("ARCH_HAS_NATIVE_BF16: %"), intptr, ARCH_HAS_NATIVE_BF16);
   printfln1(string("ARCH_HAS_NATIVE_F16: %"), intptr, ARCH_HAS_NATIVE_F16);
@@ -30,7 +44,4 @@ void foo(Thread t) {
   print_String(msg);
   assert(false);
 #endif
-}
-void main_multicore(Thread t) {
-  foo(t);
 }
