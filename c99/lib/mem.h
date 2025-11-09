@@ -58,6 +58,9 @@ void get_lock(Lock* lock) {
     expected = atomic_compare_exchange_weak(lock, &expected, true);
   }
 }
+void get_lock_assert_single_threaded(Lock* lock) {
+  assert(get_lock_or_false(lock));
+}
 void release_lock(Lock* lock) {
   atomic_store(lock, false);
 }

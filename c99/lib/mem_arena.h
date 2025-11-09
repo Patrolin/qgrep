@@ -24,14 +24,10 @@ intptr arena_alloc_impl(ArenaAllocator* arena, Size size) {
 }
 #define arena_alloc(arena, t) ((t*)arena_alloc_impl(arena, sizeof(t)))
 #define arena_alloc2(arena, t, count) ((t*)arena_alloc_impl(arena, sizeof(t) * count))
-void arena_free(ArenaAllocator* arena, intptr ptr) {
-  assert(ptr >= (intptr)arena && ptr <= (intptr)arena->next);
-  arena->next = ptr;
-}
 
-// sub arena
-ArenaAllocator* sub_arena(ArenaAllocator* arena) {
-  ArenaAllocator* subArena = arena_alloc(arena, ArenaAllocator);
-  *subArena = *arena;
-  return subArena;
+void arena_reset(ArenaAllocator* arena, intptr next) {
+  get_lock_assert_single_threaded(&arena->lock);
+  assert(next >= (intptr)arena && next <= (intptr)arena->next);
+  arena->next = next;
+  release_lock(&arena->lock);
 }
