@@ -196,7 +196,7 @@ CINT _fltused;
 // slice
 /*typedef struct {
   void* ptr;
-  uintptr count;
+  intptr count;
 } Slice;*/
 typedef struct {
   byte* ptr;

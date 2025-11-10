@@ -139,6 +139,9 @@ ENUM(DWORD, CreateThreadFlags){
     STACK_SIZE_PARAM_IS_A_RESERVATION = 0x00010000,
 };
 DISTINCT(Handle, ThreadHandle);
+ENUM(DWORD, OsTimerMillis){
+    INFINITE = -1,
+};
 
 foreign void GetSystemInfo(SYSTEM_INFO* lpSystemInfo);
 foreign ThreadHandle CreateThread(
@@ -148,6 +151,8 @@ foreign ThreadHandle CreateThread(
     rawptr param,
     DWORD flags,
     DWORD* thread_id);
+foreign void WaitOnAddress(volatile rawptr address, rawptr not_expected, Size address_size, DWORD timeout);
+foreign void WakeByAddressAll(rawptr address);
 #else
 // ASSERT(false);
 #endif
