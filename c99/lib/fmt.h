@@ -11,7 +11,7 @@
 #define STACK_BUFFER(buffer, max_size, ptr_end) \
   byte buffer[max_size];                        \
   byte* ptr_end = &buffer[max_size]
-#define sprint(t1, v1, ptr_end) CONCAT(sprint_, t1)(v1, ptr_end)
+#define sprint(t1, v1, ptr_end) CONCAT0(sprint_, t1)(v1, ptr_end)
 #define sprint_to_string(ptr_end, size) ((String){ptr_end - (intptr)size, size})
 
 #define sprint_size_String(value) (value.size)
@@ -21,6 +21,12 @@ Size sprint_String(String str, byte* buffer_end) {
     buffer[i] = str.ptr[i];
   }
   return str.size;
+}
+
+#define sprint_size__Bool(value) 5
+Size sprint__Bool(bool value, byte* buffer_end) {
+  String msg = value ? string("true") : string("false");
+  return sprint_String(msg, buffer_end);
 }
 
 /* NOTE: log10_ceil(max(type)) == log10_ceil(pow(2, bits) - 1) */

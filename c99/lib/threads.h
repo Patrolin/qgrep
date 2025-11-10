@@ -8,19 +8,21 @@
 DISTINCT(u32, Thread);
 typedef struct {
   u32 barrier;
-  u32 order;
+  u32 is_last;
+  u32 is_first;
   Thread was_first_thread;
   u32 thread_count;
   u64 values[];
 } ThreadInfos;
-ASSERT(sizeof(ThreadInfos) == 16);
+ASSERT(sizeof(ThreadInfos) == 24);
 ThreadInfos* global_thread_infos;
 
 // entry
 forward_declare void main_multicore(Thread t);
+forward_declare void barrier();
 CUINT thread_entry(rawptr param) {
   main_multicore((Thread)(uintptr)param);
-  /* TODO: barrier() before exiting */
+  barrier();
   return 0;
 }
 
@@ -67,7 +69,8 @@ void wake_all_on_address(u32* address) {
 }
 
 void barrier() {
-  intptr not_last = atomic_add(&global_thread_infos->order, 1) % global_thread_infos->thread_count != 0;
+  u32 i = atomic_add_fetch(&global_thread_infos->is_last, 1);
+  bool not_last = i % global_thread_infos->thread_count != 0;
   if (not_last) {
     wait_on_address(&global_thread_infos->barrier, global_thread_infos->barrier);
   } else {
@@ -76,7 +79,8 @@ void barrier() {
   }
 }
 bool sync_is_first(Thread t) {
-  intptr is_first = atomic_add(&global_thread_infos->order, 1) % global_thread_infos->thread_count == 1;
+  u32 prev_i = atomic_fetch_add(&global_thread_infos->is_first, 1);
+  bool is_first = prev_i % global_thread_infos->thread_count == 0;
   if (is_first) {
     global_thread_infos->was_first_thread = t;
   }

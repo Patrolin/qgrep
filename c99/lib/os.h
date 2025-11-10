@@ -43,7 +43,7 @@ ENUM(DWORD, CodePage){
     CP_UTF8 = 65001,
 };
 
-  #pragma comment(lib, "kernel32.lib")
+  #pragma comment(lib, "Kernel32.lib")
 foreign BOOL SetConsoleOutputCP(CodePage code_page);
 foreign BOOL WriteFile(FileHandle file, const byte* buffer, DWORD buffer_size, DWORD* bytes_written, rawptr overlapped);
 foreign void ExitProcess(CUINT exit_code);
@@ -143,6 +143,7 @@ ENUM(DWORD, OsTimerMillis){
     INFINITE = -1,
 };
 
+  #pragma comment(lib, "Synchronization.lib")
 foreign void GetSystemInfo(SYSTEM_INFO* lpSystemInfo);
 foreign ThreadHandle CreateThread(
     SECURITY_ATTRIBUTES* security,

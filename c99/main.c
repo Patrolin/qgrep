@@ -3,7 +3,10 @@
 // raddbg foo.exe
 // gdb foo-linux-x64
 #include "lib/all.h"
+#include "lib/threads.h"
 
 void main_multicore(Thread t) {
-  printfln1(string("thread %"), uintptr, t);
+  if (sync_is_first(t)) {
+    printfln1(string("thread %"), uintptr, t);
+  }
 }
