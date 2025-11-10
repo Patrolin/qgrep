@@ -7,15 +7,18 @@
 // shared
 DISTINCT(u32, Thread);
 typedef struct {
+  u64 value;
+} ThreadData;
+typedef struct {
   u32 barrier;
-  u32 is_last;
-  u32 is_first;
+  u32 is_last_counter;
+  u32 split_counter;
   Thread was_first_thread;
   u32 thread_count;
-  u64 values[];
-} ThreadInfos;
-ASSERT(sizeof(ThreadInfos) == 24);
-ThreadInfos* global_thread_infos;
+  ThreadData thread_data[];
+} ThreadInfo;
+ASSERT(sizeof(ThreadInfo) == 24);
+ThreadInfo* global_thread_infos;
 
 // entry
 forward_declare void main_multicore(Thread t);
@@ -40,7 +43,7 @@ void start_threads() {
   #endif
 #endif
   assert(logical_core_count > 0);
-  global_thread_infos = arena_alloc_flexible(global_arena, ThreadInfos, u64, logical_core_count);
+  global_thread_infos = arena_alloc_flexible(global_arena, ThreadInfo, ThreadData, logical_core_count);
   global_thread_infos->thread_count = logical_core_count;
   for (Thread t = 1; t < logical_core_count; t++) {
 #if OS_WINDOWS
@@ -69,7 +72,7 @@ void wake_all_on_address(u32* address) {
 }
 
 void barrier() {
-  u32 i = atomic_add_fetch(&global_thread_infos->is_last, 1);
+  u32 i = atomic_add_fetch(&global_thread_infos->is_last_counter, 1);
   bool not_last = i % global_thread_infos->thread_count != 0;
   if (not_last) {
     wait_on_address(&global_thread_infos->barrier, global_thread_infos->barrier);
@@ -78,24 +81,29 @@ void barrier() {
     wake_all_on_address(&global_thread_infos->barrier);
   }
 }
-bool sync_is_first(Thread t) {
-  u32 prev_i = atomic_fetch_add(&global_thread_infos->is_first, 1);
+bool split_thread(Thread t) {
+  u32 prev_i = atomic_fetch_add(&global_thread_infos->split_counter, 1);
   bool is_first = prev_i % global_thread_infos->thread_count == 0;
   if (is_first) {
     global_thread_infos->was_first_thread = t;
   }
   return is_first;
 }
+bool split_threads(u32 n) {
+  u32 prev_i = atomic_fetch_add(&global_thread_infos->split_counter, 1);
+  bool is_less_than_n = prev_i % global_thread_infos->thread_count < n;
+  return is_less_than_n;
+}
 void barrier_scatter(Thread t, u64* value) {
   if (t == global_thread_infos->was_first_thread) {
-    global_thread_infos->values[0] = *value;
+    global_thread_infos->thread_data[0].value = *value;
   }
   barrier();
-  *value = global_thread_infos->values[0];
+  *value = global_thread_infos->thread_data[0].value;
   barrier();
 }
-u64* barrier_gather(Thread t, u64 value) {
-  global_thread_infos->values[t] = value;
+ThreadData* barrier_gather(Thread t, u64 value) {
+  global_thread_infos->thread_data[t].value = value;
   barrier();
-  return global_thread_infos->values;
+  return global_thread_infos->thread_data;
 }

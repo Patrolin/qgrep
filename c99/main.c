@@ -6,7 +6,13 @@
 #include "lib/threads.h"
 
 void main_multicore(Thread t) {
-  if (sync_is_first(t)) {
-    printfln1(string("thread %"), uintptr, t);
+  if (split_thread(t)) {
+    println(String, string("single"));
   }
+  barrier();
+  if (split_threads(4)) {
+    println(String, string("multi"));
+  }
+  barrier();
+  printfln1(string("- thread %"), uintptr, t);
 }
