@@ -133,6 +133,7 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
   thus we have to realign ourselves either way... */
   #define ALIGN_STACK_POINTER() asm volatile("andq $-16, %%rsp" ::: "rsp");
   #define CALL(name) asm volatile("call " #name)
+  #define cpu_relax() asm volatile("pause")
 #endif
 
 // types
@@ -244,5 +245,3 @@ ASSERT(__atomic_always_lock_free(1, 0));
 ASSERT(__atomic_always_lock_free(2, 0));
 ASSERT(__atomic_always_lock_free(4, 0));
 ASSERT(__atomic_always_lock_free(8, 0));
-
-#define cpu_relax() asm volatile("pause")
