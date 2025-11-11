@@ -54,8 +54,9 @@ void start_threads() {
 #endif
   assert(logical_core_count > 0);
   global_thread_infos = arena_alloc_flexible(global_arena, ThreadInfo, ThreadData, logical_core_count);
-  arena_alloc_count(global_arena, u64, logical_core_count);
+  u64* values = arena_alloc_count(global_arena, u64, logical_core_count);
   global_thread_infos->logical_core_count = logical_core_count;
+  global_thread_infos->values = values;
   for (Thread t = 0; t < logical_core_count; t++) {
     global_thread_infos->thread_data[t].threads_end = logical_core_count;
     if (t > 0) {
