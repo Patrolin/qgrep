@@ -7,15 +7,15 @@
 void main_multicore(Thread t) {
   u64 x;
   if (single_core(t)) {
-    printfln1(string("single: thread %"), u32, t);
+    printfln1(string("thread %: single"), u32, t);  // print on one thread
     x = 13;
   }
   barrier_scatter(t, &x);
-  printfln1(string("all: %"), u64, x);
+  printfln2(string("thread %: x=%"), u32, t, u64, x);  // print on all threads
 
   if (barrier_split_threads(t, 4)) {
-    printfln1(string("split: thread %"), u32, t);
+    printfln1(string("split: thread %"), u32, t);  // print on 4 threads
   } else {
-    printfln1(string("else: thread %"), u32, t);
+    printfln1(string("else: thread %"), u32, t);  // print on remaining threads
   }
 }
