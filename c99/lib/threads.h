@@ -31,11 +31,11 @@ Threads* global_threads;
 
 // entry
 forward_declare void main_multicore(Thread t);
-forward_declare void join_threads(Thread t, Thread threads_start, Thread threads_end);
+forward_declare void barrier_join_threads(Thread t, Thread threads_start, Thread threads_end);
 CUINT thread_entry(rawptr param) {
   Thread t = (Thread)(uintptr)param;
   main_multicore(t);
-  join_threads(t, 0, global_threads->logical_core_count);
+  barrier_join_threads(t, 0, global_threads->logical_core_count);
   return 0;
 }
 
@@ -117,7 +117,8 @@ bool single_core(Thread t) {
   }
   return is_first;
 }
-void barrier_scatter(Thread t, u64* value) {
+#define barrier_scatter(t, value) barrier_scatter_impl(t, (u64*)(value))
+void barrier_scatter_impl(Thread t, u64* value) {
   Thread threads_start = global_threads->thread_infos[t].threads_start;
   ThreadInfo* shared_data = &global_threads->thread_infos[threads_start];
   u64* shared_value = &global_threads->values[threads_start];
@@ -128,13 +129,14 @@ void barrier_scatter(Thread t, u64* value) {
   *value = *shared_value;
   barrier(t); /* NOTE: make sure all threads have read the data */
 }
-ThreadInfo* barrier_gather(Thread t, u64 value) {
+#define barrier_gather(t, value) barrier_gather_impl(t, (u64)(value))
+ThreadInfo* barrier_gather_impl(Thread t, u64 value) {
   global_threads->values[t] = value;
   barrier(t); /* NOTE: make sure all threads have written their data */
   return global_threads->thread_infos;
 }
 // split threads
-bool split_threads(Thread t, u32 n) {
+bool barrier_split_threads(Thread t, u32 n) {
   // barrier() + modify threads
   u32 threads_start = global_threads->thread_infos[t].threads_start;
   u32 threads_end = global_threads->thread_infos[t].threads_end;
@@ -168,7 +170,7 @@ bool split_threads(Thread t, u32 n) {
   }
   return t < threads_split;
 }
-void join_threads(Thread t, Thread threads_start, Thread threads_end) {
+void barrier_join_threads(Thread t, Thread threads_start, Thread threads_end) {
   ThreadInfo* shared_data = &global_threads->thread_infos[threads_start];
   u32 thread_count = threads_end - threads_start;
   u32 join_counter = atomic_add_fetch(&shared_data->join_counter, 1);
