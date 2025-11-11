@@ -1,5 +1,6 @@
 #pragma once
 #include "definitions.h"
+#include "mem_arena.h"
 #include "os.h"
 #include "mem.h"
 #include "process.h"
@@ -52,8 +53,8 @@ void start_threads() {
   #endif
 #endif
   assert(logical_core_count > 0);
-  /* TODO: align the allocation, so that ThreadDatas are aligned to 32 bits */
   global_thread_infos = arena_alloc_flexible(global_arena, ThreadInfo, ThreadData, logical_core_count);
+  arena_alloc_count(global_arena, u64, logical_core_count);
   global_thread_infos->logical_core_count = logical_core_count;
   for (Thread t = 0; t < logical_core_count; t++) {
     global_thread_infos->thread_data[t].threads_end = logical_core_count;
