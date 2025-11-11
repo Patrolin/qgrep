@@ -18,6 +18,7 @@ typedef align(32) struct {
   u32 join_counter;
 } ThreadData;
 ASSERT(sizeof(ThreadData) == 32);
+ASSERT(alignof(ThreadData) == 32);
 typedef struct {
   u32 logical_core_count;
   u64* values;
