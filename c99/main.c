@@ -12,6 +12,6 @@ void main_multicore(Thread t) {
   if (split_threads(t, 4)) {
     printfln1(string("split: thread %"), u32, t);
   } else {
-    printfln1(string("else: thread %"), uintptr, t);
+    printfln1(string("else: thread %"), u32, t);
   }
 }
