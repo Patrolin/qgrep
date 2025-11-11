@@ -178,6 +178,7 @@ void join_threads(Thread t, Thread threads_start, Thread threads_end) {
       thread_data->threads_start = threads_start;
       thread_data->threads_end = threads_end;
     }
+    /* NOTE: reset counter in case we have a non-power-of-two number of threads */
     shared_data->join_counter = 0;
     shared_data->join_barrier += 1;
     wake_all_on_address(&shared_data->join_barrier);
