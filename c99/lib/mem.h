@@ -32,15 +32,20 @@ Bytes page_reserve(Size size) {
   buffer.size = size;
 #if OS_WINDOWS
   buffer.ptr = (byte*)VirtualAlloc(0, size, MEM_RESERVE, PAGE_READWRITE);
+  assert(buffer.ptr != 0);
+#elif OS_LINUX
+  buffer.ptr = (byte*)mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  assert((uintptr)buffer.ptr != MAX(uintptr));
 #else
   assert(false);
 #endif
-  assert(buffer.ptr != 0);
   return buffer;
 }
 void page_free(intptr ptr) {
 #if OS_WINDOWS
   assert(VirtualFree(ptr, 0, MEM_RELEASE));
+#elif OS_LINUX
+  assert(munmap(ptr, 0) == 0);
 #else
   assert(false);
 #endif

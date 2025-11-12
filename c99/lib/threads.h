@@ -1,8 +1,10 @@
 #pragma once
 #include "definitions.h"
-#include "mem_arena.h"
+#include "math.h"
 #include "os.h"
+#include "fmt.h"
 #include "mem.h"
+#include "os_linux.h"
 #include "process.h"
 
 // shared
@@ -47,7 +49,15 @@ void start_threads() {
   #if OS_WINDOWS
   SYSTEM_INFO info;
   GetSystemInfo(&info);
-  logical_core_count = info.dwNumberOfProcessors;
+  logical_core_count = info.dwNumberOfProcessors; /* NOTE: this fails above 64 cores... */
+  #elif OS_LINUX
+  u8 cpu_masks[64];
+  intptr written_masks_size = sched_getaffinity(0, sizeof(cpu_masks), (u8*)&cpu_masks);
+  assert(written_masks_size >= 0);
+  for (intptr i = 0; i < written_masks_size; i++) {
+    logical_core_count += count_ones(u8, cpu_masks[i]);
+  }
+  printfln1(string("logical_core_count: %"), i64, (i64)logical_core_count);
   #else
   assert(false);
   #endif

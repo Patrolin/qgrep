@@ -49,11 +49,18 @@ forward_declare noreturn abort();
 
 // builtins
 #define alignof(x) __alignof__(x)
+#define countof(x) ((intptr)sizeof(x) / (intptr)sizeof(x[0]))
 
 // Size
-typedef intptr_t intptr;
 typedef uintptr_t uintptr;
+typedef intptr_t intptr;
 typedef void* rawptr;
+#define MIN(t) CONCAT(MIN_, t)
+#define MAX(t) CONCAT(MAX_, t)
+#define MIN_uintptr (uintptr)(0)
+#define MAX_uintptr (uintptr)(-1)
+#define MIN_intptr ((intptr)(-1) >> (intptr)(1))
+#define MAX_intptr (intptr)(-1)
 ENUM(uintptr, Size){
     Byte = 1,
     KibiByte = 1024 * Byte,
@@ -144,23 +151,27 @@ typedef uint64_t u64;
 typedef uint32_t u32;
 typedef uint16_t u16;
 typedef uint8_t u8;
-#define MAX_u64 0xffffffffffffffff
-#define MAX_u32 0xffffffff
-#define MAX_u16 0xffff
-#define MAX_u8 0xff
+#define MIN_u64 (u64)(0)
+#define MAX_u64 (u64)(0xffffffffffffffff)
+#define MIN_u32 (u32)(0)
+#define MAX_u32 (u32)(0xffffffff)
+#define MIN_u16 (u16)(0)
+#define MAX_u16 (u16)(0xffff)
+#define MIN_u8 (u8)(0)
+#define MAX_u8 (u8)(0xff)
 
 typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
-#define MIN_i64 MAX_u64
-#define MAX_i64 0x7fffffffffffffff
-#define MIN_i32 MAX_u32
-#define MAX_i32 0x7fffffff
-#define MIN_i16 MAX_u16
-#define MAX_i16 0x7fff
-#define MIN_i8 MAX_u8
-#define MAX_i8 0x7f
+#define MIN_i64 (i64)(MAX_u64)
+#define MAX_i64 (i64)(0x7fffffffffffffff)
+#define MIN_i32 (i32)(MAX_u32)
+#define MAX_i32 (i32)(0x7fffffff)
+#define MIN_i16 (i16)(MAX_u16)
+#define MAX_i16 (i16)(0x7fff)
+#define MIN_i8 (i8)(MAX_u8)
+#define MAX_i8 (i8)(0x7f)
 
 // typedef signed char CICHAR;
 // typedef unsigned char CUCHAR;
@@ -169,7 +180,7 @@ typedef int64_t i64;
 /* NOTE: 16b or 32b depending on architecture */
 typedef int CINT;
 typedef unsigned int CUINT;
-// typedef long CLONG;
+typedef long CLONG;
 // typedef unsigned long CULONG;
 // typedef long long CLONGLONG;
 // typedef unsigned long long CULONGLONG;

@@ -54,8 +54,8 @@ ENUM(FileHandle, ConsoleHandleEnum){
     STDOUT = 1,
     STDERR = 2,
 };
-intptr write(FileHandle file, const byte* buffer, intptr buffer_size) {
-  return syscall3(SYS_write, (uintptr)file, (uintptr)buffer, (uintptr)buffer_size);
+intptr write(FileHandle file, const byte* buffer, Size buffer_size) {
+  return syscall3(SYS_write, (uintptr)file, (uintptr)buffer, buffer_size);
 }
 noreturn _exit(CINT return_code) {
   syscall1(SYS_exit, (uintptr)return_code);
@@ -107,6 +107,23 @@ ENUM(DWORD, AllocProtectFlags){
 foreign TOP_LEVEL_EXCEPTION_FILTER* SetUnhandledExceptionFilter(TOP_LEVEL_EXCEPTION_FILTER filter_callback);
 foreign intptr VirtualAlloc(intptr address, Size size, AllocTypeFlags type_flags, AllocProtectFlags protect_flags);
 foreign BOOL VirtualFree(intptr address, Size size, AllocTypeFlags type_flags);
+#elif OS_LINUX
+ENUM(u32, ProtectionFlags){
+    PROT_EXEC = 1 << 0,
+    PROT_READ = 1 << 1,
+    PROT_WRITE = 1 << 2,
+};
+ENUM(u32, AllocTypeFlags){
+    MAP_PRIVATE = 1 << 1,
+    MAP_ANONYMOUS = 1 << 5,
+};
+
+intptr mmap(rawptr address, Size size, ProtectionFlags protection_flags, AllocTypeFlags type_flags, FileHandle fd, Size offset) {
+  return syscall6(SYS_mmap, (uintptr)address, size, protection_flags, type_flags, (uintptr)fd, offset);
+}
+intptr munmap(intptr address, Size size) {
+  return syscall2(SYS_munmap, (uintptr)address, size);
+}
 #endif
 
 // threads
@@ -154,6 +171,12 @@ foreign ThreadHandle CreateThread(
     DWORD* thread_id);
 foreign void WaitOnAddress(volatile rawptr address, rawptr not_expected, Size address_size, DWORD timeout);
 foreign void WakeByAddressAll(rawptr address);
+#elif OS_LINUX
+typedef CINT pid_t;
+
+CLONG sched_getaffinity(pid_t pid, Size masks_size, u8* masks) {
+  return syscall3(SYS_sched_getaffinity, (uintptr)pid, masks_size, (uintptr)masks);
+};
 #else
 // ASSERT(false);
 #endif

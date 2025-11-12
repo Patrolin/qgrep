@@ -28,8 +28,7 @@
   assert((t1)(VAR(v2, c)) == VAR(v1, c)); \
   VAR(v2, c);                             \
 })
-#define saturate(t1, v1, t2) saturate_impl(__COUNTER__, t1, v1, t2)
-#define saturate_impl(c, t1, v1, t2) ((t2)(min(t1, v1, (t1)CONCAT(MAX_, t2))))
+#define saturate(t1, v1, t2) ((t2)(min(t1, v1, (t1)MAX(t2))))
 
 // bits: https://gcc.gnu.org/onlinedocs/gcc/Bit-Operation-Builtins.html
 #define ptr_add(ptr, offset) ((byte*)ptr + offset)
@@ -40,12 +39,12 @@
   t1 VAR(value, c) = v1;                                 \
   VAR(value, c) <= 1 ? 0 : find_first_set((x - 1) << 1); \
 })
-#define count_leading_zeros(t, v) __builtin_clzg((t)(v))
-#define count_trailing_zeros(t, v) __builtin_ctzg((t)(v))
-#define count_leading_redundant_sign_bits(t, v) __builtin_clrsbg((t)(v))
-#define count_ones(t, v) __builtin_popcountg((t)(v))
-#define count_zeros(t, v) __builtin_popcountg(~(t)(v))
-#define count_parity(t, v) __builtin_parityg((t)(v))
+#define count_leading_zeros(t, v) (t)(__builtin_clzg((t)(v)))
+#define count_trailing_zeros(t, v) (t)(__builtin_ctzg((t)(v)))
+#define count_leading_redundant_sign_bits(t, v) (t)(__builtin_clrsbg((t)(v)))
+#define count_ones(t, v) (t)(__builtin_popcountg((t)(v)))
+#define count_zeros(t, v) (t)(__builtin_popcountg(~(t)(v)))
+#define count_parity(t, v) (t)(__builtin_parityg((t)(v)))
 
 // floats
 #define SPLIT_FLOAT_IMPL(R, F, U, x, mask, shift, bias) \
