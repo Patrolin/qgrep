@@ -95,28 +95,38 @@ Size sprint_i8(i8 value, byte* buffer_end) {
   return size;
 }
 
-#define sprint_size_intptr(value) (2 + sizeof(intptr))
-Size sprint_intptr(intptr value, byte* buffer_end) {
+#define sprint_size_uhex(value) (2 + 2 * sizeof(uintptr))
+Size sprint_uhex(uintptr value, byte* buffer_end) {
   byte* HEX_DIGITS = "0123456789ABCDEF";
   intptr i = 0;
   do {
-    intptr digit = value % 16;
-    value = value / 16;
+    uintptr digit = value & 0xf;
+    value = value >> 4;
     buffer_end[--i] = HEX_DIGITS[digit];
   } while (value != 0);
   buffer_end[--i] = 'x';
   buffer_end[--i] = '0';
   return (Size)(-i);
 }
+#define sprint_size_hex(value) sprint_size_uhex(value)
+#define sprint_hex(value, buffer_end) sprint_uhex((uintptr)(value), buffer_end)
 
 #if ARCH_IS_64_BIT
   #define sprint_size_uintptr(value) sprint_size_u64(value)
 Size sprint_uintptr(uintptr value, byte* buffer_end) {
   return sprint_u64((u64)value, buffer_end);
 }
+  #define sprint_size_intptr(value) sprint_size_u64(value)
+Size sprint_intptr(intptr value, byte* buffer_end) {
+  return sprint_u64((u64)value, buffer_end);
+}
 #elif ARCH_IS_32_BIT
   #define sprint_size_uintptr(value) sprint_size_u32(value)
 Size sprint_uintptr(uintptr value, byte* buffer_end) {
+  return sprint_u32((u32)value, buffer_end);
+}
+  #define sprint_size_intptr(value) sprint_size_u32(value)
+Size sprint_intptr(intptr value, byte* buffer_end) {
   return sprint_u32((u32)value, buffer_end);
 }
 #endif

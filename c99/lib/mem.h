@@ -35,7 +35,7 @@ Bytes page_reserve(Size size) {
   assert(buffer.ptr != 0);
 #elif OS_LINUX
   buffer.ptr = (byte*)mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  assert((uintptr)buffer.ptr != MAX(uintptr));
+  assert((intptr)buffer.ptr != -1);
 #else
   assert(false);
 #endif
@@ -52,7 +52,7 @@ void page_free(intptr ptr) {
 }
 
 // copy
-void zero(byte* ptr, Size size) {
+always_inline void zero(byte* ptr, Size size) {
   for (intptr i = 0; i < size; i++) {
     ptr[size] = 0;
   }

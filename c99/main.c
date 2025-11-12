@@ -3,11 +3,13 @@
 // raddbg foo.exe
 // gdb foo-linux-x64
 #include "lib/all.h"
+#include "lib/threads.h"
 
 void main_multicore(Thread t) {
+  printfln1(string("thread %: hi"), u32, t);  // print on all threads
   u64 x;
   if (single_core(t)) {
-    printfln1(string("thread %: single"), u32, t);  // print on one thread
+    printfln2(string("thread %: single, waiting: %"), u32, t, u32, global_threads->thread_infos[0].is_last_counter);  // print on one thread
     x = 13;
   }
   barrier_scatter(t, &x);

@@ -28,6 +28,7 @@
 #define private static
 #define global static
 #define forward_declare
+#define always_inline inline __attribute__((always_inline))
 #define foreign __declspec(dllimport)
 #define naked __attribute__((naked))
 #define align(n) __attribute__((aligned(n)))
@@ -47,11 +48,9 @@ forward_declare noreturn abort();
   typedef type name;     \
   enum name : type
 
-// builtins
-#define alignof(x) __alignof__(x)
-#define countof(x) ((intptr)sizeof(x) / (intptr)sizeof(x[0]))
-
 // Size
+typedef char byte;
+ASSERT(sizeof(byte) == 1);
 typedef uintptr_t uintptr;
 typedef intptr_t intptr;
 typedef void* rawptr;
@@ -67,6 +66,16 @@ ENUM(uintptr, Size){
     MebiByte = 1024 * KibiByte,
     GibiByte = 1024 * MebiByte,
 };
+
+// builtins
+#define alignof(x) __alignof__(x)
+#define countof(x) ((intptr)sizeof(x) / (intptr)sizeof(x[0]))
+forward_declare void zero(byte* ptr, Size size);
+extern void* memset(void* ptr, int x, Size size) {
+  assert(x == 0);
+  zero(ptr, size);
+  return ptr;
+}
 
 // OS_xxx
 #define OS_WINDOWS 0
@@ -144,9 +153,6 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
 #endif
 
 // types
-typedef char byte;
-ASSERT(sizeof(byte) == 1);
-
 typedef uint64_t u64;
 typedef uint32_t u32;
 typedef uint16_t u16;

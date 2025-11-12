@@ -116,6 +116,8 @@ ENUM(u32, ProtectionFlags){
 ENUM(u32, AllocTypeFlags){
     MAP_PRIVATE = 1 << 1,
     MAP_ANONYMOUS = 1 << 5,
+    MAP_GROWSDOWN = 1 << 8,
+    MAP_STACK = 1 << 17,
 };
 
 intptr mmap(rawptr address, Size size, ProtectionFlags protection_flags, AllocTypeFlags type_flags, FileHandle fd, Size offset) {
@@ -173,10 +175,53 @@ foreign void WaitOnAddress(volatile rawptr address, rawptr not_expected, Size ad
 foreign void WakeByAddressAll(rawptr address);
 #elif OS_LINUX
 typedef CINT pid_t;
+typedef u64 rlim_t;
+ENUM(CUINT, ResourceType){
+    RLIMIT_STACK = 3,
+};
+typedef struct {
+  rlim_t rlim_cur;
+  rlim_t rlim_max;
+} rlimit;
+ENUM(CUINT, ThreadFlags){
+    CLONE_VM = 1 << 8,
+    CLONE_FS = 1 << 9,
+    CLONE_FILES = 1 << 10,
+    CLONE_SIGHAND = 1 << 11,
+    CLONE_PARENT = 1 << 15,
+    CLONE_THREAD = 1 < 16,
+    CLONE_SYSVSEM = 1 << 18,
+    CLONE_IO = 1 < 31,
+};
+ENUM(u64, SignalType){
+    SIGCHLD = 17,
+};
 
-CLONG sched_getaffinity(pid_t pid, Size masks_size, u8* masks) {
+intptr getrlimit(ResourceType key, rlimit* value) {
+  return syscall2(SYS_getrlimit, key, (uintptr)value);
+}
+intptr sched_getaffinity(pid_t pid, Size masks_size, u8* masks) {
   return syscall3(SYS_sched_getaffinity, (uintptr)pid, masks_size, (uintptr)masks);
 };
+// https://nullprogram.com/blog/2023/03/23/
+typedef align(16) struct {
+  CUINT (*entry)(rawptr param);
+  rawptr param;
+} new_thread_data;
+naked intptr newthread(new_thread_data* stack) {
+  #if ARCH_X64
+  asm volatile(
+      "mov  %%rdi, %%rsi\n"     // rsi = stack
+      "mov  $0x50f00, %%edi\n"  // rdi = clone flags
+      "mov  $56, %%eax\n"       // rax = SYS_clone
+      "syscall\n"
+      "movq 8(%%rsp), %%rdi\n"
+      "ret" ::: "rcx", "r11", "memory", "rax", "rdi");
+  #else
+  assert(false);
+  #endif
+}
+
 #else
 // ASSERT(false);
 #endif

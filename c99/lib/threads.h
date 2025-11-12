@@ -4,7 +4,6 @@
 #include "os.h"
 #include "fmt.h"
 #include "mem.h"
-#include "os_linux.h"
 #include "process.h"
 
 // shared
@@ -72,6 +71,23 @@ void start_threads() {
     if (t > 0) {
 #if OS_WINDOWS
       assert(CreateThread(0, 0, thread_entry, (rawptr)(uintptr)t, STACK_SIZE_PARAM_IS_A_RESERVATION, 0) != 0);
+#elif OS_LINUX
+      rlimit stack_size_limit;
+      assert(getrlimit(RLIMIT_STACK, &stack_size_limit) >= 0);
+      u64 stack_size = stack_size_limit.rlim_cur;
+      intptr stack = mmap(0, stack_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_GROWSDOWN | MAP_STACK, -1, 0);
+      assert(stack != -1);
+  #if ARCH_STACK_DIRECTION == -1
+      stack = stack + (intptr)stack_size - (intptr)sizeof(new_thread_data);
+      new_thread_data* stack_data = (new_thread_data*)(stack);
+  #else
+      new_thread_data* stack_data = (new_thread_data*)(stack);
+      stack = stack + sizeof(new_thread_data);
+  #endif
+      stack_data->entry = thread_entry;
+      stack_data->param = (rawptr)(uintptr)t;
+      intptr error = newthread(stack_data);
+      assert(error >= 0);
 #else
       assert(false);
 #endif
@@ -84,6 +100,8 @@ void start_threads() {
 void wait_on_address(u32* address, u32 not_expected) {
 #if OS_WINDOWS
   WaitOnAddress(address, &not_expected, sizeof(not_expected), INFINITE);
+#elif OS_LINUX
+  for (;;);
 #else
   assert(false);
 #endif
@@ -91,6 +109,8 @@ void wait_on_address(u32* address, u32 not_expected) {
 void wake_all_on_address(u32* address) {
 #if OS_WINDOWS
   WakeByAddressAll(address);
+#elif OS_LINUX
+  assert(false);
 #else
   assert(false);
 #endif
