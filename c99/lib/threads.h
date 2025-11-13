@@ -1,15 +1,13 @@
 #pragma once
 #include "definitions.h"
-#include "math.h"
 #include "os.h"
-#include "fmt.h"
 #include "mem.h"
 #include "process.h"
 
 // shared
 DISTINCT(u32, Thread);
 typedef align(32) struct {
-  /* NOTE: the barriers could be u8 */
+  /* NOTE: barriers must be u32 on linux... */
   u32 barrier;
   u32 join_barrier;
   Thread threads_start;

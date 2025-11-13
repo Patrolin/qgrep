@@ -186,7 +186,7 @@ typedef int64_t i64;
 /* NOTE: 16b or 32b depending on architecture */
 typedef int CINT;
 typedef unsigned int CUINT;
-typedef long CLONG;
+// typedef long CLONG;
 // typedef unsigned long CULONG;
 // typedef long long CLONGLONG;
 // typedef unsigned long long CULONGLONG;

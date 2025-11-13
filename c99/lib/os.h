@@ -183,6 +183,13 @@ typedef struct {
   rlim_t rlim_cur;
   rlim_t rlim_max;
 } rlimit;
+intptr getrlimit(ResourceType key, rlimit* value) {
+  return syscall2(SYS_getrlimit, key, (uintptr)value);
+}
+intptr sched_getaffinity(pid_t pid, Size masks_size, u8* masks) {
+  return syscall3(SYS_sched_getaffinity, (uintptr)pid, masks_size, (uintptr)masks);
+};
+
 ENUM(CUINT, ThreadFlags){
     CLONE_VM = 1 << 8,
     CLONE_FS = 1 << 9,
@@ -195,13 +202,6 @@ ENUM(CUINT, ThreadFlags){
 };
 ENUM(u64, SignalType){
     SIGCHLD = 17,
-};
-
-intptr getrlimit(ResourceType key, rlimit* value) {
-  return syscall2(SYS_getrlimit, key, (uintptr)value);
-}
-intptr sched_getaffinity(pid_t pid, Size masks_size, u8* masks) {
-  return syscall3(SYS_sched_getaffinity, (uintptr)pid, masks_size, (uintptr)masks);
 };
 // https://nullprogram.com/blog/2023/03/23/
 typedef align(16) struct {
@@ -222,6 +222,21 @@ naked intptr newthread(new_thread_data* stack) {
   #endif
 }
 
+ENUM(CINT, FutexOp){
+    FUTEX_WAIT = 0,
+    FUTEX_WAKE = 1,
+};
+typedef intptr time_t;
+typedef struct {
+  time_t t_sec;
+  time_t t_nsec;
+} timespec;
+intptr futex_wait(u32* address, u32 not_expected, const timespec* timeout) {
+  syscall4(SYS_futex, (uintptr)address, FUTEX_WAIT, not_expected, (uintptr)timeout);
+}
+intptr futex_wake(u32* address, u32 count_to_wake) {
+  syscall3(SYS_futex, (uintptr)address, FUTEX_WAKE, count_to_wake);
+}
 #else
 // ASSERT(false);
 #endif
