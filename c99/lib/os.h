@@ -216,7 +216,7 @@ naked intptr newthread(new_thread_data* stack) {
       "mov  $56, %%eax\n"       // rax = SYS_clone
       "syscall\n"
       "movq 8(%%rsp), %%rdi\n"
-      "ret" ::: "rcx", "r11", "memory", "rax", "rdi");
+      "ret" ::: "rcx", "r11", "memory", "rax", "rdi", "rsi");
   #else
   assert(false);
   #endif
