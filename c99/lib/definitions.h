@@ -237,7 +237,7 @@ String str_slice(String str, intptr i, intptr j) {
 
 // atomics: https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html
 #define volatile_store(address, value) __atomic_store_n(address, value, __ATOMIC_RELAXED)
-#define volatile_load(address, value) __atomic_load_n(address, __ATOMIC_RELAXED)
+#define volatile_load(address) __atomic_load_n(address, __ATOMIC_RELAXED)
 #define compiler_fence() __atomic_signal_fence(__ATOMIC_SEQ_CST)
 #define mfence() __atomic_thread_fence(__ATOMIC_SEQ_CST)
 
@@ -262,3 +262,46 @@ ASSERT(__atomic_always_lock_free(1, 0));
 ASSERT(__atomic_always_lock_free(2, 0));
 ASSERT(__atomic_always_lock_free(4, 0));
 ASSERT(__atomic_always_lock_free(8, 0));
+
+// bits: https://gcc.gnu.org/onlinedocs/gcc/Bit-Operation-Builtins.html
+/* AKA log2_floor() */
+#define find_first_set(t, v) find_first_set(__COUNTER__, t, v)
+#define find_first_set_impl(c, t, v) ({ \
+  t VAR(value, c) = v;                  \
+  (t)(__builtin_ffsg(VAR(value, c)));   \
+})
+#define log2_ceil(t, v) log2_ceil_impl(__COUNTER__, t, v)
+#define log2_ceil_impl(c, t, v) ({                       \
+  t1 VAR(value, c) = v1;                                 \
+  VAR(value, c) <= 1 ? 0 : find_first_set((x - 1) << 1); \
+})
+#define count_leading_zeros(t, v) count_leading_zeros(__COUNTER__, t, v)
+#define count_leading_zeros_impl(c, t, v) ({ \
+  t VAR(value, c) = v;                       \
+  (t)(__builtin_clzg(VAR(value, c)));        \
+})
+#define count_trailing_zeros(t, v) count_trailing_zeros(__COUNTER__, t, v)
+#define count_trailing_zeros_impl(c, t, v) ({ \
+  t VAR(value, c) = v;                        \
+  (t)(__builtin_ctzg(VAR(value, c)));         \
+})
+#define count_leading_redundant_sign_bits(t, v) count_leading_redundant_sign_bits_impl(__COUNTER__, t, v)
+#define count_leading_redundant_sign_bits_impl(c, t, v) ({ \
+  t VAR(value, c) = v;                                     \
+  (t)(__builtin_clrsbg(VAR(value, c)));                    \
+})
+#define count_ones(t, v) count_ones_impl(__COUNTER__, t, v)
+#define count_ones_impl(c, t, v) ({        \
+  t VAR(value, c) = v;                     \
+  (t)(__builtin_popcountg(VAR(value, c))); \
+})
+#define count_zeros(t, v) count_zeros_impl(__COUNTER__, t, v)
+#define count_zeros_impl(c, t, v) ({        \
+  t VAR(value, c) = v;                      \
+  (t)(__builtin_popcountg(~VAR(value, c))); \
+})
+#define count_parity(t, v) count_parity_impl(__COUNTER__, t, v)
+#define count_parity_impl(c, t, v) ({    \
+  t VAR(value, c) = v;                   \
+  (t)(__builtin_parityg(VAR(value, c))); \
+})

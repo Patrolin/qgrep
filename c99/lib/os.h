@@ -57,8 +57,8 @@ ENUM(FileHandle, ConsoleHandleEnum){
 intptr write(FileHandle file, const byte* buffer, Size buffer_size) {
   return syscall3(SYS_write, (uintptr)file, (uintptr)buffer, buffer_size);
 }
-noreturn _exit(CINT return_code) {
-  syscall1(SYS_exit, (uintptr)return_code);
+noreturn exit_group(CINT return_code) {
+  syscall1(SYS_exit_group, (uintptr)return_code);
   for (;;);
 }
 #else
@@ -171,7 +171,7 @@ foreign ThreadHandle CreateThread(
     rawptr param,
     DWORD flags,
     DWORD* thread_id);
-foreign void WaitOnAddress(volatile rawptr address, rawptr not_expected, Size address_size, DWORD timeout);
+foreign void WaitOnAddress(volatile rawptr address, rawptr while_value, Size address_size, DWORD timeout);
 foreign void WakeByAddressAll(rawptr address);
 #elif OS_LINUX
 typedef CINT pid_t;
@@ -201,6 +201,8 @@ ENUM(CUINT, ThreadFlags){
     CLONE_IO = 1 < 31,
 };
 ENUM(u64, SignalType){
+    SIGABRT = 6,
+    SIGKILL = 9,
     SIGCHLD = 17,
 };
 // https://nullprogram.com/blog/2023/03/23/
@@ -208,12 +210,10 @@ typedef align(16) struct {
   CUINT (*entry)(rawptr param);
   rawptr param;
 } new_thread_data;
-naked intptr newthread(new_thread_data* stack) {
+naked intptr newthread(ThreadFlags flags, new_thread_data* stack) {
   #if ARCH_X64
   asm volatile(
-      "mov rsi, rdi\n"      // rsi = stack
-      "mov edi, 0x50f00\n"  // rdi = clone flags
-      "mov eax, 56\n"       // rax = SYS_clone
+      "mov eax, 56\n"  // rax = SYS_clone
       "syscall\n"
       "mov rdi, [rsp+8]\n"
       "ret" ::: "rcx", "r11", "memory", "rax", "rdi", "rsi");
@@ -231,11 +231,11 @@ typedef struct {
   time_t t_sec;
   time_t t_nsec;
 } timespec;
-intptr futex_wait(u32* address, u32 not_expected, const timespec* timeout) {
-  syscall4(SYS_futex, (uintptr)address, FUTEX_WAIT, not_expected, (uintptr)timeout);
+intptr futex_wait(u32* address, u32 while_value, const timespec* timeout) {
+  return syscall4(SYS_futex, (uintptr)address, FUTEX_WAIT, while_value, (uintptr)timeout);
 }
 intptr futex_wake(u32* address, u32 count_to_wake) {
-  syscall3(SYS_futex, (uintptr)address, FUTEX_WAKE, count_to_wake);
+  return syscall3(SYS_futex, (uintptr)address, FUTEX_WAKE, count_to_wake);
 }
 #else
 // ASSERT(false);

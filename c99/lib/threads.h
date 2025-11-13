@@ -54,7 +54,6 @@ void start_threads() {
   for (intptr i = 0; i < written_masks_size; i++) {
     logical_core_count += count_ones(u8, cpu_masks[i]);
   }
-  printfln1(string("logical_core_count: %"), i64, (i64)logical_core_count);
   #else
   assert(false);
   #endif
@@ -84,7 +83,9 @@ void start_threads() {
   #endif
       stack_data->entry = thread_entry;
       stack_data->param = (rawptr)(uintptr)t;
-      intptr error = newthread(stack_data);
+      ThreadFlags flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_THREAD | CLONE_SYSVSEM;
+      /* NOTE: SIGCHLD is the only one that doesn't print garbage depending on which thread exits... */
+      intptr error = newthread(flags | SIGCHLD, stack_data);
       assert(error >= 0);
 #else
       assert(false);
@@ -95,11 +96,13 @@ void start_threads() {
 }
 
 // multi-core
-void wait_on_address(u32* address, u32 not_expected) {
+void wait_on_address(u32* address, u32 while_value) {
 #if OS_WINDOWS
-  WaitOnAddress(address, &not_expected, sizeof(not_expected), INFINITE);
+  WaitOnAddress(address, &while_value, sizeof(while_value), INFINITE);
 #elif OS_LINUX
-  for (;;);
+  do {
+    futex_wait(address, while_value, 0);
+  } while (volatile_load(address) == while_value);
 #else
   assert(false);
 #endif
@@ -108,7 +111,7 @@ void wake_all_on_address(u32* address) {
 #if OS_WINDOWS
   WakeByAddressAll(address);
 #elif OS_LINUX
-  assert(false);
+  futex_wake(address, MAX(i32));
 #else
   assert(false);
 #endif

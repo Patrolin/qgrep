@@ -55,7 +55,7 @@ noreturn exit_process(CINT exit_code) {
 #if OS_WINDOWS
   ExitProcess((CUINT)exit_code);
 #elif OS_LINUX
-  _exit(exit_code);
+  exit_group(exit_code);
 #else
   ASSERT(false);
 #endif
