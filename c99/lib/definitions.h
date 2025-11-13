@@ -147,7 +147,7 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
 #if ARCH_X64
   /* NOTE: windows starts aligned to 8B, while linux starts (correctly) aligned to 16B
   thus we have to realign ourselves either way... */
-  #define ALIGN_STACK_POINTER() asm volatile("andq $-16, %%rsp" ::: "rsp");
+  #define ALIGN_STACK_POINTER() asm volatile("and rsp, -16" ::: "rsp");
   #define CALL(name) asm volatile("call " #name)
   #define cpu_relax() asm volatile("pause")
 #endif

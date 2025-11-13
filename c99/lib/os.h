@@ -211,11 +211,11 @@ typedef align(16) struct {
 naked intptr newthread(new_thread_data* stack) {
   #if ARCH_X64
   asm volatile(
-      "mov  %%rdi, %%rsi\n"     // rsi = stack
-      "mov  $0x50f00, %%edi\n"  // rdi = clone flags
-      "mov  $56, %%eax\n"       // rax = SYS_clone
+      "mov rsi, rdi\n"      // rsi = stack
+      "mov edi, 0x50f00\n"  // rdi = clone flags
+      "mov eax, 56\n"       // rax = SYS_clone
       "syscall\n"
-      "movq 8(%%rsp), %%rdi\n"
+      "mov rdi, [rsp+8]\n"
       "ret" ::: "rcx", "r11", "memory", "rax", "rdi", "rsi");
   #else
   assert(false);
