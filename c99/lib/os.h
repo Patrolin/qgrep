@@ -92,7 +92,7 @@ ENUM(DWORD, ExceptionResult){
     EXCEPTION_CONTINUE_SEARCH = 0,
     EXCEPTION_CONTINUE_EXECUTION = -1,
 };
-typedef ExceptionResult TOP_LEVEL_EXCEPTION_FILTER(_EXCEPTION_POINTERS* exception);
+typedef ExceptionResult ExceptionFilter(_EXCEPTION_POINTERS* exception);
 
 ENUM(DWORD, AllocTypeFlags){
     MEM_COMMIT = 1 << 12,
@@ -104,7 +104,8 @@ ENUM(DWORD, AllocProtectFlags){
     PAGE_READWRITE = 1 << 2,
 };
 
-foreign TOP_LEVEL_EXCEPTION_FILTER* SetUnhandledExceptionFilter(TOP_LEVEL_EXCEPTION_FILTER filter_callback);
+// foreign ExceptionFilter* SetUnhandledExceptionFilter(ExceptionFilter filter_callback);
+foreign Handle AddVectoredExceptionHandler(uintptr run_first, ExceptionFilter handler);
 foreign intptr VirtualAlloc(intptr address, Size size, AllocTypeFlags type_flags, AllocProtectFlags protect_flags);
 foreign BOOL VirtualFree(intptr address, Size size, AllocTypeFlags type_flags);
 #elif OS_LINUX

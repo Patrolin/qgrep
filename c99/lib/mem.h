@@ -21,7 +21,7 @@ ExceptionResult _page_fault_handler(_EXCEPTION_POINTERS* exception_info) {
 
 void init_page_fault_handler() {
 #if OS_WINDOWS
-  SetUnhandledExceptionFilter(_page_fault_handler);
+  AddVectoredExceptionHandler(1, _page_fault_handler);
 #else
   // ASSERT(false);
 #endif
