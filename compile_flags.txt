@@ -6,3 +6,4 @@
 -Werror
 -Wconversion
 -Wsign-conversion
+-fno-signed-char

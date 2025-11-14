@@ -8,4 +8,5 @@
 #include "mem.h"
 #include "process.h"
 #include "threads.h"
+#include "parse.h"
 // IWYU pragma: end_exports

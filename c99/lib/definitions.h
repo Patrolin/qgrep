@@ -227,12 +227,18 @@ typedef struct {
 } String;
 /* NOTE: we take the pointer of the cstring directly to avoid a memcpy() */
 #define string(const_cstr) ((String){const_cstr, sizeof(const_cstr) - 1})
-String str_slice(String str, intptr i, intptr j) {
-  String sliced = (String){&str.ptr[i], (Size)(j - i)};
-  if (i > j) {
-    sliced.size = 0;
+#define str_slice(str, i, j) \
+  (String) { &str.ptr[i], i > j ? 0 : (Size)(j) - (Size)(i) }
+bool str_equals(String a, String b) {
+  if (a.size != b.size) {
+    return false;
   }
-  return sliced;
+  for (intptr i = 0; i < a.size; i++) {
+    if (a.ptr[i] != b.ptr[i]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 // atomics: https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html
@@ -305,3 +311,8 @@ ASSERT(__atomic_always_lock_free(8, 0));
   t VAR(value, c) = v;                   \
   (t)(__builtin_parityg(VAR(value, c))); \
 })
+
+// overflow: https://gcc.gnu.org/onlinedocs/gcc/Integer-Overflow-Builtins.html
+#define add_overflow(a, b, dest) __builtin_add_overflow(a, b, dest)
+#define sub_overflow(a, b, dest) __builtin_sub_overflow(a, b, dest)
+#define mul_overflow(a, b, dest) __builtin_mul_overflow(a, b, dest)

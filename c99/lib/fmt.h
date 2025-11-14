@@ -108,8 +108,18 @@ Size sprint_uhex(uintptr value, byte* buffer_end) {
   buffer_end[--i] = '0';
   return (Size)(-i);
 }
-#define sprint_size_hex(value) sprint_size_uhex(value)
-#define sprint_hex(value, buffer_end) sprint_uhex((uintptr)(value), buffer_end)
+#define sprint_size_ihex(value) sprint_size_uhex(value)
+#define sprint_ihex(value, buffer_end) sprint_uhex((uintptr)(value), buffer_end)
+#define sprint_size_fhex(value) sprint_size_uhex(value)
+#define sprint_fhex(value, buffer_end) sprint_fhex_impl(__COUNTER__, value, buffer_end)
+#define sprint_fhex_impl(c, value, buffer_end) ({ \
+  union {                                         \
+    f64 f;                                        \
+    u64 u;                                        \
+  } VAR(u, c);                                    \
+  VAR(u, c).f = (f64)value;                       \
+  sprint_uhex(VAR(u, c).u, buffer_end);           \
+})
 
 #if ARCH_IS_64_BIT
   #define sprint_size_uintptr(value) sprint_size_u64(value)
@@ -131,7 +141,19 @@ Size sprint_intptr(intptr value, byte* buffer_end) {
 }
 #endif
 
-/* TODO: sprint_f64(), ... */
+#define sprint_size_f64(value) 30
+Size sprint_f64(f64 value, byte* buffer_end) {
+  /* TODO: https://github.com/abolz/Drachennest */
+  intptr i = 0;
+  if (value < 1e21) {
+    SplitFloat_f64 split = split_float_f64(value);
+    if (split.fraction > 0) {
+    }
+  } else {
+    assert(false);
+  }
+  return (Size)i;
+}
 
 // sprintf()
 #define sprintf1(ptr_end, format, t1, v1) sprintf1_impl(__COUNTER__, ptr_end, format, t1, v1)

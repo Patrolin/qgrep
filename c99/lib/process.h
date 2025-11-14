@@ -35,9 +35,10 @@ CINT main() {
   _start_process();
 }
 #else
-  #if 1
+  #if 0
 /* NOTE: naked attribute for correctness, but we don't really need it,
-  since we have to align the stack pointer manually either way... */
+  since we have to align the stack pointer manually either way...
+  NOTE: this doesn't actually work together with -flto */
 naked noreturn _start() {
   ALIGN_STACK_POINTER();
   CALL(_start_process);
