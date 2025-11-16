@@ -25,4 +25,5 @@ String trim_suffix(String str, String prefix) {
 
 // IWYU pragma: begin_exports
 #include "parse_int.h"
+#include "parse_float.h"
 // IWYU pragma: end_exports

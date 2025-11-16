@@ -76,6 +76,13 @@ extern void* memset(void* ptr, int x, Size size) {
   zero(ptr, size);
   return ptr;
 }
+#define reinterpret(value, t1, t2) reinterpret_impl(__COUNTER__, value, t1, t2)
+#define reinterpret_impl(c, value, t1, t2) ({ \
+  ASSERT(sizeof(t1) == sizeof(t2));           \
+  t2 VAR(v, c);                               \
+  *(t1*)((rawptr)(&VAR(v, c))) = value;       \
+  VAR(v, c);                                  \
+})
 
 // OS_xxx
 #define OS_WINDOWS 0
@@ -270,23 +277,23 @@ ASSERT(__atomic_always_lock_free(4, 0));
 ASSERT(__atomic_always_lock_free(8, 0));
 
 // bits: https://gcc.gnu.org/onlinedocs/gcc/Bit-Operation-Builtins.html
-/* AKA log2_floor() */
-#define find_first_set(t, v) find_first_set(__COUNTER__, t, v)
-#define find_first_set_impl(c, t, v) ({ \
-  t VAR(value, c) = v;                  \
-  (t)(__builtin_ffsg(VAR(value, c)));   \
-})
-#define log2_ceil(t, v) log2_ceil_impl(__COUNTER__, t, v)
-#define log2_ceil_impl(c, t, v) ({                       \
-  t1 VAR(value, c) = v1;                                 \
-  VAR(value, c) <= 1 ? 0 : find_first_set((x - 1) << 1); \
-})
-#define count_leading_zeros(t, v) count_leading_zeros(__COUNTER__, t, v)
+// /* AKA log2_floor() */
+// #define find_first_set(t, v) find_first_set_impl(__COUNTER__, t, v)
+// #define find_first_set_impl(c, t, v) ({ \
+//   t VAR(value, c) = v;                  \
+//   (t)(__builtin_ffsg(VAR(value, c)));   \
+// })
+// #define log2_ceil(t, v) log2_ceil_impl(__COUNTER__, t, v)
+// #define log2_ceil_impl(c, t, v) ({                       \
+//   t1 VAR(value, c) = v1;                                 \
+//   VAR(value, c) <= 1 ? 0 : find_first_set((x - 1) << 1); \
+// })
+#define count_leading_zeros(t, v) count_leading_zeros_impl(__COUNTER__, t, v)
 #define count_leading_zeros_impl(c, t, v) ({ \
   t VAR(value, c) = v;                       \
   (t)(__builtin_clzg(VAR(value, c)));        \
 })
-#define count_trailing_zeros(t, v) count_trailing_zeros(__COUNTER__, t, v)
+#define count_trailing_zeros(t, v) count_trailing_zeros_impl(__COUNTER__, t, v)
 #define count_trailing_zeros_impl(c, t, v) ({ \
   t VAR(value, c) = v;                        \
   (t)(__builtin_ctzg(VAR(value, c)));         \

@@ -41,17 +41,13 @@
     return (R){0, negate ? -x : x};                     \
   };                                                    \
                                                         \
-  union {                                               \
-    F f;                                                \
-    U i;                                                \
-  } u;                                                  \
-  u.f = x;                                              \
-  U exponent = (u.i >> shift) & mask - bias;            \
+  U y = reinterpret(x, F, U);                           \
+  U exponent = (y >> shift) & mask - bias;              \
                                                         \
   if (exponent < shift) {                               \
-    u.i &= ~((1 << (shift - exponent)) - 1);            \
+    y &= ~((1 << (shift - exponent)) - 1);              \
   }                                                     \
-  F integer = u.f;                                      \
+  F integer = reinterpret(y, U, F);                     \
   F fraction = x - integer;                             \
   return (R){negate ? -integer : integer, negate ? -fraction : fraction};
 

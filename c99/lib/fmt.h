@@ -34,6 +34,7 @@ Size sprint__Bool(bool value, byte* buffer_end) {
 #define sprint_size_u32(value) (10)
 #define sprint_size_u16(value) (5)
 #define sprint_size_u8(value) (3)
+#define sprint_size_byte(value) (3)
 Size sprint_u64(u64 value, byte* buffer_end) {
   intptr i = 0;
   do {
@@ -50,6 +51,9 @@ Size sprint_u16(u16 value, byte* buffer_end) {
   return sprint_u64(value, buffer_end);
 }
 Size sprint_u8(u8 value, byte* buffer_end) {
+  return sprint_u64(value, buffer_end);
+}
+Size sprint_byte(u8 value, byte* buffer_end) {
   return sprint_u64(value, buffer_end);
 }
 
@@ -95,12 +99,24 @@ Size sprint_i8(i8 value, byte* buffer_end) {
   return size;
 }
 
-#define sprint_size_uhex(value) (2 + 2 * sizeof(uintptr))
-Size sprint_uhex(uintptr value, byte* buffer_end) {
-  byte* HEX_DIGITS = "0123456789ABCDEF";
+#define sprint_size_uhex_pad(value) (2 + 2 * sizeof(u64))
+byte* HEX_DIGITS = "0123456789ABCDEF";
+Size sprint_uhex_pad(u64 value, byte* buffer_end) {
   intptr i = 0;
   do {
-    uintptr digit = value & 0xf;
+    u64 digit = value & 0xf;
+    value = value >> 4;
+    buffer_end[--i] = HEX_DIGITS[digit];
+  } while (i > -2 * (intptr)sizeof(u64));
+  buffer_end[--i] = 'x';
+  buffer_end[--i] = '0';
+  return (Size)(-i);
+}
+#define sprint_size_uhex(value) (2 + 2 * sizeof(u64))
+Size sprint_uhex(u64 value, byte* buffer_end) {
+  intptr i = 0;
+  do {
+    u64 digit = value & 0xf;
     value = value >> 4;
     buffer_end[--i] = HEX_DIGITS[digit];
   } while (value != 0);
@@ -109,17 +125,10 @@ Size sprint_uhex(uintptr value, byte* buffer_end) {
   return (Size)(-i);
 }
 #define sprint_size_ihex(value) sprint_size_uhex(value)
-#define sprint_ihex(value, buffer_end) sprint_uhex((uintptr)(value), buffer_end)
+#define sprint_ihex(value, buffer_end) sprint_uhex((u64)(value), buffer_end)
 #define sprint_size_fhex(value) sprint_size_uhex(value)
 #define sprint_fhex(value, buffer_end) sprint_fhex_impl(__COUNTER__, value, buffer_end)
-#define sprint_fhex_impl(c, value, buffer_end) ({ \
-  union {                                         \
-    f64 f;                                        \
-    u64 u;                                        \
-  } VAR(u, c);                                    \
-  VAR(u, c).f = (f64)value;                       \
-  sprint_uhex(VAR(u, c).u, buffer_end);           \
-})
+#define sprint_fhex_impl(c, value, buffer_end) sprint_uhex(reinterpret(value, f64, u64), buffer_end)
 
 #if ARCH_IS_64_BIT
   #define sprint_size_uintptr(value) sprint_size_u64(value)
@@ -140,20 +149,6 @@ Size sprint_intptr(intptr value, byte* buffer_end) {
   return sprint_u32((u32)value, buffer_end);
 }
 #endif
-
-#define sprint_size_f64(value) 30
-Size sprint_f64(f64 value, byte* buffer_end) {
-  /* TODO: https://github.com/abolz/Drachennest */
-  intptr i = 0;
-  if (value < 1e21) {
-    SplitFloat_f64 split = split_float_f64(value);
-    if (split.fraction > 0) {
-    }
-  } else {
-    assert(false);
-  }
-  return (Size)i;
-}
 
 // sprintf()
 #define sprintf1(ptr_end, format, t1, v1) sprintf1_impl(__COUNTER__, ptr_end, format, t1, v1)
@@ -364,3 +359,7 @@ void print_String(String str) {
   String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c));                  \
   print_String(VAR(msg, c));                                                             \
 })
+
+// IWYU pragma: begin_exports
+#include "fmt_float.h"
+// IWYU pragma: end_exports
