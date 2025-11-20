@@ -166,11 +166,11 @@ extern void* memset(void* ptr, int x, Size size) {
   return ptr;
 }
 #define reinterpret(value, t1, t2) reinterpret_impl(__COUNTER__, value, t1, t2)
-#define reinterpret_impl(c, value, t1, t2) ({ \
+#define reinterpret_impl(C, value, t1, t2) ({ \
   ASSERT(sizeof(t1) == sizeof(t2));           \
-  t2 VAR(v, c);                               \
-  *(t1*)((rawptr)(&VAR(v, c))) = value;       \
-  VAR(v, c);                                  \
+  t2 VAR(v, C);                               \
+  *(t1*)((rawptr)(&VAR(v, C))) = value;       \
+  VAR(v, C);                                  \
 })
 
 // types
@@ -293,44 +293,44 @@ ASSERT(__atomic_always_lock_free(8, 0));
 // bits: https://gcc.gnu.org/onlinedocs/gcc/Bit-Operation-Builtins.html
 // /* AKA log2_floor() */
 // #define find_first_set(t, v) find_first_set_impl(__COUNTER__, t, v)
-// #define find_first_set_impl(c, t, v) ({ \
-//   t VAR(value, c) = v;                  \
-//   (t)(__builtin_ffsg(VAR(value, c)));   \
+// #define find_first_set_impl(C, t, v) ({ \
+//   t VAR(value, C) = v;                  \
+//   (t)(__builtin_ffsg(VAR(value, C)));   \
 // })
 // #define log2_ceil(t, v) log2_ceil_impl(__COUNTER__, t, v)
-// #define log2_ceil_impl(c, t, v) ({                       \
-//   t1 VAR(value, c) = v1;                                 \
-//   VAR(value, c) <= 1 ? 0 : find_first_set((x - 1) << 1); \
+// #define log2_ceil_impl(C, t, v) ({                       \
+//   t1 VAR(value, C) = v1;                                 \
+//   VAR(value, C) <= 1 ? 0 : find_first_set((x - 1) << 1); \
 // })
 #define count_leading_zeros(t, v) count_leading_zeros_impl(__COUNTER__, t, v)
-#define count_leading_zeros_impl(c, t, v) ({ \
-  t VAR(value, c) = v;                       \
-  (t)(__builtin_clzg(VAR(value, c)));        \
+#define count_leading_zeros_impl(C, t, v) ({ \
+  t VAR(value, C) = v;                       \
+  (t)(__builtin_clzg(VAR(value, C)));        \
 })
 #define count_trailing_zeros(t, v) count_trailing_zeros_impl(__COUNTER__, t, v)
-#define count_trailing_zeros_impl(c, t, v) ({ \
-  t VAR(value, c) = v;                        \
-  (t)(__builtin_ctzg(VAR(value, c)));         \
+#define count_trailing_zeros_impl(C, t, v) ({ \
+  t VAR(value, C) = v;                        \
+  (t)(__builtin_ctzg(VAR(value, C)));         \
 })
 #define count_leading_redundant_sign_bits(t, v) count_leading_redundant_sign_bits_impl(__COUNTER__, t, v)
-#define count_leading_redundant_sign_bits_impl(c, t, v) ({ \
-  t VAR(value, c) = v;                                     \
-  (t)(__builtin_clrsbg(VAR(value, c)));                    \
+#define count_leading_redundant_sign_bits_impl(C, t, v) ({ \
+  t VAR(value, C) = v;                                     \
+  (t)(__builtin_clrsbg(VAR(value, C)));                    \
 })
 #define count_ones(t, v) count_ones_impl(__COUNTER__, t, v)
-#define count_ones_impl(c, t, v) ({        \
-  t VAR(value, c) = v;                     \
-  (t)(__builtin_popcountg(VAR(value, c))); \
+#define count_ones_impl(C, t, v) ({        \
+  t VAR(value, C) = v;                     \
+  (t)(__builtin_popcountg(VAR(value, C))); \
 })
 #define count_zeros(t, v) count_zeros_impl(__COUNTER__, t, v)
-#define count_zeros_impl(c, t, v) ({        \
-  t VAR(value, c) = v;                      \
-  (t)(__builtin_popcountg(~VAR(value, c))); \
+#define count_zeros_impl(C, t, v) ({        \
+  t VAR(value, C) = v;                      \
+  (t)(__builtin_popcountg(~VAR(value, C))); \
 })
 #define count_parity(t, v) count_parity_impl(__COUNTER__, t, v)
-#define count_parity_impl(c, t, v) ({    \
-  t VAR(value, c) = v;                   \
-  (t)(__builtin_parityg(VAR(value, c))); \
+#define count_parity_impl(C, t, v) ({    \
+  t VAR(value, C) = v;                   \
+  (t)(__builtin_parityg(VAR(value, C))); \
 })
 
 // overflow: https://gcc.gnu.org/onlinedocs/gcc/Integer-Overflow-Builtins.html

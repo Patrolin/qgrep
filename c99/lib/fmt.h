@@ -127,8 +127,7 @@ Size sprint_uhex(u64 value, byte* buffer_end) {
 #define sprint_size_ihex(value) sprint_size_uhex(value)
 #define sprint_ihex(value, buffer_end) sprint_uhex((u64)(value), buffer_end)
 #define sprint_size_fhex(value) sprint_size_uhex(value)
-#define sprint_fhex(value, buffer_end) sprint_fhex_impl(__COUNTER__, value, buffer_end)
-#define sprint_fhex_impl(c, value, buffer_end) sprint_uhex(reinterpret(value, f64, u64), buffer_end)
+#define sprint_fhex(value, buffer_end) sprint_uhex(reinterpret(value, f64, u64), buffer_end)
 
 #if ARCH_IS_64_BIT
   #define sprint_size_uintptr(value) sprint_size_u64(value)
@@ -152,100 +151,100 @@ Size sprint_intptr(intptr value, byte* buffer_end) {
 
 // sprintf()
 #define sprintf1(ptr_end, format, t1, v1) sprintf1_impl(__COUNTER__, ptr_end, format, t1, v1)
-#define sprintf1_impl(c, ptr_end, format, t1, v1) ({                           \
-  String VAR(fmt, c) = format;                                                 \
-  Size VAR(size, c) = 0;                                                       \
-  intptr VAR(i, c) = (intptr)VAR(fmt, c).size;                                 \
-  intptr VAR(j, c) = VAR(i, c);                                                \
-  while (VAR(i, c) > 0) {                                                      \
-    (VAR(i, c)--);                                                             \
-    if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
-      String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
-      VAR(size, c) += sprint(String, VAR(after, c), ptr_end);                  \
-      VAR(j, c) = VAR(i, c);                                                   \
-      VAR(size, c) += sprint(t1, v1, ptr_end - VAR(size, c));                  \
+#define sprintf1_impl(C, ptr_end, format, t1, v1) ({                           \
+  String VAR(fmt, C) = format;                                                 \
+  Size VAR(size, C) = 0;                                                       \
+  intptr VAR(i, C) = (intptr)VAR(fmt, C).size;                                 \
+  intptr VAR(j, C) = VAR(i, C);                                                \
+  while (VAR(i, C) > 0) {                                                      \
+    (VAR(i, C)--);                                                             \
+    if (VAR(fmt, C).ptr[VAR(i, C)] == '%') {                                   \
+      String VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
+      VAR(size, C) += sprint(String, VAR(after, C), ptr_end);                  \
+      VAR(j, C) = VAR(i, C);                                                   \
+      VAR(size, C) += sprint(t1, v1, ptr_end - VAR(size, C));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
-  if (VAR(j, c) > 0) {                                                         \
-    String VAR(before, c) = str_slice(VAR(fmt, c), 0, VAR(j, c));              \
-    VAR(size, c) += sprint(String, VAR(before, c), ptr_end - VAR(size, c));    \
+  if (VAR(j, C) > 0) {                                                         \
+    String VAR(before, C) = str_slice(VAR(fmt, C), 0, VAR(j, C));              \
+    VAR(size, C) += sprint(String, VAR(before, C), ptr_end - VAR(size, C));    \
   }                                                                            \
-  VAR(size, c);                                                                \
+  VAR(size, C);                                                                \
 })
 #define sprintf2(ptr_end, format, t1, v1, t2, v2) sprintf2_impl(__COUNTER__, ptr_end, format, t1, v1, t2, v2)
-#define sprintf2_impl(c, ptr_end, format, t1, v1, t2, v2) ({                   \
-  String VAR(fmt, c) = format;                                                 \
-  Size VAR(size, c) = 0;                                                       \
-  intptr VAR(i, c) = (intptr)VAR(fmt, c).size;                                 \
-  intptr VAR(j, c) = VAR(i, c);                                                \
-  while (VAR(i, c) > 0) {                                                      \
-    (VAR(i, c)--);                                                             \
-    if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
-      String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
-      VAR(size, c) += sprint(String, VAR(after, c), ptr_end);                  \
-      VAR(j, c) = VAR(i, c);                                                   \
-      VAR(size, c) += sprint(t2, v2, ptr_end - VAR(size, c));                  \
+#define sprintf2_impl(C, ptr_end, format, t1, v1, t2, v2) ({                   \
+  String VAR(fmt, C) = format;                                                 \
+  Size VAR(size, C) = 0;                                                       \
+  intptr VAR(i, C) = (intptr)VAR(fmt, C).size;                                 \
+  intptr VAR(j, C) = VAR(i, C);                                                \
+  while (VAR(i, C) > 0) {                                                      \
+    (VAR(i, C)--);                                                             \
+    if (VAR(fmt, C).ptr[VAR(i, C)] == '%') {                                   \
+      String VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
+      VAR(size, C) += sprint(String, VAR(after, C), ptr_end);                  \
+      VAR(j, C) = VAR(i, C);                                                   \
+      VAR(size, C) += sprint(t2, v2, ptr_end - VAR(size, C));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
-  while (VAR(i, c) > 0) {                                                      \
-    (VAR(i, c)--);                                                             \
-    if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
-      String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
-      VAR(size, c) += sprint(String, VAR(after, c), ptr_end - VAR(size, c));   \
-      VAR(j, c) = VAR(i, c);                                                   \
-      VAR(size, c) += sprint(t1, v1, ptr_end - VAR(size, c));                  \
+  while (VAR(i, C) > 0) {                                                      \
+    (VAR(i, C)--);                                                             \
+    if (VAR(fmt, C).ptr[VAR(i, C)] == '%') {                                   \
+      String VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
+      VAR(size, C) += sprint(String, VAR(after, C), ptr_end - VAR(size, C));   \
+      VAR(j, C) = VAR(i, C);                                                   \
+      VAR(size, C) += sprint(t1, v1, ptr_end - VAR(size, C));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
-  if (VAR(j, c) > 0) {                                                         \
-    String VAR(before, c) = str_slice(VAR(fmt, c), 0, VAR(j, c));              \
-    VAR(size, c) += sprint(String, VAR(before, c), ptr_end - VAR(size, c));    \
+  if (VAR(j, C) > 0) {                                                         \
+    String VAR(before, C) = str_slice(VAR(fmt, C), 0, VAR(j, C));              \
+    VAR(size, C) += sprint(String, VAR(before, C), ptr_end - VAR(size, C));    \
   }                                                                            \
-  VAR(size, c);                                                                \
+  VAR(size, C);                                                                \
 })
 #define sprintf3(ptr_end, format, t1, v1, t2, v2, t3, v3) sprintf3_impl(__COUNTER__, ptr_end, format, t1, v1, t2, v2, t3, v3)
-#define sprintf3_impl(c, ptr_end, format, t1, v1, t2, v2, t3, v3) ({           \
-  String VAR(fmt, c) = format;                                                 \
-  Size VAR(size, c) = 0;                                                       \
-  intptr VAR(i, c) = (intptr)VAR(fmt, c).size;                                 \
-  intptr VAR(j, c) = VAR(i, c);                                                \
-  while (VAR(i, c) > 0) {                                                      \
-    (VAR(i, c)--);                                                             \
-    if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
-      String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
-      VAR(size, c) += sprint(String, VAR(after, c), ptr_end);                  \
-      VAR(j, c) = VAR(i, c);                                                   \
-      VAR(size, c) += sprint(t3, v3, ptr_end - VAR(size, c));                  \
+#define sprintf3_impl(C, ptr_end, format, t1, v1, t2, v2, t3, v3) ({           \
+  String VAR(fmt, C) = format;                                                 \
+  Size VAR(size, C) = 0;                                                       \
+  intptr VAR(i, C) = (intptr)VAR(fmt, C).size;                                 \
+  intptr VAR(j, C) = VAR(i, C);                                                \
+  while (VAR(i, C) > 0) {                                                      \
+    (VAR(i, C)--);                                                             \
+    if (VAR(fmt, C).ptr[VAR(i, C)] == '%') {                                   \
+      String VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
+      VAR(size, C) += sprint(String, VAR(after, C), ptr_end);                  \
+      VAR(j, C) = VAR(i, C);                                                   \
+      VAR(size, C) += sprint(t3, v3, ptr_end - VAR(size, C));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
-  while (VAR(i, c) > 0) {                                                      \
-    (VAR(i, c)--);                                                             \
-    if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
-      String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
-      VAR(size, c) += sprint(String, VAR(after, c), ptr_end - VAR(size, c));   \
-      VAR(j, c) = VAR(i, c);                                                   \
-      VAR(size, c) += sprint(t2, v2, ptr_end - VAR(size, c));                  \
+  while (VAR(i, C) > 0) {                                                      \
+    (VAR(i, C)--);                                                             \
+    if (VAR(fmt, C).ptr[VAR(i, C)] == '%') {                                   \
+      String VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
+      VAR(size, C) += sprint(String, VAR(after, C), ptr_end - VAR(size, C));   \
+      VAR(j, C) = VAR(i, C);                                                   \
+      VAR(size, C) += sprint(t2, v2, ptr_end - VAR(size, C));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
-  while (VAR(i, c) > 0) {                                                      \
-    (VAR(i, c)--);                                                             \
-    if (VAR(fmt, c).ptr[VAR(i, c)] == '%') {                                   \
-      String VAR(after, c) = str_slice(VAR(fmt, c), VAR(i, c) + 1, VAR(j, c)); \
-      VAR(size, c) += sprint(String, VAR(after, c), ptr_end - VAR(size, c));   \
-      VAR(j, c) = VAR(i, c);                                                   \
-      VAR(size, c) += sprint(t1, v1, ptr_end - VAR(size, c));                  \
+  while (VAR(i, C) > 0) {                                                      \
+    (VAR(i, C)--);                                                             \
+    if (VAR(fmt, C).ptr[VAR(i, C)] == '%') {                                   \
+      String VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
+      VAR(size, C) += sprint(String, VAR(after, C), ptr_end - VAR(size, C));   \
+      VAR(j, C) = VAR(i, C);                                                   \
+      VAR(size, C) += sprint(t1, v1, ptr_end - VAR(size, C));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
-  if (VAR(j, c) > 0) {                                                         \
-    String VAR(before, c) = str_slice(VAR(fmt, c), 0, VAR(j, c));              \
-    VAR(size, c) += sprint(String, VAR(before, c), ptr_end - VAR(size, c));    \
+  if (VAR(j, C) > 0) {                                                         \
+    String VAR(before, C) = str_slice(VAR(fmt, C), 0, VAR(j, C));              \
+    VAR(size, C) += sprint(String, VAR(before, C), ptr_end - VAR(size, C));    \
   }                                                                            \
-  VAR(size, c);                                                                \
+  VAR(size, C);                                                                \
 })
 
 // fprint()
@@ -265,13 +264,13 @@ void fprint(FileHandle file, String str) {
 
 // assert()
 #undef assert
-#define assert(condition) assert_impl(__COUNTER__, condition, __FILE__ ":" STR(__LINE__) " assert(" #condition ")\n")
-#define assert1(condition, msg_cstr) assert_impl(__COUNTER__, condition, __FILE__ ":" STR(__LINE__) " " msg_cstr "\n")
-#define assert_impl(c, condition, msg_cstr) ({ \
-  if (!(condition)) {                          \
-    fprint(STDERR, string(msg_cstr));          \
-    abort();                                   \
-  }                                            \
+#define assert(condition) assert_impl(condition, __FILE__ ":" STR(__LINE__) " assert(" #condition ")\n")
+#define assert1(condition, msg_cstr) assert_impl(condition, __FILE__ ":" STR(__LINE__) " " msg_cstr "\n")
+#define assert_impl(condition, msg_cstr) ({ \
+  if (!(condition)) {                       \
+    fprint(STDERR, string(msg_cstr));       \
+    abort();                                \
+  }                                         \
 })
 
 // print()
@@ -279,85 +278,85 @@ void print_String(String str) {
   fprint(STDOUT, str);
 }
 #define print_copy(t1, v1) print_copy_impl(__COUNTER__, t1, v1)
-#define print_copy_impl(c, t1, v1) ({                                   \
-  intptr VAR(max_size, c) = sprint_size1(t1, v1);                       \
-  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));      \
+#define print_copy_impl(C, t1, v1) ({                                   \
+  intptr VAR(max_size, C) = sprint_size1(t1, v1);                       \
+  STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));      \
                                                                         \
-  Size VAR(size, c) = CONCAT(sprint_, t1)(v1, VAR(ptr_end, c));         \
-  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c)); \
-  print_String(VAR(msg, c));                                            \
+  Size VAR(size, C) = CONCAT(sprint_, t1)(v1, VAR(ptr_end, C));         \
+  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C)); \
+  print_String(VAR(msg, C));                                            \
 })
 #define print(t1, v1) IF(IS_STRING(t1), print_String(v1), print_copy(t1, v1))
 #define println(t1, v1) println_impl(__COUNTER__, t1, v1)
-#define println_impl(c, t1, v1) ({                                      \
-  intptr VAR(max_size, c) = sprint_size1(t1, v1) + 1;                   \
-  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));      \
+#define println_impl(C, t1, v1) ({                                      \
+  intptr VAR(max_size, C) = sprint_size1(t1, v1) + 1;                   \
+  STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));      \
                                                                         \
-  *(VAR(ptr_end, c) - 1) = '\n';                                        \
-  Size VAR(size, c) = CONCAT(sprint_, t1)(v1, VAR(ptr_end, c) - 1) + 1; \
-  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c)); \
-  print_String(VAR(msg, c));                                            \
+  *(VAR(ptr_end, C) - 1) = '\n';                                        \
+  Size VAR(size, C) = CONCAT(sprint_, t1)(v1, VAR(ptr_end, C) - 1) + 1; \
+  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C)); \
+  print_String(VAR(msg, C));                                            \
 })
 
 // printf()
 #define printf1(format, t1, v1) printf1_impl(__COUNTER__, format, t1, v1)
-#define printf1_impl(c, format, t1, v1) ({                              \
-  intptr VAR(max_size, c) = sprint_size2(String, format, t1, v1);       \
-  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));      \
+#define printf1_impl(C, format, t1, v1) ({                              \
+  intptr VAR(max_size, C) = sprint_size2(String, format, t1, v1);       \
+  STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));      \
                                                                         \
-  Size VAR(size, c) = sprintf1(VAR(ptr_end, c), format, t1, v1);        \
-  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c)); \
-  print_String(VAR(msg, c));                                            \
+  Size VAR(size, C) = sprintf1(VAR(ptr_end, C), format, t1, v1);        \
+  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C)); \
+  print_String(VAR(msg, C));                                            \
 })
 #define printf2(format, t1, v1, t2, v2) printf2_impl(__COUNTER__, format, t1, v1, t2, v2)
-#define printf2_impl(c, format, t1, v1, t2, v2) ({                        \
-  intptr VAR(max_size, c) = sprint_size3(String, format, t1, v1, t2, v2); \
-  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));        \
+#define printf2_impl(C, format, t1, v1, t2, v2) ({                        \
+  intptr VAR(max_size, C) = sprint_size3(String, format, t1, v1, t2, v2); \
+  STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));        \
                                                                           \
-  Size VAR(size, c) = sprintf2(VAR(ptr_end, c), format, t1, v1, t2, v2);  \
-  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c));   \
-  print_String(VAR(msg, c));                                              \
+  Size VAR(size, C) = sprintf2(VAR(ptr_end, C), format, t1, v1, t2, v2);  \
+  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));   \
+  print_String(VAR(msg, C));                                              \
 })
 #define printf3(format, t1, v1, t2, v2, t3, v3) printf3_impl(__COUNTER__, format, t1, v1, t2, v2, t3, v3)
-#define printf3_impl(c, format, t1, v1, t2, v2, t3, v3) ({                        \
-  intptr VAR(max_size, c) = sprint_size4(String, format, t1, v1, t2, v2, t3, v3); \
-  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));                \
+#define printf3_impl(C, format, t1, v1, t2, v2, t3, v3) ({                        \
+  intptr VAR(max_size, C) = sprint_size4(String, format, t1, v1, t2, v2, t3, v3); \
+  STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));                \
                                                                                   \
-  Size VAR(size, c) = sprintf3(VAR(ptr_end, c), format, t1, v1, t2, v2, t3, v3);  \
-  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c));           \
-  print_String(VAR(msg, c));                                                      \
+  Size VAR(size, C) = sprintf3(VAR(ptr_end, C), format, t1, v1, t2, v2, t3, v3);  \
+  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));           \
+  print_String(VAR(msg, C));                                                      \
 })
 
 // printfln()
 #define printfln1(format, t1, v1) printfln1_impl(__COUNTER__, format, t1, v1)
-#define printfln1_impl(c, format, t1, v1) ({                             \
-  Size VAR(max_size, c) = sprint_size2(String, format, t1, v1) + 1;      \
-  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));       \
+#define printfln1_impl(C, format, t1, v1) ({                             \
+  Size VAR(max_size, C) = sprint_size2(String, format, t1, v1) + 1;      \
+  STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));       \
                                                                          \
-  *(VAR(ptr_end, c) - 1) = '\n';                                         \
-  Size VAR(size, c) = sprintf1(VAR(ptr_end, c) - 1, format, t1, v1) + 1; \
-  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c));  \
-  print_String(VAR(msg, c));                                             \
+  *(VAR(ptr_end, C) - 1) = '\n';                                         \
+  Size VAR(size, C) = sprintf1(VAR(ptr_end, C) - 1, format, t1, v1) + 1; \
+  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));  \
+  print_String(VAR(msg, C));                                             \
 })
 #define printfln2(format, t1, v1, t2, v2) printfln2_impl(__COUNTER__, format, t1, v1, t2, v2)
-#define printfln2_impl(c, format, t1, v1, t2, v2) ({                             \
-  Size VAR(max_size, c) = sprint_size3(String, format, t1, v1, t2, v2) + 1;      \
-  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));               \
+#define printfln2_impl(C, format, t1, v1, t2, v2) ({                             \
+  Size VAR(max_size, C) = sprint_size3(String, format, t1, v1, t2, v2) + 1;      \
+  STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));               \
                                                                                  \
-  *(VAR(ptr_end, c) - 1) = '\n';                                                 \
-  Size VAR(size, c) = sprintf2(VAR(ptr_end, c) - 1, format, t1, v1, t2, v2) + 1; \
-  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c));          \
-  print_String(VAR(msg, c));                                                     \
+  *(VAR(ptr_end, C) - 1) = '\n';                                                 \
+  Size VAR(size, C) = sprintf2(VAR(ptr_end, C) - 1, format, t1, v1, t2, v2) + 1; \
+  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));          \
+  print_String(VAR(msg, C));                                                     \
 })
 #define printfln3(format, t1, v1, t2, v2, t3, v3) printfln3_impl(__COUNTER__, format, t1, v1, t2, v2, t3, v3)
-#define printfln3_impl(c, format, t1, v1, t2, v2, t3, v3) ({                             \
-  Size VAR(max_size, c) = sprint_size4(String, format, t1, v1, t2, v2, t3, v3) + 1;      \
-  STACK_BUFFER(VAR(buffer, c), VAR(max_size, c), VAR(ptr_end, c));                       \
+#define printfln3_impl(C, format, t1, v1, t2, v2, t3, v3) ({                             \
+  Size VAR(max_size, C) = sprint_size4(String, format, t1, v1, t2, v2, t3, v3) + 1;      \
+  STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));                       \
                                                                                          \
-  *(VAR(ptr_end, c) - 1) = '\n';                                                         \
-  Size VAR(size, c) = sprintf3(VAR(ptr_end, c) - 1, format, t1, v1, t2, v2, t3, v3) + 1; \
-  String VAR(msg, c) = sprint_to_string(VAR(ptr_end, c), VAR(size, c));                  \
-  print_String(VAR(msg, c));                                                             \
+  *(VAR(ptr_end, C) - 1) = '\n';                                                         \
+  Size VAR(size, C) = sprintf3(VAR(ptr_end, C) - 1, format, t1, v1, t2, v2, t3, v3) + 1; \
+  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));                  \
+  print_String(VAR(msg, C));                                                             \
 })
 
 // IWYU pragma: begin_exports

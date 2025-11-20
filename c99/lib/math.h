@@ -3,30 +3,31 @@
 
 // negatives
 #define abs(v) abs_impl(__COUNTER__, typeof(v), v)
-#define abs_impl(c, t, v) ({                                \
-  t VAR(value, c) = v;                                      \
-  (VAR(value, c) >= (t)0) ? VAR(value, c) : -VAR(value, c); \
+#define abs_impl(C, t, v) ({                                \
+  t VAR(value, C) = v;                                      \
+  (VAR(value, C) >= (t)0) ? VAR(value, C) : -VAR(value, C); \
 })
 #define min(t, v1, v2) min_impl(__COUNTER, t, v1, v2)
-#define min_impl(c, t, v1, v2) ({                                 \
-  t VAR(left, c) = v1;                                            \
-  t VAR(right, c) = v2;                                           \
-  (VAR(left, c) <= VAR(right, c)) ? VAR(left, c) : VAR(right, c); \
+#define min_impl(C, t, v1, v2) ({                                 \
+  t VAR(left, C) = v1;                                            \
+  t VAR(right, C) = v2;                                           \
+  (VAR(left, C) <= VAR(right, C)) ? VAR(left, C) : VAR(right, C); \
 })
 #define max(t, v1, v2) max_impl(__COUNTER, t, v1, v2)
-#define max_impl(c, t, v1, v2) ({                                 \
-  t VAR(left, c) = v1;                                            \
-  t VAR(right, c) = v2;                                           \
-  (VAR(left, c) >= VAR(right, c)) ? VAR(left, c) : VAR(right, c); \
+#define max_impl(C, t, v1, v2) ({                                 \
+  t VAR(left, C) = v1;                                            \
+  t VAR(right, C) = v2;                                           \
+  (VAR(left, C) >= VAR(right, C)) ? VAR(left, C) : VAR(right, C); \
 })
 
 // casts
 #define downcast(t1, v, t2) downcast_impl(__COUNTER__, t1, v, t2)
-#define downcast_impl(c, t1, v, t2) ({    \
-  t1 VAR(v1, c) = v;                      \
-  t2 VAR(v2, c) = (t2)VAR(v1, c);         \
-  assert((t1)(VAR(v2, c)) == VAR(v1, c)); \
-  VAR(v2, c);                             \
+#define downcast_impl(C, t1, v, t2) ({    \
+  ASSERT(sizeof(t2) < sizeof(t1));        \
+  t1 VAR(v1, C) = v;                      \
+  t2 VAR(v2, C) = (t2)VAR(v1, C);         \
+  assert((t1)(VAR(v2, C)) == VAR(v1, C)); \
+  VAR(v2, C);                             \
 })
 #define saturate(t1, v1, t2) ((t2)(min(t1, v1, (t1)MAX(t2))))
 
