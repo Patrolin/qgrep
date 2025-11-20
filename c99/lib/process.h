@@ -24,6 +24,9 @@ forward_declare noreturn exit_process(CINT exit_code);
 
 // entry
 noreturn _start_process() {
+#if OS_WINDOWS
+  asm volatile("" ::"m"(_fltused));
+#endif
   init_console();
   init_page_fault_handler();
   init_shared_arena();

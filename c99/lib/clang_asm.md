@@ -10,3 +10,5 @@ Constraints
   r - any register
   m - memory
   g - register or memory
+  x - xmm register (also used for floats)
+  0 - same as the output

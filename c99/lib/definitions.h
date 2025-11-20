@@ -2,53 +2,8 @@
 #include <stdbool.h>
 #include <stdint.h> /* IWYU pragma: keep */
 
-// preprocessor helpers
-#define CONCAT0(a, b) a##b
-#define CONCAT(a, b) CONCAT0(a, b)
-#define STR0(a) #a
-#define STR(a) STR0(a)
-/* NOTE: clang is stupid, and overwrites outer scope variables with the same name,
-  so we need macro variables to all have different names... */
-#define VAR(name, counter) CONCAT(__##name, counter)
-
-#define IF_1(t, f) t
-#define IF_0(t, f) f
-#define IF(cond, t, f) CONCAT(IF_, cond)(t, f)
-
-#define PROBE() 1, 1
-#define SECOND(a, b, ...) b
-/* NOTE: SECOND() is also acting like EXPAND() here... */
-#define IS_PROBE(...) SECOND(__VA_ARGS__, 0)
-#define IS_STRING_String PROBE()
-#define IS_STRING(x) IS_PROBE(CONCAT(IS_STRING_, x))
-
-// keywords
-#define readonly const
-/* private to file */
-#define private static
-#define global static
-#define forward_declare
-#define always_inline inline __attribute__((always_inline))
-#define foreign __declspec(dllimport)
-#define naked __attribute__((naked))
-#define align(n) __attribute__((aligned(n)))
-#define noreturn _Noreturn void
-// #define deprecated(msg) __attribute__((deprecated(msg)))
-
-forward_declare noreturn abort();
-#define assert(condition) \
-  if (!(condition)) {     \
-    abort();              \
-  }
-#define ASSERT(condition) _Static_assert((condition), #condition)
-#define ASSERT_MUlTIPLE_OF(a, b) ASSERT(a % b == 0)
-#define DISTINCT(type, name) \
-  typedef type name
-#define ENUM(type, name) \
-  typedef type name;     \
-  enum name : type
-
 // Size
+#define ASSERT(condition) _Static_assert((condition), #condition)
 typedef char byte;
 ASSERT(sizeof(byte) == 1);
 typedef uintptr_t uintptr;
@@ -60,29 +15,13 @@ typedef void* rawptr;
 #define MAX_uintptr (uintptr)(-1)
 #define MIN_intptr ((intptr)(-1) >> (intptr)(1))
 #define MAX_intptr (intptr)(-1)
-ENUM(uintptr, Size){
-    Byte = 1,
-    KibiByte = 1024 * Byte,
-    MebiByte = 1024 * KibiByte,
-    GibiByte = 1024 * MebiByte,
+typedef uintptr Size;
+enum Size : uintptr {
+  Byte = 1,
+  KibiByte = 1024 * Byte,
+  MebiByte = 1024 * KibiByte,
+  GibiByte = 1024 * MebiByte,
 };
-
-// builtins
-#define alignof(x) __alignof__(x)
-#define countof(x) ((intptr)sizeof(x) / (intptr)sizeof(x[0]))
-forward_declare void zero(byte* ptr, Size size);
-extern void* memset(void* ptr, int x, Size size) {
-  assert(x == 0);
-  zero(ptr, size);
-  return ptr;
-}
-#define reinterpret(value, t1, t2) reinterpret_impl(__COUNTER__, value, t1, t2)
-#define reinterpret_impl(c, value, t1, t2) ({ \
-  ASSERT(sizeof(t1) == sizeof(t2));           \
-  t2 VAR(v, c);                               \
-  *(t1*)((rawptr)(&VAR(v, c))) = value;       \
-  VAR(v, c);                                  \
-})
 
 // OS_xxx
 #define OS_WINDOWS 0
@@ -151,13 +90,87 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
   #define ARCH_HAS_NATIVE_F16 0
 #endif
 
+#define fma(a, b, c) fma_impl(__COUNTER__, a, b, c)
 #if ARCH_X64
   /* NOTE: windows starts aligned to 8B, while linux starts (correctly) aligned to 16B
   thus we have to realign ourselves either way... */
   #define ALIGN_STACK_POINTER() asm volatile("and rsp, -16" ::: "rsp");
   #define CALL(name) asm volatile("call " #name)
   #define cpu_relax() asm volatile("pause")
+  #define fma_impl(C, a, b, c) ({      \
+    __m128 mA = __mm_set1_pd(a);       \
+    __m128 mB = __mm_set1_pd(b);       \
+    __m128 mC = __mm_set1_pd(c);       \
+    __m128 mR = _mm_fmadd_pd(a, b, c); \
+  })
+  #include <emmintrin.h>
+  #include <xmmintrin.h>
+  #include <immintrin.h>
+  #undef min
+  #undef max
 #endif
+
+// preprocessor helpers
+#define CONCAT0(a, b) a##b
+#define CONCAT(a, b) CONCAT0(a, b)
+#define STR0(a) #a
+#define STR(a) STR0(a)
+/* NOTE: clang is stupid, and overwrites outer scope variables with the same name,
+  so we need macro variables to all have different names... */
+#define VAR(name, counter) CONCAT(__##name, counter)
+
+#define IF_1(t, f) t
+#define IF_0(t, f) f
+#define IF(cond, t, f) CONCAT(IF_, cond)(t, f)
+
+#define PROBE() 1, 1
+#define SECOND(a, b, ...) b
+/* NOTE: SECOND() is also acting like EXPAND() here... */
+#define IS_PROBE(...) SECOND(__VA_ARGS__, 0)
+#define IS_STRING_String PROBE()
+#define IS_STRING(x) IS_PROBE(CONCAT(IS_STRING_, x))
+
+// keywords
+#define readonly const
+/* private to file */
+#define private static
+#define global static
+#define forward_declare
+#define always_inline inline __attribute__((always_inline))
+#define foreign __declspec(dllimport)
+#define naked __attribute__((naked))
+#define align(n) __attribute__((aligned(n)))
+#define noreturn _Noreturn void
+// #define deprecated(msg) __attribute__((deprecated(msg)))
+
+forward_declare noreturn abort();
+#define assert(condition) \
+  if (!(condition)) {     \
+    abort();              \
+  }
+#define ASSERT_MUlTIPLE_OF(a, b) ASSERT(a % b == 0)
+#define DISTINCT(type, name) \
+  typedef type name
+#define ENUM(type, name) \
+  typedef type name;     \
+  enum name : type
+
+// builtins
+#define alignof(x) __alignof__(x)
+#define countof(x) ((intptr)sizeof(x) / (intptr)sizeof(x[0]))
+forward_declare void zero(byte* ptr, Size size);
+extern void* memset(void* ptr, int x, Size size) {
+  assert(x == 0);
+  zero(ptr, size);
+  return ptr;
+}
+#define reinterpret(value, t1, t2) reinterpret_impl(__COUNTER__, value, t1, t2)
+#define reinterpret_impl(c, value, t1, t2) ({ \
+  ASSERT(sizeof(t1) == sizeof(t2));           \
+  t2 VAR(v, c);                               \
+  *(t1*)((rawptr)(&VAR(v, c))) = value;       \
+  VAR(v, c);                                  \
+})
 
 // types
 typedef uint64_t u64;
@@ -213,7 +226,7 @@ ASSERT(sizeof(f16) == 2);
 #endif
 /* NOTE: Windows is dumb */
 #if OS_WINDOWS
-CINT _fltused;
+CINT _fltused = 0;
 #else
 // ASSERT(false);
 #endif

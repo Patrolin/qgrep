@@ -2,7 +2,7 @@
 #include "definitions.h"
 
 // negatives
-#define abs(t, v) abs_impl(__COUNTER__, t, v)
+#define abs(v) abs_impl(__COUNTER__, typeof(v), v)
 #define abs_impl(c, t, v) ({                                \
   t VAR(value, c) = v;                                      \
   (VAR(value, c) >= (t)0) ? VAR(value, c) : -VAR(value, c); \
