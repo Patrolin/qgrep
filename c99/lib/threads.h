@@ -6,6 +6,7 @@
 
 // shared
 DISTINCT(u32, Thread);
+#define Thread(x) ((Thread)(x))
 typedef align(32) struct {
   /* NOTE: barriers must be u32 on linux... */
   u32 barrier;
@@ -32,7 +33,7 @@ Threads* global_threads;
 forward_declare void main_multicore(Thread t);
 forward_declare void barrier_join_threads(Thread t, Thread threads_start, Thread threads_end);
 CUINT thread_entry(rawptr param) {
-  Thread t = (Thread)(uintptr)param;
+  Thread t = Thread(uintptr(param));
   main_multicore(t);
   barrier_join_threads(t, 0, global_threads->logical_core_count);
   return 0;
@@ -67,7 +68,7 @@ void start_threads() {
     global_threads->thread_infos[t].threads_end = logical_core_count;
     if (t > 0) {
 #if OS_WINDOWS
-      assert(CreateThread(0, 0, thread_entry, (rawptr)(uintptr)t, STACK_SIZE_PARAM_IS_A_RESERVATION, 0) != 0);
+      assert(CreateThread(0, 0, thread_entry, rawptr(uintptr(t)), STACK_SIZE_PARAM_IS_A_RESERVATION, 0) != 0);
 #elif OS_LINUX
       rlimit stack_size_limit;
       assert(getrlimit(RLIMIT_STACK, &stack_size_limit) >= 0);
@@ -75,14 +76,14 @@ void start_threads() {
       intptr stack = mmap(0, stack_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_GROWSDOWN | MAP_STACK, -1, 0);
       assert(stack != -1);
   #if ARCH_STACK_DIRECTION == -1
-      stack = stack + (intptr)stack_size - (intptr)sizeof(new_thread_data);
+      stack = stack + intptr(stack_size) - intptr(sizeof(new_thread_data));
       new_thread_data* stack_data = (new_thread_data*)(stack);
   #else
       new_thread_data* stack_data = (new_thread_data*)(stack);
       stack = stack + sizeof(new_thread_data);
   #endif
       stack_data->entry = thread_entry;
-      stack_data->param = (rawptr)(uintptr)t;
+      stack_data->param = rawptr(uintptr(t));
       ThreadFlags flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_THREAD | CLONE_SYSVSEM;
       /* NOTE: SIGCHLD is the only one that doesn't print garbage depending on which thread exits... */
       intptr error = newthread(flags | SIGCHLD, stack_data);
@@ -160,7 +161,7 @@ void barrier_scatter_impl(Thread t, u64* value) {
   *value = *shared_value;
   barrier(t); /* NOTE: make sure all threads have read the data */
 }
-#define barrier_gather(t, value) barrier_gather_impl(t, (u64)(value))
+#define barrier_gather(t, value) barrier_gather_impl(t, u64(value))
 ThreadInfo* barrier_gather_impl(Thread t, u64 value) {
   global_threads->values[t] = value;
   barrier(t); /* NOTE: make sure all threads have written their data */

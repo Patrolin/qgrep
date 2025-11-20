@@ -2,7 +2,7 @@
 #include "definitions.h"
 
 bool str_continues_with(String a, intptr start, String b) {
-  return str_equals(str_slice(a, start, start + (intptr)b.size), b);
+  return str_equals(str_slice(a, start, start + intptr(b.size)), b);
 }
 bool str_starts_with(String str, String prefix) {
   if (str.size < prefix.size) {

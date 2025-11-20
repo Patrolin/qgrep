@@ -12,7 +12,7 @@
   byte buffer[max_size];                        \
   byte* ptr_end = &buffer[max_size]
 #define sprint(t1, v1, ptr_end) CONCAT0(sprint_, t1)(v1, ptr_end)
-#define sprint_to_string(ptr_end, size) ((String){ptr_end - (intptr)size, size})
+#define sprint_to_string(ptr_end, size) ((String){ptr_end - intptr(size), size})
 
 #define sprint_size_String(value) (value.size)
 Size sprint_String(String str, byte* buffer_end) {
@@ -63,7 +63,7 @@ Size sprint_byte(u8 value, byte* buffer_end) {
 #define sprint_size_i16(value) (6)
 #define sprint_size_i8(value) (4)
 Size sprint_i64(i64 value, byte* buffer_end) {
-  u64 value_abs = (u64)abs(value);
+  u64 value_abs = u64(abs(value));
   Size size = sprint_u64(value_abs, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
@@ -72,7 +72,7 @@ Size sprint_i64(i64 value, byte* buffer_end) {
   return size;
 }
 Size sprint_i32(i32 value, byte* buffer_end) {
-  u64 value_abs = (u64)abs(value);
+  u64 value_abs = u64(abs(value));
   Size size = sprint_u64(value_abs, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
@@ -81,7 +81,7 @@ Size sprint_i32(i32 value, byte* buffer_end) {
   return size;
 }
 Size sprint_i16(i16 value, byte* buffer_end) {
-  u64 value_abs = (u64)abs(value);
+  u64 value_abs = u64(abs(value));
   Size size = sprint_u64(value_abs, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
@@ -90,7 +90,7 @@ Size sprint_i16(i16 value, byte* buffer_end) {
   return size;
 }
 Size sprint_i8(i8 value, byte* buffer_end) {
-  u64 value_abs = (u64)abs(value);
+  u64 value_abs = u64(abs(value));
   Size size = sprint_u64(value_abs, buffer_end);
   if (value < 0) {
     *(buffer_end - size - 1) = '-';
@@ -107,7 +107,7 @@ Size sprint_uhex_pad(u64 value, byte* buffer_end) {
     u64 digit = value & 0xf;
     value = value >> 4;
     buffer_end[--i] = HEX_DIGITS[digit];
-  } while (i > -2 * (intptr)sizeof(u64));
+  } while (i > -2 * intptr(sizeof(u64)));
   buffer_end[--i] = 'x';
   buffer_end[--i] = '0';
   return (Size)(-i);
@@ -125,27 +125,27 @@ Size sprint_uhex(u64 value, byte* buffer_end) {
   return (Size)(-i);
 }
 #define sprint_size_ihex(value) sprint_size_uhex(value)
-#define sprint_ihex(value, buffer_end) sprint_uhex((u64)(value), buffer_end)
+#define sprint_ihex(value, buffer_end) sprint_uhex(u64(value), buffer_end)
 #define sprint_size_fhex(value) sprint_size_uhex(value)
 #define sprint_fhex(value, buffer_end) sprint_uhex(reinterpret(value, f64, u64), buffer_end)
 
 #if ARCH_IS_64_BIT
   #define sprint_size_uintptr(value) sprint_size_u64(value)
 Size sprint_uintptr(uintptr value, byte* buffer_end) {
-  return sprint_u64((u64)value, buffer_end);
+  return sprint_u64(u64(value), buffer_end);
 }
   #define sprint_size_intptr(value) sprint_size_u64(value)
 Size sprint_intptr(intptr value, byte* buffer_end) {
-  return sprint_u64((u64)value, buffer_end);
+  return sprint_u64(u64(value), buffer_end);
 }
 #elif ARCH_IS_32_BIT
   #define sprint_size_uintptr(value) sprint_size_u32(value)
 Size sprint_uintptr(uintptr value, byte* buffer_end) {
-  return sprint_u32((u32)value, buffer_end);
+  return sprint_u32(u32(value), buffer_end);
 }
   #define sprint_size_intptr(value) sprint_size_u32(value)
 Size sprint_intptr(intptr value, byte* buffer_end) {
-  return sprint_u32((u32)value, buffer_end);
+  return sprint_u32(u32(value), buffer_end);
 }
 #endif
 
@@ -154,7 +154,7 @@ Size sprint_intptr(intptr value, byte* buffer_end) {
 #define sprintf1_impl(C, ptr_end, format, t1, v1) ({                           \
   String VAR(fmt, C) = format;                                                 \
   Size VAR(size, C) = 0;                                                       \
-  intptr VAR(i, C) = (intptr)VAR(fmt, C).size;                                 \
+  intptr VAR(i, C) = intptr(VAR(fmt, C).size);                                 \
   intptr VAR(j, C) = VAR(i, C);                                                \
   while (VAR(i, C) > 0) {                                                      \
     (VAR(i, C)--);                                                             \
@@ -176,7 +176,7 @@ Size sprint_intptr(intptr value, byte* buffer_end) {
 #define sprintf2_impl(C, ptr_end, format, t1, v1, t2, v2) ({                   \
   String VAR(fmt, C) = format;                                                 \
   Size VAR(size, C) = 0;                                                       \
-  intptr VAR(i, C) = (intptr)VAR(fmt, C).size;                                 \
+  intptr VAR(i, C) = intptr(VAR(fmt, C).size);                                 \
   intptr VAR(j, C) = VAR(i, C);                                                \
   while (VAR(i, C) > 0) {                                                      \
     (VAR(i, C)--);                                                             \
@@ -208,7 +208,7 @@ Size sprint_intptr(intptr value, byte* buffer_end) {
 #define sprintf3_impl(C, ptr_end, format, t1, v1, t2, v2, t3, v3) ({           \
   String VAR(fmt, C) = format;                                                 \
   Size VAR(size, C) = 0;                                                       \
-  intptr VAR(i, C) = (intptr)VAR(fmt, C).size;                                 \
+  intptr VAR(i, C) = intptr(VAR(fmt, C).size);                                 \
   intptr VAR(j, C) = VAR(i, C);                                                \
   while (VAR(i, C) > 0) {                                                      \
     (VAR(i, C)--);                                                             \

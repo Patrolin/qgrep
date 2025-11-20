@@ -10,15 +10,15 @@ typedef struct {
 } ArenaAllocator;
 ArenaAllocator* arena_allocator(Bytes buffer) {
   ArenaAllocator* arena = (ArenaAllocator*)buffer.ptr;
-  arena->next = (intptr)(buffer.ptr + sizeof(ArenaAllocator));
-  arena->end = (intptr)(buffer.ptr + buffer.size);
+  arena->next = intptr(buffer.ptr + sizeof(ArenaAllocator));
+  arena->end = intptr(buffer.ptr + buffer.size);
   return arena;
 }
 
 intptr arena_alloc_impl(ArenaAllocator* arena, Size size, intptr align_mask) {
   get_lock(&arena->lock);
   intptr ptr = (arena->next + align_mask) & ~align_mask;
-  intptr next = ptr + (intptr)size;
+  intptr next = ptr + intptr(size);
   intptr end = arena->end;
   arena->next = next;
   release_lock(&arena->lock);
@@ -36,7 +36,7 @@ intptr arena_alloc_impl(ArenaAllocator* arena, Size size, intptr align_mask) {
 
 void arena_reset(ArenaAllocator* arena, intptr next) {
   get_lock_assert_single_threaded(&arena->lock);
-  assert(next >= (intptr)arena && next <= arena->next);
+  assert(next >= intptr(arena) && next <= arena->next);
   arena->next = next;
   release_lock(&arena->lock);
 }

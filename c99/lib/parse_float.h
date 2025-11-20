@@ -31,10 +31,10 @@ void print_float(String name, f64 value) {
   if (exponent_to_print == 0) {
     printfln1(string("%.exponent: denormal"), String, name);
   } else {
-    printfln2(string("%.exponent: %"), String, name, i64, (i64)exponent_to_print - 1023);
+    printfln2(string("%.exponent: %"), String, name, i64, i64(exponent_to_print) - 1023);
   }
   printfln2(string("%.mantissa: %"), String, name, uhex_pad, hex_value & 0x000fffffffffffff);
-  printfln2(string("%.mantissa_log2: %"), String, name, i64, 12 - (i64)count_leading_zeros(u64, hex_value & 0x000fffffffffffff));
+  printfln2(string("%.mantissa_log2: %"), String, name, i64, 12 - i64(count_leading_zeros(u64, hex_value & 0x000fffffffffffff)));
 }*/
 f64 parse_f64_decimal(String str, intptr start, intptr* _Nonnull end) {
   intptr i = start;

@@ -45,7 +45,7 @@ ENUM(DWORD, CodePage){
 
   #pragma comment(lib, "Kernel32.lib")
 foreign BOOL SetConsoleOutputCP(CodePage code_page);
-foreign BOOL WriteFile(FileHandle file, const byte* buffer, DWORD buffer_size, DWORD* bytes_written, rawptr overlapped);
+foreign BOOL WriteFile(FileHandle file, readonly byte* buffer, DWORD buffer_size, DWORD* bytes_written, rawptr overlapped);
 foreign void ExitProcess(CUINT exit_code);
 
 #elif OS_LINUX
@@ -54,7 +54,7 @@ ENUM(FileHandle, ConsoleHandleEnum){
     STDOUT = 1,
     STDERR = 2,
 };
-intptr write(FileHandle file, const byte* buffer, Size buffer_size) {
+intptr write(FileHandle file, readonly byte* buffer, Size buffer_size) {
   return syscall3(SYS_write, (uintptr)file, (uintptr)buffer, buffer_size);
 }
 noreturn exit_group(CINT return_code) {
@@ -232,7 +232,7 @@ typedef struct {
   time_t t_sec;
   time_t t_nsec;
 } timespec;
-intptr futex_wait(u32* address, u32 while_value, const timespec* timeout) {
+intptr futex_wait(u32* address, u32 while_value, readonly timespec* timeout) {
   return syscall4(SYS_futex, (uintptr)address, FUTEX_WAIT, while_value, (uintptr)timeout);
 }
 intptr futex_wake(u32* address, u32 count_to_wake) {
@@ -257,7 +257,7 @@ ENUM(CUINT, FileFlags){
     O_TRUNC = 1 << 9,
     O_DIRECTORY = 1 << 16,
 };
-intptr open(const byte* path, FileFlags flags, CUINT mode) {
+intptr open(readonly byte* path, FileFlags flags, CUINT mode) {
   return syscall3(SYS_open, (uintptr)path, flags, mode);
 }
 #endif

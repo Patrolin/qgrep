@@ -5,17 +5,22 @@
 // Size
 #define ASSERT(condition) _Static_assert((condition), #condition)
 typedef char byte;
+#define byte(x) ((byte)(x))
 ASSERT(sizeof(byte) == 1);
 typedef uintptr_t uintptr;
+#define uintptr(x) ((uintptr)(x))
 typedef intptr_t intptr;
+#define intptr(x) ((intptr)(x))
 typedef void* rawptr;
+#define rawptr(x) ((rawptr)(x))
 #define MIN(t) CONCAT(MIN_, t)
 #define MAX(t) CONCAT(MAX_, t)
-#define MIN_uintptr (uintptr)(0)
-#define MAX_uintptr (uintptr)(-1)
-#define MIN_intptr ((intptr)(-1) >> (intptr)(1))
-#define MAX_intptr (intptr)(-1)
+#define MIN_uintptr uintptr(0)
+#define MAX_uintptr uintptr(-1)
+#define MIN_intptr (intptr(-1) >> intptr(1))
+#define MAX_intptr intptr(-1)
 typedef uintptr Size;
+#define Size(x) ((Size)(x))
 enum Size : uintptr {
   Byte = 1,
   KibiByte = 1024 * Byte,
@@ -131,23 +136,31 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
 #define IS_STRING_String PROBE()
 #define IS_STRING(x) IS_PROBE(CONCAT(IS_STRING_, x))
 
-// keywords
+// type keywords
+#define global static
 #define readonly const
+#define restrict __restrict
+// #define nonnull _Nonnull /* NOTE: clang doesn't have an option to assume nullable by default... */
+#define align(n) __attribute__((aligned(n)))
+#define vector_size(n) __attribute__((vector_size(n)))
+// proc keywords
 /* private to file */
 #define private static
-#define global static
 #define forward_declare
 #define always_inline inline __attribute__((always_inline))
+#define never_inline __attribute__((noinline))
 #define foreign __declspec(dllimport)
+// #define stdcall __attribute__((__stdcall__))
 #define naked __attribute__((naked))
-#define align(n) __attribute__((aligned(n)))
 #define noreturn _Noreturn void
 // #define deprecated(msg) __attribute__((deprecated(msg)))
-
+// other keywords
+#define expect_true(condition) __builtin_expect(condition, true)
+#define expect_false(condition) __builtin_expect(condition, false)
 forward_declare noreturn abort();
-#define assert(condition) \
-  if (!(condition)) {     \
-    abort();              \
+#define assert(condition)           \
+  if (expect_false(!(condition))) { \
+    abort();                        \
   }
 #define ASSERT_MUlTIPLE_OF(a, b) ASSERT(a % b == 0)
 #define DISTINCT(type, name) \
@@ -158,7 +171,7 @@ forward_declare noreturn abort();
 
 // builtins
 #define alignof(x) __alignof__(x)
-#define countof(x) ((intptr)sizeof(x) / (intptr)sizeof(x[0]))
+#define countof(x) (intptr(sizeof(x)) / intptr(sizeof(x[0])))
 forward_declare void zero(byte* ptr, Size size);
 extern void* memset(void* ptr, int x, Size size) {
   assert(x == 0);
@@ -175,30 +188,38 @@ extern void* memset(void* ptr, int x, Size size) {
 
 // types
 typedef uint64_t u64;
+#define u64(x) ((u64)(x))
 typedef uint32_t u32;
+#define u32(x) ((u32)(x))
 typedef uint16_t u16;
+#define u16(x) ((u16)(x))
 typedef uint8_t u8;
-#define MIN_u64 (u64)(0)
-#define MAX_u64 (u64)(0xffffffffffffffff)
-#define MIN_u32 (u32)(0)
-#define MAX_u32 (u32)(0xffffffff)
-#define MIN_u16 (u16)(0)
-#define MAX_u16 (u16)(0xffff)
-#define MIN_u8 (u8)(0)
-#define MAX_u8 (u8)(0xff)
+#define u8(x) ((u8)(x))
+#define MIN_u64 u64(0)
+#define MAX_u64 u64(0xffffffffffffffff)
+#define MIN_u32 u32(0)
+#define MAX_u32 u32(0xffffffff)
+#define MIN_u16 u16(0)
+#define MAX_u16 u16(0xffff)
+#define MIN_u8 u8(0)
+#define MAX_u8 u8(0xff)
 
-typedef int8_t i8;
-typedef int16_t i16;
-typedef int32_t i32;
 typedef int64_t i64;
-#define MIN_i64 (i64)(MAX_u64)
-#define MAX_i64 (i64)(0x7fffffffffffffff)
-#define MIN_i32 (i32)(MAX_u32)
-#define MAX_i32 (i32)(0x7fffffff)
-#define MIN_i16 (i16)(MAX_u16)
-#define MAX_i16 (i16)(0x7fff)
-#define MIN_i8 (i8)(MAX_u8)
-#define MAX_i8 (i8)(0x7f)
+#define i64(x) ((i64)(x))
+typedef int32_t i32;
+#define i32(x) ((i32)(x))
+typedef int16_t i16;
+#define i16(x) ((i16)(x))
+typedef int8_t i8;
+#define i8(x) ((i8)(x))
+#define MIN_i64 i64(MAX_u64)
+#define MAX_i64 i64(0x7fffffffffffffff)
+#define MIN_i32 i32(MAX_u32)
+#define MAX_i32 i32(0x7fffffff)
+#define MIN_i16 i16(MAX_u16)
+#define MAX_i16 i16(0x7fff)
+#define MIN_i8 i8(MAX_u8)
+#define MAX_i8 i8(0x7f)
 
 // typedef signed char CICHAR;
 // typedef unsigned char CUCHAR;
@@ -206,15 +227,19 @@ typedef int64_t i64;
 // typedef unsigned short CUSHORT;
 /* NOTE: 16b or 32b depending on architecture */
 typedef int CINT;
+#define CINT(x) ((CINT)(x))
 typedef unsigned int CUINT;
+#define CUINT(x) ((CUINT)(x))
 // typedef long CLONG;
 // typedef unsigned long CULONG;
 // typedef long long CLONGLONG;
 // typedef unsigned long long CULONGLONG;
 
 typedef double f64;
+#define f64(x) ((f64)(x))
 ASSERT(sizeof(f64) == 8);
 typedef float f32;
+#define f32(x) ((f32)(x))
 ASSERT(sizeof(f32) == 4);
 /* NOTE: If there isn't native support, f16 is implemented by converting back and forth between f32... */
 #if ARCH_HAS_NATIVE_BF16
@@ -243,7 +268,7 @@ typedef struct {
 } Bytes;
 /* NOTE: utf8 string */
 typedef struct {
-  const byte* ptr;
+  readonly byte* ptr;
   Size size;
 } String;
 /* NOTE: we take the pointer of the cstring directly to avoid a memcpy() */

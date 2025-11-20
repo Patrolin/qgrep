@@ -9,7 +9,7 @@ ExceptionResult _page_fault_handler(_EXCEPTION_POINTERS* exception_info) {
   DWORD exception_code = exception->ExceptionCode;
   if (exception_code == EXCEPTION_ACCESS_VIOLATION) {
     uintptr ptr = exception->ExceptionInformation[1];
-    intptr page_ptr = (intptr)ptr & ~(intptr)(OS_PAGE_SIZE - 1);
+    intptr page_ptr = intptr(ptr) & ~intptr(OS_PAGE_SIZE - 1);
     intptr commited_ptr = VirtualAlloc(page_ptr, OS_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
     return page_ptr != 0 && commited_ptr != 0 ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_EXECUTE_HANDLER;
   }
@@ -35,7 +35,7 @@ Bytes page_reserve(Size size) {
   assert(buffer.ptr != 0);
 #elif OS_LINUX
   buffer.ptr = (byte*)mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  assert((intptr)buffer.ptr != -1);
+  assert(intptr(buffer.ptr) != -1);
 #else
   assert(false);
 #endif
