@@ -6,9 +6,9 @@
 
 void main_multicore(Thread t) {
   if (single_core(t)) {
-    f64 a = 1.0;
+    f64 a = 2.0;
     f64 b = 0.1;
-    f64 c = 0.2;
+    f64 c = 0.1;
     f64 result = fma(a, b, c);
     assert(0.3 != 0.1 + 0.2);
     assert(result == 0.1 + 0.2);
