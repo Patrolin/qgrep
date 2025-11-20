@@ -22,7 +22,7 @@ u64 parse_u64_hex(String str, intptr start, intptr* _Nonnull end) {
     u64 new_result;
     bool did_overflow = mul_overflow(result, 16, &new_result);
     did_overflow |= add_overflow(new_result, u64(digit), &new_result);
-    if (digit >= 16 || did_overflow) {
+    if (expect_unlikely(digit >= 16 || did_overflow)) {
       break;
     }
     result = new_result;
@@ -39,7 +39,7 @@ u64 parse_u64_decimal(String str, intptr start, intptr* _Nonnull end) {
     u64 new_result;
     bool did_overflow = mul_overflow(result, 10, &new_result);
     did_overflow |= add_overflow(new_result, u64(digit), &new_result);
-    if (digit >= 10 || new_result < result) {
+    if (expect_unlikely(digit >= 10 || new_result < result)) {
       break;
     }
     result = new_result;
@@ -49,7 +49,7 @@ u64 parse_u64_decimal(String str, intptr start, intptr* _Nonnull end) {
   return result;
 }
 u64 parse_u64(String str, intptr start, intptr* _Nonnull end) {
-  if (str_continues_with(str, start, string("0x"))) {
+  if (expect_unlikely(str_continues_with(str, start, string("0x")))) {
     return parse_u64_hex(str, start + 2, end);
   } else {
     return parse_u64_decimal(str, start, end);

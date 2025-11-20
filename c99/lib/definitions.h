@@ -13,12 +13,6 @@ typedef intptr_t intptr;
 #define intptr(x) ((intptr)(x))
 typedef void* rawptr;
 #define rawptr(x) ((rawptr)(x))
-#define MIN(t) CONCAT(MIN_, t)
-#define MAX(t) CONCAT(MAX_, t)
-#define MIN_uintptr uintptr(0)
-#define MAX_uintptr uintptr(-1)
-#define MIN_intptr (intptr(-1) >> intptr(1))
-#define MAX_intptr intptr(-1)
 typedef uintptr Size;
 #define Size(x) ((Size)(x))
 enum Size : uintptr {
@@ -27,6 +21,17 @@ enum Size : uintptr {
   MebiByte = 1024 * KibiByte,
   GibiByte = 1024 * MebiByte,
 };
+
+#define MIN(t) CONCAT(MIN_, t)
+#define MAX(t) CONCAT(MAX_, t)
+#define MIN_byte byte(0)
+#define MAX_byte byte(255)
+#define MIN_uintptr uintptr(0)
+#define MAX_uintptr uintptr(-1)
+#define MIN_Size Size(0)
+#define MAX_Size Size(-1)
+#define MIN_intptr (intptr(-1) >> intptr(1))
+#define MAX_intptr intptr(-1)
 
 // OS_xxx
 #define OS_WINDOWS 0
@@ -155,8 +160,15 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
 #define noreturn _Noreturn void
 // #define deprecated(msg) __attribute__((deprecated(msg)))
 // other keywords
-#define expect_true(condition) __builtin_expect(condition, true)
-#define expect_false(condition) __builtin_expect(condition, false)
+/* generate code that takes shorter when the condition is true, but longer when the condition is false */
+#define expect_likely(condition) __builtin_expect(condition, true)
+/* generate code that takes shorter when the condition is false, but longer when the condition is true */
+#define expect_unlikely(condition) __builtin_expect(condition, false)
+/* In the case of `if (expect_small(condition)) {x += y}`,
+   expect_likely() puts the block right after and skips over it via a jump
+   whereas expect_unlikely() puts the block far away, and may duplicate code on both paths.
+   Should only be used if there aren't any `break` or `return` statements in the block. */
+#define expect_small(condition) expect_likely(condition)
 forward_declare noreturn abort();
 #define assert(condition)           \
   if (expect_false(!(condition))) { \
@@ -274,13 +286,13 @@ typedef struct {
 /* NOTE: we take the pointer of the cstring directly to avoid a memcpy() */
 #define string(const_cstr) ((String){const_cstr, sizeof(const_cstr) - 1})
 #define str_slice(str, i, j) \
-  (String) { &str.ptr[i], i > j ? 0 : (Size)(j) - (Size)(i) }
+  (String) { &str.ptr[i], i > j ? 0 : Size(j) - Size(i) }
 bool str_equals(String a, String b) {
-  if (a.size != b.size) {
+  if (expect_unlikely(a.size != b.size)) {
     return false;
   }
   for (intptr i = 0; i < a.size; i++) {
-    if (a.ptr[i] != b.ptr[i]) {
+    if (expect_unlikely(a.ptr[i] != b.ptr[i])) {
       return false;
     }
   }

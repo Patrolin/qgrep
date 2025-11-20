@@ -8,7 +8,7 @@ f64 parse_fraction64_decimal(String str, intptr start, intptr* _Nonnull end) {
   intptr i = start;
   while (i < str.size) {
     byte digit = str.ptr[i] - '0';
-    if (digit > 10) {
+    if (expect_unlikely(digit > 10)) {
       break;
     }
     i++;
@@ -28,7 +28,7 @@ void print_float(String name, f64 value) {
   u64 hex_value = reinterpret(value, f64, u64);
   printfln2(string("%.sign: %"), String, name, u64, hex_value >> 63);
   u64 exponent_to_print = (hex_value >> 52) & 0x7ff;
-  if (exponent_to_print == 0) {
+  if (expect_unlikely(exponent_to_print == 0)) {
     printfln1(string("%.exponent: denormal"), String, name);
   } else {
     printfln2(string("%.exponent: %"), String, name, i64, i64(exponent_to_print) - 1023);
@@ -40,25 +40,25 @@ f64 parse_f64_decimal(String str, intptr start, intptr* _Nonnull end) {
   intptr i = start;
   // sign
   bool negative = i < str.size && str.ptr[i] == '-';
-  if (negative) {
+  if (expect_small(negative)) {
     i++;
   }
   // mantissa
   f64 mantissa_f64 = (f64)parse_u64_decimal(str, i, &i);
-  if (i < str.size && str.ptr[i] == '.') {
+  if (expect_small(i < str.size && str.ptr[i] == '.')) {
     mantissa_f64 += parse_fraction64_decimal(str, i + 1, &i);
   }
   // exponent
   f64 exponent_f64 = 1;
   bool exponent_is_negative = false;
-  if (i < str.size && str.ptr[i] == 'e') {
+  if (expect_small(i < str.size && str.ptr[i] == 'e')) {
     i++;
     u64 base10_exponent = parse_u64_decimal(str, i, &i);
     exponent_is_negative = base10_exponent < 0;
     base10_exponent = exponent_is_negative ? -base10_exponent : base10_exponent;
     f64 next_pow10_step = 10;
     while (base10_exponent > 0) {
-      if ((base10_exponent & 1) == 1) {
+      if (expect_small((base10_exponent & 1) == 1)) {
         exponent_f64 = exponent_f64 * next_pow10_step;
       }
       next_pow10_step = next_pow10_step * next_pow10_step;
@@ -73,7 +73,7 @@ f64 parse_f64_decimal(String str, intptr start, intptr* _Nonnull end) {
   return 0.0;
 }
 f64 parse_f64(String str, intptr start, intptr* _Nonnull end) {
-  if (str_continues_with(str, start, string("0x"))) {
+  if (expect_unlikely(str_continues_with(str, start, string("0x")))) {
     u64 hex_value = parse_u64_hex(str, start, end);
     return reinterpret(hex_value, u64, f64);
   } else {

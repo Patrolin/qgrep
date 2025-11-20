@@ -7,7 +7,7 @@
 ExceptionResult _page_fault_handler(_EXCEPTION_POINTERS* exception_info) {
   EXCEPTION_RECORD* exception = exception_info->ExceptionRecord;
   DWORD exception_code = exception->ExceptionCode;
-  if (exception_code == EXCEPTION_ACCESS_VIOLATION) {
+  if (expect_likely(exception_code == EXCEPTION_ACCESS_VIOLATION)) {
     uintptr ptr = exception->ExceptionInformation[1];
     intptr page_ptr = intptr(ptr) & ~intptr(OS_PAGE_SIZE - 1);
     intptr commited_ptr = VirtualAlloc(page_ptr, OS_PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);

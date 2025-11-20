@@ -41,14 +41,14 @@
   ASSERT(sizeof(x) == sizeof(bias));                    \
   bool negate = x < 0;                                  \
   x = negate ? -x : x;                                  \
-  if (x < 1) {                                          \
+  if (expect_unlikely(x < 1)) {                         \
     return (R){0, negate ? -x : x};                     \
   };                                                    \
                                                         \
   U y = reinterpret(x, F, U);                           \
   U exponent = (y >> shift) & mask - bias;              \
                                                         \
-  if (exponent < shift) {                               \
+  if (expect_small(exponent < shift)) {                 \
     y &= ~((1 << (shift - exponent)) - 1);              \
   }                                                     \
   F integer = reinterpret(y, U, F);                     \

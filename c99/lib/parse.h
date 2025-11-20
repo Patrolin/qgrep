@@ -5,13 +5,13 @@ bool str_continues_with(String a, intptr start, String b) {
   return str_equals(str_slice(a, start, start + intptr(b.size)), b);
 }
 bool str_starts_with(String str, String prefix) {
-  if (str.size < prefix.size) {
+  if (expect_unlikely(str.size < prefix.size)) {
     return false;
   }
   return str_equals(str_slice(str, 0, prefix.size), prefix);
 }
 bool str_ends_with(String str, String suffix) {
-  if (str.size < suffix.size) {
+  if (expect_unlikely(str.size < suffix.size)) {
     return false;
   }
   return str_equals(str_slice(str, str.size - suffix.size, str.size), suffix);
