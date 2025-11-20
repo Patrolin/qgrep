@@ -29,7 +29,10 @@
   assert((t1)(VAR(v2, C)) == VAR(v1, C)); \
   VAR(v2, C);                             \
 })
-#define saturate(t1, v1, t2) ((t2)(min(t1, v1, (t1)MAX(t2))))
+#define saturate(t1, v1, t2) ({    \
+  ASSERT(sizeof(t2) < sizeof(t1)); \
+  (t2)(min(t1, v1, (t1)MAX(t2)));  \
+})
 
 // floats
 #define SPLIT_FLOAT_IMPL(R, F, U, x, mask, shift, bias) \
