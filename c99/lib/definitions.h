@@ -170,9 +170,9 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
    Should only be used if there aren't any `break` or `return` statements in the block. */
 #define expect_small(condition) expect_likely(condition)
 forward_declare noreturn abort();
-#define assert(condition)           \
-  if (expect_false(!(condition))) { \
-    abort();                        \
+#define assert(condition)              \
+  if (expect_unlikely(!(condition))) { \
+    abort();                           \
   }
 #define ASSERT_MUlTIPLE_OF(a, b) ASSERT(a % b == 0)
 #define DISTINCT(type, name) \
