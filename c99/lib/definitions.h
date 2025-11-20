@@ -97,11 +97,12 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
   #define ALIGN_STACK_POINTER() asm volatile("and rsp, -16" ::: "rsp");
   #define CALL(name) asm volatile("call " #name)
   #define cpu_relax() asm volatile("pause")
-  #define fma_impl(C, a, b, c) ({      \
-    __m128 mA = __mm_set1_pd(a);       \
-    __m128 mB = __mm_set1_pd(b);       \
-    __m128 mC = __mm_set1_pd(c);       \
-    __m128 mR = _mm_fmadd_pd(a, b, c); \
+  #define fma_impl(C, a, b, c) ({         \
+    f64 VAR(fma, C) = a;                  \
+    asm volatile("vfmadd213sd %0, %1, %2" \
+                 : "+x"(VAR(fma, C))      \
+                 : "x"(b), "x"(c));       \
+    VAR(fma, C);                          \
   })
   #include <emmintrin.h>
   #include <xmmintrin.h>

@@ -6,15 +6,12 @@
 
 void main_multicore(Thread t) {
   if (single_core(t)) {
-    f64 a = 2.0;
-    f64 b = 2.0;
-    f64 c = 2.0;
-    // fma()
-    f64 result = a;
-    asm("vfmadd213sd %0, %1, %2"
-        : "=x"(result)
-        : "0"(result), "x"(b), "x"(c));
-    assert(result == 6.0);
+    f64 a = 1.0;
+    f64 b = 0.1;
+    f64 c = 0.2;
+    f64 result = fma(a, b, c);
+    assert(0.3 != 0.1 + 0.2);
+    assert(result == 0.1 + 0.2);
 
     intptr end;
     f64 x = parse_f64(string("0.5e1"), 0, &end);
