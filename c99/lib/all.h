@@ -9,4 +9,5 @@
 #include "process.h"
 #include "threads.h"
 #include "parse.h"
+#include "tests.h"
 // IWYU pragma: end_exports

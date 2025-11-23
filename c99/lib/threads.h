@@ -136,6 +136,7 @@ void barrier(Thread t) {
   }
 }
 // single-core
+/* return true on the first thread that gets here, and false on the rest */
 bool single_core(Thread t) {
   u32 threads_start = global_threads->thread_infos[t].threads_start;
   u32 threads_end = global_threads->thread_infos[t].threads_end;
@@ -149,7 +150,8 @@ bool single_core(Thread t) {
   }
   return is_first;
 }
-#define barrier_scatter(t, value) barrier_scatter_impl(t, (u64*)(value))
+/* scatter the value from the thread where single_core() returned true, defaulting to the first thread in the group */
+#define barrier_scatter(t, value) barrier_scatter_impl(t, (u64*)(value));
 void barrier_scatter_impl(Thread t, u64* value) {
   Thread threads_start = global_threads->thread_infos[t].threads_start;
   ThreadInfo* shared_data = &global_threads->thread_infos[threads_start];
@@ -188,14 +190,15 @@ bool barrier_split_threads(Thread t, u32 n) {
       u32* ptr = i < threads_split ? &thread_data->threads_end : &thread_data->threads_start;
       *ptr = threads_split;
     }
-    /* NOTE: reset counters in case we have a non-power-of-two number of threads */
     ThreadInfo* split_data = &global_threads->thread_infos[threads_split];
-    split_data->is_first_counter = 0;
-    split_data->is_last_counter = 0;
+    split_data->was_first_thread = threads_split;
+    /* NOTE: reset counters in case we have a non-power-of-two number of threads */
     shared_data->is_first_counter = 0;
     shared_data->is_last_counter = 0;
-    shared_data->barrier += 1;
+    split_data->is_first_counter = 0;
+    split_data->is_last_counter = 0;
     // -modify threads
+    shared_data->barrier += 1;
     wake_all_on_address(&shared_data->barrier);
   }
   return t < threads_split;
@@ -212,6 +215,7 @@ void barrier_join_threads(Thread t, Thread threads_start, Thread threads_end) {
       thread_data->threads_start = threads_start;
       thread_data->threads_end = threads_end;
     }
+    shared_data->was_first_thread = threads_start;
     /* NOTE: reset counter in case we have a non-power-of-two number of threads */
     shared_data->join_counter = 0;
     shared_data->join_barrier += 1;

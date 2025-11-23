@@ -14,7 +14,7 @@
 #define sprint(t1, v1, ptr_end) CONCAT0(sprint_, t1)(v1, ptr_end)
 #define sprint_to_string(ptr_end, size) ((String){ptr_end - intptr(size), size})
 
-#define sprint_size_String(value) (value.size)
+#define sprint_size_String(value) (intptr)(value.size)
 Size sprint_String(String str, byte* buffer_end) {
   byte* buffer = buffer_end - str.size;
   for (intptr i = 0; i < str.size; i++) {

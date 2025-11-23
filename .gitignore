@@ -2,6 +2,7 @@
 *.cpp
 *.obj
 *.exe
+*.ilk
 *.pdb
 *.rdi
 *.bin
