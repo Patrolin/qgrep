@@ -17,7 +17,7 @@ if ($opt) {
   $cargs += @("-O0", "-g")
 }
 
-echo "clang $cargs c99/main.c -o foo.exe && foo.exe"
 rm foo.rdi -ErrorAction SilentlyContinue;
 rm foo.pdb -ErrorAction SilentlyContinue;
+echo "clang $cargs c99/main.c -o foo.exe && foo.exe"
 clang $cargs c99/main.c -o foo.exe && foo.exe
