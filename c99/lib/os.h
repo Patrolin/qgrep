@@ -207,8 +207,9 @@ ENUM(u64, SignalType){
     SIGCHLD = 17,
 };
 // https://nullprogram.com/blog/2023/03/23/
+typedef CUINT _linux_thread_entry(rawptr);
 typedef align(16) struct {
-  CUINT (*entry)(rawptr param);
+  _linux_thread_entry* entry;
   rawptr param;
 } new_thread_data;
 naked intptr newthread(ThreadFlags flags, new_thread_data* stack) {
