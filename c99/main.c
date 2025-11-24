@@ -24,7 +24,14 @@ void main_multicore(u32 t) {
     printf("e: %g\n", nan("test"));
     printf("g: %g\n", 1e6);
     printf("g: %g\n", 1e5);
-    printf("g: %g\n", 0.3);
+
+    printf("g: %g\n", 0.1 + 0.2);               // 0.3
+    printf("g: %g\n", 0.3);                     // 0.3
+    printf("g: %.17g\n", 0.1 + 0.2);            // 0.30000000000000004
+    printf("g: %.17g\n", 0.3);                  // 0.29999999999999999
+    printf("g: %.17g\n", 0.30000000000000004);  // 0.30000000000000004
+    printf("g: %.17g\n", 0.29999999999999999);  // 0.29999999999999999
+
     printf("g: %g\n", 1e-4);
     printf("g: %g\n", 9e-5);
   }
