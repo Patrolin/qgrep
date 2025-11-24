@@ -185,11 +185,13 @@ forward_declare noreturn abort();
 #define alignof(x) __alignof__(x)
 #define countof(x) (intptr(sizeof(x)) / intptr(sizeof(x[0])))
 forward_declare void zero(byte* ptr, Size size);
+#if !HAS_CRT
 extern void* memset(void* ptr, int x, Size size) {
   assert(x == 0);
   zero(ptr, size);
   return ptr;
 }
+#endif
 #define reinterpret(value, t1, t2) reinterpret_impl(__COUNTER__, value, t1, t2)
 #define reinterpret_impl(C, value, t1, t2) ({ \
   ASSERT(sizeof(t1) == sizeof(t2));           \
@@ -263,7 +265,7 @@ typedef _Float16 f16;
 ASSERT(sizeof(f16) == 2);
 #endif
 /* NOTE: Windows is dumb */
-#if OS_WINDOWS
+#if OS_WINDOWS && !HAS_CRT
 CINT _fltused = 0;
 #else
 // ASSERT(false);

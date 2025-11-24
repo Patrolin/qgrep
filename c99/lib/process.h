@@ -24,7 +24,7 @@ forward_declare noreturn exit_process(CINT exit_code);
 
 // entry
 noreturn _start_process() {
-#if OS_WINDOWS
+#if OS_WINDOWS && !HAS_CRT
   asm volatile("" ::"m"(_fltused));
 #endif
   init_console();

@@ -1,6 +1,7 @@
 param (
     [switch]$opt,
-    [switch]$crt
+    [switch]$crt,
+    [switch]$testFloat
 )
 $cargs = @("-Wno-gcc-compat", "-march=native", "-masm=intel", "-std=gnu99", "-fno-signed-char")
 if ($crt) {
@@ -15,8 +16,14 @@ if ($opt) {
 } else {
   $cargs += @("-O0", "-g")
 }
+$input = "c99/main.c"
+$output = "foo.exe"
+if ($testFloat) {
+  $input = "c99/test_fmt_float.c"
+  $output = "test_fmt_float.exe"
+}
 
 rm foo.rdi -ErrorAction SilentlyContinue;
 rm foo.pdb -ErrorAction SilentlyContinue;
-echo "clang $cargs c99/main.c -o foo.exe && foo.exe"
-clang $cargs c99/main.c -o foo.exe && foo.exe
+echo "clang $cargs $input -o $output && $output"
+clang $cargs $input -o $output && Invoke-Expression $output
