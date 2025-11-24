@@ -2,9 +2,9 @@
 -march=native
 -masm=intel
 -std=gnu99
+-fno-signed-char
 -nostdlib
 -Werror
 -Wconversion
 -Wsign-conversion
 -Wnullable-to-nonnull-conversion
--fno-signed-char

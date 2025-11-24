@@ -3,7 +3,9 @@
 
 // common
 #if OS_WINDOWS
-  #pragma comment(linker, "/ENTRY:_start")
+  #if !HAS_CRT
+    #pragma comment(linker, "/ENTRY:_start")
+  #endif
   #if RUN_WITHOUT_CONSOLE
     /* NOTE: /SUBSYSTEM:WINDOWS cannot connect to a console without a race condition, or spawning a new window */
     #pragma comment(linker, "/SUBSYSTEM:WINDOWS")

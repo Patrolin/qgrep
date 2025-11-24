@@ -2,9 +2,14 @@
 #include "definitions.h"
 #include "math.h"
 
+/* TODO: f64 need at most 17 (integer+fraction) digits: https://www.exploringbinary.com/number-of-digits-required-for-round-trip-conversions/
+   = Math.ceil(explicitmantissa_bits*Math.log10(2))+1
+// */
+
 #define BITS_f64 64
-#define SIGNIFICAND_EXPLICIT_BITS_f64 52
-#define EXPONENT_BITS_f64 = (BITS_f64 - SIGNIFICAND_EXPLICIT_BITS_f64)
+#define EXPLICIT_MANTISSA_BITS_f64 52
+#define IMPLICIT_MANTISSA_BITS_f64 (EXPLICIT_MANTISSA_BITS_f64 + 1)
+#define EXPONENT_BITS_f64 = (BITS_f64 - IMPLICIT_MANTISSA_BITS_f64)
 
 // "augmented arithmetic operations"
 void augmented_mul(f64 a, f64 b, f64 *result, f64 *error) {
