@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* NOTE: sign(1) + digits(17) + decimal_point(1) + signed_exponent(5) + null_terminator(1) */
 #define FORMAT_FLOAT_SIZE 1 + 17 + 1 + 5 + 1
 string shorten_float_string(f64 value, string value_string) {
   // preserve "+-inf", "nan"
@@ -74,18 +75,13 @@ string shorten_float_string(f64 value, string value_string) {
   return value_string; /* TODO: alloc and return shortened */
 }
 
-/* NOTE: sign(1) + digits(17) + decimal_point(1) + signed_exponent(5) + null_terminator(1) */
 void format_float_libc(f64 value) {
   char original[FORMAT_FLOAT_SIZE];
   int size = snprintf(original, sizeof(original), "%.17g", value);
   shorten_float_string(value, (string){original, Size(size)});
 }
-
 void main_multicore(u32 t) {
   if (single_core(t)) {
-    // intptr end;
-    // f64 x = parse_f64(string("0.5e1"), 0, &end);
-    // printfln1(string("end: %"), intptr, end);
     format_float_libc(1.2e234);              // 1.2e+234
     format_float_libc(0.3);                  // 0.3
     format_float_libc(0.30000000000000004);  // 0.30000000000000004
