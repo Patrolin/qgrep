@@ -12,10 +12,10 @@
   byte buffer[max_size];                        \
   byte* ptr_end = &buffer[max_size]
 #define sprint(t1, v1, ptr_end) CONCAT0(sprint_, t1)(v1, ptr_end)
-#define sprint_to_string(ptr_end, size) ((String){ptr_end - intptr(size), size})
+#define sprint_to_string(ptr_end, size) ((string){ptr_end - intptr(size), size})
 
-#define sprint_size_String(value) (intptr)(value.size)
-Size sprint_String(String str, byte* buffer_end) {
+#define sprint_size_string(value) (intptr)(value.size)
+Size sprint_string(string str, byte* buffer_end) {
   byte* buffer = buffer_end - str.size;
   for (intptr i = 0; i < str.size; i++) {
     buffer[i] = str.ptr[i];
@@ -25,8 +25,8 @@ Size sprint_String(String str, byte* buffer_end) {
 
 #define sprint_size__Bool(value) 5
 Size sprint__Bool(bool value, byte* buffer_end) {
-  String msg = value ? string("true") : string("false");
-  return sprint_String(msg, buffer_end);
+  string msg = value ? string("true") : string("false");
+  return sprint_string(msg, buffer_end);
 }
 
 /* NOTE: log10_ceil(max(type)) == log10_ceil(pow(2, bits) - 1) */
@@ -152,37 +152,37 @@ Size sprint_intptr(intptr value, byte* buffer_end) {
 // sprintf()
 #define sprintf1(ptr_end, format, t1, v1) sprintf1_impl(__COUNTER__, ptr_end, format, t1, v1)
 #define sprintf1_impl(C, ptr_end, format, t1, v1) ({                           \
-  String VAR(fmt, C) = format;                                                 \
+  string VAR(fmt, C) = format;                                                 \
   Size VAR(size, C) = 0;                                                       \
   intptr VAR(i, C) = intptr(VAR(fmt, C).size);                                 \
   intptr VAR(j, C) = VAR(i, C);                                                \
   while (VAR(i, C) > 0) {                                                      \
     (VAR(i, C)--);                                                             \
     if (expect_unlikely(VAR(fmt, C).ptr[VAR(i, C)] == '%')) {                  \
-      String VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
-      VAR(size, C) += sprint(String, VAR(after, C), ptr_end);                  \
+      string VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
+      VAR(size, C) += sprint(string, VAR(after, C), ptr_end);                  \
       VAR(j, C) = VAR(i, C);                                                   \
       VAR(size, C) += sprint(t1, v1, ptr_end - VAR(size, C));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
   if (expect_small(VAR(j, C) > 0)) {                                           \
-    String VAR(before, C) = str_slice(VAR(fmt, C), 0, VAR(j, C));              \
-    VAR(size, C) += sprint(String, VAR(before, C), ptr_end - VAR(size, C));    \
+    string VAR(before, C) = str_slice(VAR(fmt, C), 0, VAR(j, C));              \
+    VAR(size, C) += sprint(string, VAR(before, C), ptr_end - VAR(size, C));    \
   }                                                                            \
   VAR(size, C);                                                                \
 })
 #define sprintf2(ptr_end, format, t1, v1, t2, v2) sprintf2_impl(__COUNTER__, ptr_end, format, t1, v1, t2, v2)
 #define sprintf2_impl(C, ptr_end, format, t1, v1, t2, v2) ({                   \
-  String VAR(fmt, C) = format;                                                 \
+  string VAR(fmt, C) = format;                                                 \
   Size VAR(size, C) = 0;                                                       \
   intptr VAR(i, C) = intptr(VAR(fmt, C).size);                                 \
   intptr VAR(j, C) = VAR(i, C);                                                \
   while (VAR(i, C) > 0) {                                                      \
     (VAR(i, C)--);                                                             \
     if (expect_unlikely(VAR(fmt, C).ptr[VAR(i, C)] == '%')) {                  \
-      String VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
-      VAR(size, C) += sprint(String, VAR(after, C), ptr_end);                  \
+      string VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
+      VAR(size, C) += sprint(string, VAR(after, C), ptr_end);                  \
       VAR(j, C) = VAR(i, C);                                                   \
       VAR(size, C) += sprint(t2, v2, ptr_end - VAR(size, C));                  \
       break;                                                                   \
@@ -191,30 +191,30 @@ Size sprint_intptr(intptr value, byte* buffer_end) {
   while (VAR(i, C) > 0) {                                                      \
     (VAR(i, C)--);                                                             \
     if (expect_unlikely(VAR(fmt, C).ptr[VAR(i, C)] == '%')) {                  \
-      String VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
-      VAR(size, C) += sprint(String, VAR(after, C), ptr_end - VAR(size, C));   \
+      string VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
+      VAR(size, C) += sprint(string, VAR(after, C), ptr_end - VAR(size, C));   \
       VAR(j, C) = VAR(i, C);                                                   \
       VAR(size, C) += sprint(t1, v1, ptr_end - VAR(size, C));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
   if (expect_small(VAR(j, C) > 0)) {                                           \
-    String VAR(before, C) = str_slice(VAR(fmt, C), 0, VAR(j, C));              \
-    VAR(size, C) += sprint(String, VAR(before, C), ptr_end - VAR(size, C));    \
+    string VAR(before, C) = str_slice(VAR(fmt, C), 0, VAR(j, C));              \
+    VAR(size, C) += sprint(string, VAR(before, C), ptr_end - VAR(size, C));    \
   }                                                                            \
   VAR(size, C);                                                                \
 })
 #define sprintf3(ptr_end, format, t1, v1, t2, v2, t3, v3) sprintf3_impl(__COUNTER__, ptr_end, format, t1, v1, t2, v2, t3, v3)
 #define sprintf3_impl(C, ptr_end, format, t1, v1, t2, v2, t3, v3) ({           \
-  String VAR(fmt, C) = format;                                                 \
+  string VAR(fmt, C) = format;                                                 \
   Size VAR(size, C) = 0;                                                       \
   intptr VAR(i, C) = intptr(VAR(fmt, C).size);                                 \
   intptr VAR(j, C) = VAR(i, C);                                                \
   while (VAR(i, C) > 0) {                                                      \
     (VAR(i, C)--);                                                             \
     if (expect_unlikely(VAR(fmt, C).ptr[VAR(i, C)] == '%')) {                  \
-      String VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
-      VAR(size, C) += sprint(String, VAR(after, C), ptr_end);                  \
+      string VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
+      VAR(size, C) += sprint(string, VAR(after, C), ptr_end);                  \
       VAR(j, C) = VAR(i, C);                                                   \
       VAR(size, C) += sprint(t3, v3, ptr_end - VAR(size, C));                  \
       break;                                                                   \
@@ -223,8 +223,8 @@ Size sprint_intptr(intptr value, byte* buffer_end) {
   while (VAR(i, C) > 0) {                                                      \
     (VAR(i, C)--);                                                             \
     if (expect_unlikely(VAR(fmt, C).ptr[VAR(i, C)] == '%')) {                  \
-      String VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
-      VAR(size, C) += sprint(String, VAR(after, C), ptr_end - VAR(size, C));   \
+      string VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
+      VAR(size, C) += sprint(string, VAR(after, C), ptr_end - VAR(size, C));   \
       VAR(j, C) = VAR(i, C);                                                   \
       VAR(size, C) += sprint(t2, v2, ptr_end - VAR(size, C));                  \
       break;                                                                   \
@@ -233,22 +233,22 @@ Size sprint_intptr(intptr value, byte* buffer_end) {
   while (VAR(i, C) > 0) {                                                      \
     (VAR(i, C)--);                                                             \
     if (expect_unlikely(VAR(fmt, C).ptr[VAR(i, C)] == '%')) {                  \
-      String VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
-      VAR(size, C) += sprint(String, VAR(after, C), ptr_end - VAR(size, C));   \
+      string VAR(after, C) = str_slice(VAR(fmt, C), VAR(i, C) + 1, VAR(j, C)); \
+      VAR(size, C) += sprint(string, VAR(after, C), ptr_end - VAR(size, C));   \
       VAR(j, C) = VAR(i, C);                                                   \
       VAR(size, C) += sprint(t1, v1, ptr_end - VAR(size, C));                  \
       break;                                                                   \
     }                                                                          \
   }                                                                            \
   if (expect_small(VAR(j, C) > 0)) {                                           \
-    String VAR(before, C) = str_slice(VAR(fmt, C), 0, VAR(j, C));              \
-    VAR(size, C) += sprint(String, VAR(before, C), ptr_end - VAR(size, C));    \
+    string VAR(before, C) = str_slice(VAR(fmt, C), 0, VAR(j, C));              \
+    VAR(size, C) += sprint(string, VAR(before, C), ptr_end - VAR(size, C));    \
   }                                                                            \
   VAR(size, C);                                                                \
 })
 
 // fprint()
-void fprint(FileHandle file, String str) {
+void fprint(FileHandle file, string str) {
 #if OS_WINDOWS
   DWORD bytes_written;
   DWORD chars_to_write = downcast(Size, str.size, DWORD);
@@ -274,7 +274,7 @@ void fprint(FileHandle file, String str) {
 })
 
 // print()
-void print_String(String str) {
+void print_string(string str) {
   fprint(STDOUT, str);
 }
 #define print_copy(t1, v1) print_copy_impl(__COUNTER__, t1, v1)
@@ -283,10 +283,10 @@ void print_String(String str) {
   STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));      \
                                                                         \
   Size VAR(size, C) = CONCAT(sprint_, t1)(v1, VAR(ptr_end, C));         \
-  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C)); \
-  print_String(VAR(msg, C));                                            \
+  string VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C)); \
+  print_string(VAR(msg, C));                                            \
 })
-#define print(t1, v1) IF(IS_STRING(t1), print_String(v1), print_copy(t1, v1))
+#define print(t1, v1) IF(IS_STRING(t1), print_string(v1), print_copy(t1, v1))
 #define println(t1, v1) println_impl(__COUNTER__, t1, v1)
 #define println_impl(C, t1, v1) ({                                      \
   intptr VAR(max_size, C) = sprint_size1(t1, v1) + 1;                   \
@@ -294,69 +294,69 @@ void print_String(String str) {
                                                                         \
   *(VAR(ptr_end, C) - 1) = '\n';                                        \
   Size VAR(size, C) = CONCAT(sprint_, t1)(v1, VAR(ptr_end, C) - 1) + 1; \
-  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C)); \
-  print_String(VAR(msg, C));                                            \
+  string VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C)); \
+  print_string(VAR(msg, C));                                            \
 })
 
 // printf()
 #define printf1(format, t1, v1) printf1_impl(__COUNTER__, format, t1, v1)
 #define printf1_impl(C, format, t1, v1) ({                              \
-  intptr VAR(max_size, C) = sprint_size2(String, format, t1, v1);       \
+  intptr VAR(max_size, C) = sprint_size2(string, format, t1, v1);       \
   STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));      \
                                                                         \
   Size VAR(size, C) = sprintf1(VAR(ptr_end, C), format, t1, v1);        \
-  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C)); \
-  print_String(VAR(msg, C));                                            \
+  string VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C)); \
+  print_string(VAR(msg, C));                                            \
 })
 #define printf2(format, t1, v1, t2, v2) printf2_impl(__COUNTER__, format, t1, v1, t2, v2)
 #define printf2_impl(C, format, t1, v1, t2, v2) ({                        \
-  intptr VAR(max_size, C) = sprint_size3(String, format, t1, v1, t2, v2); \
+  intptr VAR(max_size, C) = sprint_size3(string, format, t1, v1, t2, v2); \
   STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));        \
                                                                           \
   Size VAR(size, C) = sprintf2(VAR(ptr_end, C), format, t1, v1, t2, v2);  \
-  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));   \
-  print_String(VAR(msg, C));                                              \
+  string VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));   \
+  print_string(VAR(msg, C));                                              \
 })
 #define printf3(format, t1, v1, t2, v2, t3, v3) printf3_impl(__COUNTER__, format, t1, v1, t2, v2, t3, v3)
 #define printf3_impl(C, format, t1, v1, t2, v2, t3, v3) ({                        \
-  intptr VAR(max_size, C) = sprint_size4(String, format, t1, v1, t2, v2, t3, v3); \
+  intptr VAR(max_size, C) = sprint_size4(string, format, t1, v1, t2, v2, t3, v3); \
   STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));                \
                                                                                   \
   Size VAR(size, C) = sprintf3(VAR(ptr_end, C), format, t1, v1, t2, v2, t3, v3);  \
-  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));           \
-  print_String(VAR(msg, C));                                                      \
+  string VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));           \
+  print_string(VAR(msg, C));                                                      \
 })
 
 // printfln()
 #define printfln1(format, t1, v1) printfln1_impl(__COUNTER__, format, t1, v1)
 #define printfln1_impl(C, format, t1, v1) ({                             \
-  Size VAR(max_size, C) = sprint_size2(String, format, t1, v1) + 1;      \
+  Size VAR(max_size, C) = sprint_size2(string, format, t1, v1) + 1;      \
   STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));       \
                                                                          \
   *(VAR(ptr_end, C) - 1) = '\n';                                         \
   Size VAR(size, C) = sprintf1(VAR(ptr_end, C) - 1, format, t1, v1) + 1; \
-  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));  \
-  print_String(VAR(msg, C));                                             \
+  string VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));  \
+  print_string(VAR(msg, C));                                             \
 })
 #define printfln2(format, t1, v1, t2, v2) printfln2_impl(__COUNTER__, format, t1, v1, t2, v2)
 #define printfln2_impl(C, format, t1, v1, t2, v2) ({                             \
-  Size VAR(max_size, C) = sprint_size3(String, format, t1, v1, t2, v2) + 1;      \
+  Size VAR(max_size, C) = sprint_size3(string, format, t1, v1, t2, v2) + 1;      \
   STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));               \
                                                                                  \
   *(VAR(ptr_end, C) - 1) = '\n';                                                 \
   Size VAR(size, C) = sprintf2(VAR(ptr_end, C) - 1, format, t1, v1, t2, v2) + 1; \
-  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));          \
-  print_String(VAR(msg, C));                                                     \
+  string VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));          \
+  print_string(VAR(msg, C));                                                     \
 })
 #define printfln3(format, t1, v1, t2, v2, t3, v3) printfln3_impl(__COUNTER__, format, t1, v1, t2, v2, t3, v3)
 #define printfln3_impl(C, format, t1, v1, t2, v2, t3, v3) ({                             \
-  Size VAR(max_size, C) = sprint_size4(String, format, t1, v1, t2, v2, t3, v3) + 1;      \
+  Size VAR(max_size, C) = sprint_size4(string, format, t1, v1, t2, v2, t3, v3) + 1;      \
   STACK_BUFFER(VAR(buffer, C), VAR(max_size, C), VAR(ptr_end, C));                       \
                                                                                          \
   *(VAR(ptr_end, C) - 1) = '\n';                                                         \
   Size VAR(size, C) = sprintf3(VAR(ptr_end, C) - 1, format, t1, v1, t2, v2, t3, v3) + 1; \
-  String VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));                  \
-  print_String(VAR(msg, C));                                                             \
+  string VAR(msg, C) = sprint_to_string(VAR(ptr_end, C), VAR(size, C));                  \
+  print_string(VAR(msg, C));                                                             \
 })
 
 // IWYU pragma: begin_exports

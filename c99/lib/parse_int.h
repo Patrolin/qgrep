@@ -2,7 +2,7 @@
 #include "definitions.h"
 #include "parse.h"
 
-u64 parse_u64_hex(String str, intptr start, intptr* _Nonnull end) {
+u64 parse_u64_hex(string str, intptr start, intptr* _Nonnull end) {
   u64 result = 0;
   intptr i = start;
   while (i < str.size) {
@@ -31,7 +31,7 @@ u64 parse_u64_hex(String str, intptr start, intptr* _Nonnull end) {
   *end = i;
   return result;
 }
-u64 parse_u64_decimal(String str, intptr start, intptr* _Nonnull end) {
+u64 parse_u64_decimal(string str, intptr start, intptr* _Nonnull end) {
   u64 result = 0;
   intptr i = start;
   while (i < str.size) {
@@ -48,7 +48,7 @@ u64 parse_u64_decimal(String str, intptr start, intptr* _Nonnull end) {
   *end = i;
   return result;
 }
-u64 parse_u64(String str, intptr start, intptr* _Nonnull end) {
+u64 parse_u64(string str, intptr start, intptr* _Nonnull end) {
   if (expect_unlikely(str_continues_with(str, start, string("0x")))) {
     return parse_u64_hex(str, start + 2, end);
   } else {

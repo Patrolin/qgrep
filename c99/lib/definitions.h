@@ -138,7 +138,7 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
 #define SECOND(a, b, ...) b
 /* NOTE: SECOND() is also acting like EXPAND() here... */
 #define IS_PROBE(...) SECOND(__VA_ARGS__, 0)
-#define IS_STRING_String PROBE()
+#define IS_STRING_string PROBE()
 #define IS_STRING(x) IS_PROBE(CONCAT(IS_STRING_, x))
 
 // type keywords
@@ -284,12 +284,11 @@ typedef struct {
 typedef struct {
   readonly byte* ptr;
   Size size;
-} String;
+} string;
 /* NOTE: we take the pointer of the cstring directly to avoid a memcpy() */
-#define string(const_cstr) ((String){const_cstr, sizeof(const_cstr) - 1})
-#define str_slice(str, i, j) \
-  (String) { &str.ptr[i], i > j ? 0 : Size(j) - Size(i) }
-bool str_equals(String a, String b) {
+#define string(const_cstr) ((string){const_cstr, sizeof(const_cstr) - 1})
+#define str_slice(str, i, j) ((string){&str.ptr[i], i > j ? 0 : Size(j) - Size(i)})
+bool str_equals(string a, string b) {
   if (expect_unlikely(a.size != b.size)) {
     return false;
   }

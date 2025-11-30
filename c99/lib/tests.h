@@ -30,7 +30,7 @@ void print_tests_done(Thread t, u64 succeeded, u64 max_runs) {
     return;
   }
   if (succeeded == max_runs) {
-    println(String, string("\x1b[2K\rAll tests passed!"));
+    println(string, string("\x1b[2K\rAll tests passed!"));
   } else {
     printfln1(string("\x1b[2K\r% tests failed..."), u64, max_runs - succeeded);
   }
