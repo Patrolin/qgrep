@@ -24,9 +24,10 @@ string shorten_float_string(f64 value, string value_string) {
     return value_string;
   }
   // -- shorten float --
-  char original[FORMAT_FLOAT_SIZE] = {};
+  char original[FORMAT_FLOAT_SIZE];
   memcpy(original, value_string.ptr, min(Size(size), sizeof(original)));
-  // find exponent
+  original[size] = 0;
+  //  find exponent
   intptr exponent_index = 0;
   while (exponent_index < size && original[exponent_index] != 'e') {
     exponent_index++;
