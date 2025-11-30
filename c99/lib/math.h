@@ -1,13 +1,39 @@
 #pragma once
 #include "definitions.h"
+#include "fmt_float.h"
+
+// nan
+#if !HAS_CRT
+bool isinf(f64 f) {
+  u64 x = bitcast(f, f64, u64);
+  u64 exponent = x & (u64(0x7ff) << EXPLICIT_MANTISSA_BITS_f64);
+  u64 mantissa = x & ((u64(1) << EXPLICIT_MANTISSA_BITS_f64) - 1);
+  return exponent == 0x7ff && mantissa == 0;
+}
+bool isnan(f64 f) {
+  u64 x = bitcast(f, f64, u64);
+  u64 exponent = x & (u64(0x7ff) << EXPLICIT_MANTISSA_BITS_f64);
+  u64 mantissa = x & ((u64(1) << EXPLICIT_MANTISSA_BITS_f64) - 1);
+  return exponent == 0x7ff && mantissa != 0;
+}
+f64 NAN = 0.0 / 0.0;
+#endif
 
 // negatives
-#define abs(v) abs_impl(__COUNTER__, typeof(v), v)
-#define abs_impl(C, t, v) ({                                \
-  t VAR(value, C) = v;                                      \
-  (VAR(value, C) >= (t)0) ? VAR(value, C) : -VAR(value, C); \
-})
-#define min(t, v1, v2) min_impl(__COUNTER, t, v1, v2)
+#if HAS_CRT
+  #include <math.h>
+#else
+  #define abs(v) abs_impl(__COUNTER__, typeof(v), v)
+  #define abs_impl(C, t, v) ({                                \
+    t VAR(value, C) = v;                                      \
+    (VAR(value, C) >= (t)0) ? VAR(value, C) : -VAR(value, C); \
+  })
+  #define labs(v) abs(v)
+  #define llabs(v) abs(v)
+  #define fabsf(v) abs(v)
+  #define fabs(v) abs(v)
+#endif
+#define min(v1, v2) min_impl(__COUNTER, typeof(v1), v1, v2)
 #define min_impl(C, t, v1, v2) ({                                 \
   t VAR(left, C) = v1;                                            \
   t VAR(right, C) = v2;                                           \
@@ -45,13 +71,13 @@
     return (R){0, negate ? -x : x};                     \
   };                                                    \
                                                         \
-  U y = reinterpret(x, F, U);                           \
+  U y = bitcast(x, F, U);                               \
   U exponent = (y >> shift) & mask - bias;              \
                                                         \
   if (expect_small(exponent < shift)) {                 \
     y &= ~((1 << (shift - exponent)) - 1);              \
   }                                                     \
-  F integer = reinterpret(y, U, F);                     \
+  F integer = bitcast(y, U, F);                         \
   F fraction = x - integer;                             \
   return (R){negate ? -integer : integer, negate ? -fraction : fraction};
 

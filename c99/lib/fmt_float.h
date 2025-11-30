@@ -32,8 +32,8 @@ void augmented_add(f64 a, f64 b, f64 *result, f64 *error) {
   *result = s;
 #endif
 }
-void augmented_add_fast(double a, double b, double *result, double *error) {
-  assert(abs(a) >= abs(b));
+void augmented_add_fast(f64 a, f64 b, f64 *result, f64 *error) {
+  assert(fabs(a) >= fabs(b));
   f64 s = a + b;
   *error = b - (s - a);
   *result = s;

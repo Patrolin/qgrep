@@ -25,7 +25,7 @@ f64 parse_fraction64_decimal(string str, intptr start, intptr* _Nonnull end) {
 }
 /* TODO: proper float print...
 void print_float(string name, f64 value) {
-  u64 hex_value = reinterpret(value, f64, u64);
+  u64 hex_value = bitcast(value, f64, u64);
   printfln2(string("%.sign: %"), string, name, u64, hex_value >> 63);
   u64 exponent_to_print = (hex_value >> 52) & 0x7ff;
   if (expect_unlikely(exponent_to_print == 0)) {
@@ -75,7 +75,7 @@ f64 parse_f64_decimal(string str, intptr start, intptr* _Nonnull end) {
 f64 parse_f64(string str, intptr start, intptr* _Nonnull end) {
   if (expect_unlikely(str_continues_with(str, start, string("0x")))) {
     u64 hex_value = parse_u64_hex(str, start, end);
-    return reinterpret(hex_value, u64, f64);
+    return bitcast(hex_value, u64, f64);
   } else {
     return parse_f64_decimal(str, start, end);
   }

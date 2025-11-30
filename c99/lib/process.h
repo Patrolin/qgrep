@@ -20,10 +20,10 @@ void init_shared_arena() {
 }
 
 forward_declare void start_threads();
-forward_declare noreturn exit_process(CINT exit_code);
+forward_declare Noreturn exit_process(CINT exit_code);
 
 // entry
-noreturn _start_process() {
+Noreturn _start_process() {
 #if OS_WINDOWS && !HAS_CRT
   asm volatile("" ::"m"(_fltused));
 #endif
@@ -42,12 +42,12 @@ CINT main() {
 /* NOTE: naked attribute for correctness, but we don't really need it,
   since we have to align the stack pointer manually either way...
   NOTE: this doesn't actually work together with -flto */
-naked noreturn _start() {
+naked Noreturn _start() {
   ALIGN_STACK_POINTER();
   CALL(_start_process);
 }
   #else
-noreturn _start() {
+Noreturn _start() {
   ALIGN_STACK_POINTER();
   _start_process();
 }
@@ -55,7 +55,7 @@ noreturn _start() {
 #endif
 
 // exit
-noreturn exit_process(CINT exit_code) {
+Noreturn exit_process(CINT exit_code) {
 #if OS_WINDOWS
   ExitProcess((CUINT)exit_code);
 #elif OS_LINUX
@@ -65,7 +65,7 @@ noreturn exit_process(CINT exit_code) {
 #endif
   for (;;);
 }
-noreturn abort() {
+Noreturn abort() {
   /* NOTE: technically you should signal abort on linux, but eh... */
   exit_process(1);
 }

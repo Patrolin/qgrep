@@ -100,7 +100,11 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
   #define ARCH_HAS_NATIVE_F16 0
 #endif
 
-#define fma(a, b, c) fma_impl(__COUNTER__, a, b, c)
+#if HAS_CRT
+  #include <math.h>
+#else
+  #define fma(a, b, c) fma_impl(__COUNTER__, a, b, c)
+#endif
 #if ARCH_X64
   /* NOTE: windows starts aligned to 8B, while linux starts (correctly) aligned to 16B
   thus we have to realign ourselves either way... */
@@ -114,9 +118,9 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
                  : "x"(b), "x"(c));       \
     VAR(fma, C);                          \
   })
-  #include <emmintrin.h>
-  #include <xmmintrin.h>
-  #include <immintrin.h>
+  // #include <emmintrin.h>
+  // #include <xmmintrin.h>
+  // #include <immintrin.h>
   #undef min
   #undef max
 #endif
@@ -157,7 +161,7 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
 #define foreign __declspec(dllimport)
 // #define stdcall __attribute__((__stdcall__))
 #define naked __attribute__((naked))
-#define noreturn _Noreturn void
+#define Noreturn _Noreturn void
 // #define deprecated(msg) __attribute__((deprecated(msg)))
 // other keywords
 /* generate code that takes shorter when the condition is true, but longer when the condition is false */
@@ -169,7 +173,7 @@ ASSERT(OS_HUGE_PAGE_SIZE == 2 * MebiByte);
    whereas expect_unlikely() puts the block far away, and may duplicate code on both paths.
    Should only be used if there aren't any `break` or `return` statements in the block. */
 #define expect_small(condition) expect_likely(condition)
-forward_declare noreturn abort();
+forward_declare Noreturn abort();
 #define assert(condition)              \
   if (expect_unlikely(!(condition))) { \
     abort();                           \
@@ -192,12 +196,12 @@ extern void* memset(void* ptr, int x, Size size) {
   return ptr;
 }
 #endif
-#define reinterpret(value, t1, t2) reinterpret_impl(__COUNTER__, value, t1, t2)
-#define reinterpret_impl(C, value, t1, t2) ({ \
-  ASSERT(sizeof(t1) == sizeof(t2));           \
-  t2 VAR(v, C);                               \
-  *(t1*)((rawptr)(&VAR(v, C))) = value;       \
-  VAR(v, C);                                  \
+#define bitcast(value, t1, t2) bitcast_impl(__COUNTER__, value, t1, t2)
+#define bitcast_impl(C, value, t1, t2) ({ \
+  ASSERT(sizeof(t1) == sizeof(t2));       \
+  t2 VAR(v, C);                           \
+  *(t1*)((rawptr)(&VAR(v, C))) = value;   \
+  VAR(v, C);                              \
 })
 
 // types
