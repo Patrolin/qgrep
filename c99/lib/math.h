@@ -1,6 +1,5 @@
 #pragma once
 #include "definitions.h"
-#include "fmt_float.h"
 
 // nan
 #if !HAS_CRT
