@@ -17,13 +17,13 @@ if ($opt) {
   $cargs += @("-O0", "-g")
 }
 $input = "c99/main.c"
-$output = "foo.exe"
+$output = "foo"
 if ($testFloat) {
   $input = "c99/test_fmt_float.c"
-  $output = "test_fmt_float.exe"
+  $output = "test_fmt_float"
 }
 
-rm foo.rdi -ErrorAction SilentlyContinue;
-rm foo.pdb -ErrorAction SilentlyContinue;
-echo "clang $cargs $input -o $output && $output"
-clang $cargs $input -o $output && Invoke-Expression $output
+rm ($output + ".rdi") -ErrorAction SilentlyContinue;
+rm ($output + ".pdb") -ErrorAction SilentlyContinue;
+echo "clang $cargs $input -o $output.exe && $output.exe"
+clang $cargs $input -o ($output + ".exe") && Invoke-Expression ($output + ".exe")

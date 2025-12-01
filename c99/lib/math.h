@@ -32,19 +32,19 @@ f64 NAN = 0.0 / 0.0;
   #define llabs(v) abs(v)
   #define fabsf(v) abs(v)
   #define fabs(v) abs(v)
+  #define min(v1, v2) min_impl(__COUNTER, typeof(v1), v1, v2)
+  #define min_impl(C, t, v1, v2) ({                                 \
+    t VAR(left, C) = v1;                                            \
+    t VAR(right, C) = v2;                                           \
+    (VAR(left, C) <= VAR(right, C)) ? VAR(left, C) : VAR(right, C); \
+  })
+  #define max(t, v1, v2) max_impl(__COUNTER, t, v1, v2)
+  #define max_impl(C, t, v1, v2) ({                                 \
+    t VAR(left, C) = v1;                                            \
+    t VAR(right, C) = v2;                                           \
+    (VAR(left, C) >= VAR(right, C)) ? VAR(left, C) : VAR(right, C); \
+  })
 #endif
-#define min(v1, v2) min_impl(__COUNTER, typeof(v1), v1, v2)
-#define min_impl(C, t, v1, v2) ({                                 \
-  t VAR(left, C) = v1;                                            \
-  t VAR(right, C) = v2;                                           \
-  (VAR(left, C) <= VAR(right, C)) ? VAR(left, C) : VAR(right, C); \
-})
-#define max(t, v1, v2) max_impl(__COUNTER, t, v1, v2)
-#define max_impl(C, t, v1, v2) ({                                 \
-  t VAR(left, C) = v1;                                            \
-  t VAR(right, C) = v2;                                           \
-  (VAR(left, C) >= VAR(right, C)) ? VAR(left, C) : VAR(right, C); \
-})
 
 // casts
 #define downcast(t1, v, t2) downcast_impl(__COUNTER__, t1, v, t2)
