@@ -183,6 +183,7 @@ forward_declare Noreturn abort();
   typedef type name
 
 // builtins
+#define offsetof(T, key) CONCAT(&(T*)(0)., key)
 #define alignof(x) __alignof__(x)
 #define countof(x) (intptr(sizeof(x)) / intptr(sizeof(x[0])))
 forward_declare void zero(byte* ptr, Size size);
