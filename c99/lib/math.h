@@ -1,7 +1,12 @@
 #pragma once
 #include "definitions.h"
 
-// nan
+// float
+#define BITS_f64 64
+#define EXPLICIT_MANTISSA_BITS_f64 52
+#define IMPLICIT_MANTISSA_BITS_f64 (EXPLICIT_MANTISSA_BITS_f64 + 1)
+#define EXPONENT_BITS_f64 = (BITS_f64 - IMPLICIT_MANTISSA_BITS_f64)
+
 #if !HAS_CRT
 bool isinf(f64 f) {
   u64 x = bitcast(f, f64, u64);

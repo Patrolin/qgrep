@@ -4,6 +4,7 @@
 
 // Size
 #define ASSERT(condition) _Static_assert((condition), #condition)
+
 typedef char byte;
 #define byte(x) ((byte)(x))
 ASSERT(sizeof(byte) == 1);
@@ -13,14 +14,13 @@ typedef intptr_t intptr;
 #define intptr(x) ((intptr)(x))
 typedef void* rawptr;
 #define rawptr(x) ((rawptr)(x))
-typedef uintptr Size;
 #define Size(x) ((Size)(x))
-enum Size : uintptr {
+typedef enum : uintptr {
   Byte = 1,
   KibiByte = 1024 * Byte,
   MebiByte = 1024 * KibiByte,
   GibiByte = 1024 * MebiByte,
-};
+} Size;
 
 #define MIN(t) CONCAT(MIN_, t)
 #define MAX(t) CONCAT(MAX_, t)
@@ -181,9 +181,6 @@ forward_declare Noreturn abort();
 #define ASSERT_MUlTIPLE_OF(a, b) ASSERT(a % b == 0)
 #define DISTINCT(type, name) \
   typedef type name
-#define ENUM(type, name) \
-  typedef type name;     \
-  enum name : type
 
 // builtins
 #define alignof(x) __alignof__(x)

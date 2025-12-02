@@ -86,7 +86,7 @@ void start_threads() {
       stack_data->param = rawptr(uintptr(t));
       ThreadFlags flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_THREAD | CLONE_SYSVSEM;
       /* NOTE: SIGCHLD is the only one that doesn't print garbage depending on which thread exits... */
-      intptr error = newthread(flags | SIGCHLD, stack_data);
+      intptr error = newthread(flags | (ThreadFlags)SIGCHLD, stack_data);
       assert(error >= 0);
 #else
       assert(false);
