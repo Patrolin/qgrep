@@ -1,17 +1,17 @@
 param (
-    [switch]$opt,
-    [switch]$crt,
-    [switch]$testFloat
+  [switch]$opt,
+  [switch]$crt,
+  [switch]$testFloat
 )
 $cargs = @("-march=native", "-masm=intel", "-std=gnu99", "-fno-signed-char")
 if ($crt) {
-  $cargs += @("-DHAS_CRT") # why does this fail bro...
+  $cargs += @("-DHAS_CRT")
 } else {
   $cargs += @("-nostdlib", "-mno-stack-arg-probe")
 }
 $cargs += @("-Werror", "-Wconversion", "-Wsign-conversion", "-Wnullable-to-nonnull-conversion")
 $cargs += @("-fuse-ld=lld", "-Wl,/STACK:0x100000")
-if ($opt) {
+if ($opt || $testFloat) {
   $cargs += @("-O2", "-flto", "-g")
 } else {
   $cargs += @("-O0", "-g")

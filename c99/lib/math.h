@@ -50,20 +50,6 @@ f64 NAN = 0.0 / 0.0;
   })
 #endif
 
-// casts
-#define downcast(t1, v, t2) downcast_impl(__COUNTER__, t1, v, t2)
-#define downcast_impl(C, t1, v, t2) ({    \
-  ASSERT(sizeof(t2) < sizeof(t1));        \
-  t1 VAR(v1, C) = v;                      \
-  t2 VAR(v2, C) = (t2)VAR(v1, C);         \
-  assert((t1)(VAR(v2, C)) == VAR(v1, C)); \
-  VAR(v2, C);                             \
-})
-#define saturate(t1, v1, t2) ({    \
-  ASSERT(sizeof(t2) < sizeof(t1)); \
-  (t2)(min(t1, v1, (t1)MAX(t2)));  \
-})
-
 // floats
 #define SPLIT_FLOAT_IMPL(R, F, U, x, mask, shift, bias) \
   ASSERT(sizeof(x) == sizeof(mask));                    \
