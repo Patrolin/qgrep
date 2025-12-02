@@ -1,4 +1,3 @@
--Wno-gcc-compat
 -march=native
 -masm=intel
 -std=gnu99

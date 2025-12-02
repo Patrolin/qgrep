@@ -51,13 +51,6 @@ void page_free(intptr ptr) {
 #endif
 }
 
-// copy
-always_inline void zero(byte* ptr, Size size) {
-  for (intptr i = 0; i < size; i++) {
-    ptr[size] = 0;
-  }
-}
-
 // locks
 DISTINCT(bool, Lock);
 bool get_lock_or_false(Lock* lock) {

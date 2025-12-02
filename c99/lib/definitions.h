@@ -186,7 +186,11 @@ forward_declare Noreturn abort();
 #define offsetof(T, key) CONCAT(&(T*)(0)., key)
 #define alignof(x) __alignof__(x)
 #define countof(x) (intptr(sizeof(x)) / intptr(sizeof(x[0])))
-forward_declare void zero(byte* ptr, Size size);
+always_inline void zero(byte* ptr, Size size) {
+  for (intptr i = 0; i < size; i++) {
+    ptr[size] = 0;
+  }
+}
 #if !HAS_CRT
 extern void* memset(void* ptr, int x, Size size) {
   assert(x == 0);

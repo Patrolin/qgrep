@@ -3,7 +3,7 @@ param (
     [switch]$crt,
     [switch]$testFloat
 )
-$cargs = @("-Wno-gcc-compat", "-march=native", "-masm=intel", "-std=gnu99", "-fno-signed-char")
+$cargs = @("-march=native", "-masm=intel", "-std=gnu99", "-fno-signed-char")
 if ($crt) {
   $cargs += @("-DHAS_CRT") # why does this fail bro...
 } else {
