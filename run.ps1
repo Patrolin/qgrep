@@ -11,7 +11,7 @@ if ($crt) {
 }
 $cargs += @("-Werror", "-Wconversion", "-Wsign-conversion", "-Wnullable-to-nonnull-conversion")
 $cargs += @("-fuse-ld=lld", "-Wl,/STACK:0x100000")
-if ($opt || $testFloat) {
+if ($opt) {
   $cargs += @("-O2", "-flto", "-g")
 } else {
   $cargs += @("-O0", "-g")

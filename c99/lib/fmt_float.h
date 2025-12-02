@@ -2,6 +2,8 @@
 #include "definitions.h"
 #include "math.h"
 
+// TODO: use qfloat lib instead
+
 /* NOTE: f64 needs at most 17 (integer+fraction) digits: https://www.exploringbinary.com/number-of-digits-required-for-round-trip-conversions/
    = Math.ceil(explicitmantissa_bits*Math.log10(2))+1 */
 /* NOTE: sign(1) + digits(17) + decimal_point(1) + signed_exponent(5) + null_terminator(1) */
