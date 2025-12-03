@@ -1,2 +1,2 @@
 @echo off
-python C:\Users\patri\Documents\Programming\qgrep\qloc.py %*
+python C:\Users\patri\Documents\Programming\qgrep\bin\qloc.py %*
